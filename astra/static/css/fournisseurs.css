@@ -1,0 +1,20 @@
+/* Forcer le fond blanc complet sur la page et annuler le fond bleu du base.html */
+    html, body, main, .main-content, #content {
+        background-color: #ffffff !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+    }
+
+    .modal-backdrop {
+        background-color: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+    }
+    .modal-content {
+        transform: translateY(-20px) scale(0.95);
+        opacity: 0;
+        transition: all 0.3s ease-in-out;
+    }
+    .modal-content.active {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }

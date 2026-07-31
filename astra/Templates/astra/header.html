@@ -1,0 +1,35 @@
+{% load static %}
+
+<header class="app-header">
+
+    <div class="logo-container">
+        <img src="{% static 'image/logoo.png' %}" alt="ASTRA TECH">
+    </div>
+
+    <nav class="nav-menu">
+        <a href="{% url 'astra:ventes' %}" class="nav-item {% if request.resolver_match.url_name == 'ventes' %}active{% endif %}">Ventes</a>
+        <a href="{% url 'astra:stock' %}" class="nav-item {% if request.resolver_match.url_name == 'stock' %}active{% endif %}">Stocks</a>
+        <a href="{% url 'astra:approvisionnements' %}" class="nav-item {% if request.resolver_match.url_name == 'approvisionnement' or request.resolver_match.url_name == 'approvisionnements' %}active{% endif %}">Approvisionnement</a>
+        <a href="{% url 'astra:gestion_clients' %}" class="nav-item {% if request.resolver_match.url_name == 'gestion_clients' %}active{% endif %}">Clients</a>
+        <a href="{% url 'astra:fournisseurs' %}" class="nav-item {% if request.resolver_match.url_name == 'fournisseurs' %}active{% endif %}">Fournisseurs</a>
+        <a href="{% url 'astra:rapports' %}" class="nav-item {% if request.resolver_match.url_name == 'rapports' %}active{% endif %}">Rapports</a>
+    </nav>
+
+    <div class="user-menu">
+        <!-- 1. Cloche de notification -->
+        <div class="notification-icon" id="notificationIcon">
+            <i class="fas fa-bell"></i>
+            {% if notifications_non_lues or stock_bas %}
+                <span class="notification-badge">
+                    {{ notifications_non_lues|default:0|add:stock_bas|default:0 }}
+                </span>
+            {% endif %}
+        </div>
+
+        <!-- 2. Bouton Retour -->
+        <a href="{% url 'astra:accueil' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i> Retour
+        </a>
+    </div>
+
+</header>

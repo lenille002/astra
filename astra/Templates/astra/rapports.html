@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Astra Tech - Rapports & Analyses Globaux
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/rapports.css' %}">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body, main, .main-content, #content {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+    }
+    .kpi-card {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        min-height: 160px !important;
+    }
+    .kpi-top-bar {
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    .kpi-label {
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #ffffff !important;
+        opacity: 0.95 !important;
+        line-height: 1.2 !important;
+    }
+    .kpi-icon-box {
+        width: 32px !important;
+        height: 32px !important;
+        flex-shrink: 0 !important;
+        border-radius: 10px !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* CLASSES D'IMPRESSION CIBLÉE */
+    @media print {
+        @page {
+            size: landscape;
+            margin: 10mm;
+        }
+
+        body * {
+            visibility: hidden !important;
+        }
+
+        body.printing-both #salesCardContainer,
+        body.printing-both #salesCardContainer *,
+        body.printing-both #stockCardContainer,
+        body.printing-both #stockCardContainer * {
+            visibility: visible !important;
+        }
+
+        body.printing-both .print-charts-wrapper {
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: 2fr 1fr !important;
+            gap: 20px !important;
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 10px !important;
+        }
+
+        body.printing-both #salesCardContainer,
+        body.printing-both #stockCardContainer {
+            position: relative !important;
+            width: 100% !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 15px !important;
+            background: #ffffff !important;
+        }
+
+        body.printing-sales #salesCardContainer, 
+        body.printing-sales #salesCardContainer * {
+            visibility: visible !important;
+        }
+        body.printing-sales #salesCardContainer {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            background: #ffffff !important;
+        }
+
+        body.printing-stock #stockCardContainer, 
+        body.printing-stock #stockCardContainer * {
+            visibility: visible !important;
+        }
+        body.printing-stock #stockCardContainer {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            background: #ffffff !important;
+        }
+
+        .print-ignore {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="w-full min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-8">
+    <div class="max-w-7xl mx-auto space-y-8">
+
+        <!-- En-tête -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold mb-2 border border-orange-100">
+                    <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                    Synchronisé en temps réel avec la Base de Données
+                </div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">
+                    Rapports <span class="text-orange-500">& Analyses</span>
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">
+                    Centralisation des données issues des ventes, stocks, clients et approvisionnements d'Astra Tech.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{% url 'astra:ventes' %}" class="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-2xl transition-all text-xs gap-2">
+                    <i class="fas fa-cash-register"></i> Gérer les Ventes
+                </a>
+                <a href="{% url 'astra:stock' %}" class="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-3 rounded-2xl transition-all text-xs gap-2">
+                    <i class="fas fa-boxes"></i> Gérer le Stock
+                </a>
+                <button type="button" id="mainPrintBtn" class="inline-flex items-center justify-center bg-blue-900 hover:bg-blue-800 text-white font-semibold px-5 py-3 rounded-2xl shadow-lg shadow-blue-900/20 transition-all text-xs gap-2 cursor-pointer">
+                    <i class="fas fa-print"></i> Imprimer Page
+                </button>
+            </div>
+        </div>
+
+        <!-- CARTES KPI -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div class="kpi-card bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl border border-blue-800/50">
+                <div class="kpi-top-bar">
+                    <span class="kpi-label">Chiffre d'Affaires</span> 
+                    <div class="kpi-icon-box"><i class="fas fa-wallet text-white text-xs"></i></div>
+                </div>
+                <div>
+                    <p class="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">{{ total_sales|default:0|floatformat:0 }} FCFA</p>
+                    <span class="text-xs text-blue-100/80 font-medium block">Cumul global des ventes</span>
+                </div>
+            </div>
+
+            <div class="kpi-card bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl border border-orange-400/40">
+                <div class="kpi-top-bar">
+                    <span class="kpi-label">Stock Total</span>
+                    <div class="kpi-icon-box"><i class="fas fa-boxes-stacked text-white text-xs"></i></div>
+                </div>
+                <div>
+                    <p class="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">{{ total_stock_qty|default:0 }} un.</p>
+                    <span class="text-xs text-orange-100 font-medium block">Références en stock</span>
+                </div>
+            </div>
+
+            <div class="kpi-card bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl border border-blue-800/50">
+                <div class="kpi-top-bar">
+                    <span class="kpi-label">Clients</span>
+                    <div class="kpi-icon-box"><i class="fas fa-users text-white text-xs"></i></div>
+                </div>
+                <div>
+                    <p class="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">{{ total_clients|default:0 }}</p>
+                    <span class="text-xs text-blue-100/80 font-medium block">Clients enregistrés</span>
+                </div>
+            </div>
+
+            <div class="kpi-card bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl border border-orange-400/40">
+                <div class="kpi-top-bar">
+                    <span class="kpi-label">Fournisseurs</span>
+                    <div class="kpi-icon-box"><i class="fas fa-truck-field text-white text-xs"></i></div>
+                </div>
+                <div>
+                    <p class="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">{{ total_suppliers|default:0 }}</p>
+                    <span class="text-xs text-orange-100 font-medium block">Partenaires actifs</span>
+                </div>
+            </div>
+
+            <div class="kpi-card bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl border border-blue-800/50 sm:col-span-2 xl:col-span-1">
+                <div class="kpi-top-bar">
+                    <span class="kpi-label">Dépenses Appros</span>
+                    <div class="kpi-icon-box"><i class="fas fa-cart-flatbed text-white text-xs"></i></div>
+                </div>
+                <div>
+                    <p class="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">{{ total_appros|default:0|floatformat:0 }} FCFA</p>
+                    <span class="text-xs text-blue-100/80 font-medium block">Dépenses totales</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Graphiques -->
+        <div class="print-charts-wrapper grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div id="salesCardContainer" class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 m-0">
+                        <span class="w-3 h-3 rounded-full bg-blue-900"></span> Évolution du Chiffre d'Affaires
+                    </h2>
+                    <button type="button" id="printSalesBtn" class="print-ignore inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                        <i class="fas fa-print"></i> Imprimer ce graphique
+                    </button>
+                </div>
+                <div class="h-80 relative"><canvas id="salesChart"></canvas></div>
+            </div>
+
+            <div id="stockCardContainer" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 m-0">
+                        <span class="w-3 h-3 rounded-full bg-orange-500"></span> Répartition du Stock
+                    </h2>
+                    <button type="button" id="printStockBtn" class="print-ignore inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                        <i class="fas fa-print"></i> Imprimer
+                    </button>
+                </div>
+                <div class="h-80 relative flex items-center justify-center"><canvas id="stockChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Tableaux de Synthèse -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                <h2 class="text-base font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
+                    <i class="fas fa-arrow-up-right-dots text-emerald-500 text-lg"></i> Dernières Ventes Enregistrées
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                                <th class="p-3">Réf / ID</th>
+                                <th class="p-3">Client</th>
+                                <th class="p-3 text-right">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentSalesTable" class="divide-y divide-slate-100 text-sm font-medium text-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                <h2 class="text-base font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
+                    <i class="fas fa-truck-ramp-box text-blue-600 text-lg"></i> Derniers Approvisionnements Enregistrés
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                                <th class="p-3">Réf / ID</th>
+                                <th class="p-3">Fournisseur</th>
+                                <th class="p-3 text-right">Coût Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentApprosTable" class="divide-y divide-slate-100 text-sm font-medium text-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let sales = [];
+    let products = [];
+    let appros = [];
+
+    try {
+        sales = JSON.parse('{{ ventes_json|safe|escapejs }}') || [];
+    } catch (e) { sales = []; }
+
+    try {
+        products = JSON.parse('{{ produits_json|safe|escapejs }}') || [];
+    } catch (e) { products = []; }
+
+    try {
+        appros = JSON.parse('{{ appros_json|safe|escapejs }}') || [];
+    } catch (e) { appros = []; }
+
+    // Fonction de récupération robuste
+    const getProp = (item, keys) => {
+        if (!item) return '';
+        for (let key of keys) {
+            if (item[key] !== undefined && item[key] !== null && item[key] !== '') return item[key];
+            if (item.fields && item.fields[key] !== undefined && item.fields[key] !== null && item.fields[key] !== '') return item.fields[key];
+        }
+        return '';
+    };
+
+    const mainPrintBtn = document.getElementById('mainPrintBtn');
+    if (mainPrintBtn) {
+        mainPrintBtn.addEventListener('click', () => {
+            document.body.classList.add('printing-both');
+            window.print();
+            document.body.classList.remove('printing-both');
+        });
+    }
+
+    const printSalesBtn = document.getElementById('printSalesBtn');
+    if (printSalesBtn) {
+        printSalesBtn.addEventListener('click', () => {
+            document.body.classList.add('printing-sales');
+            window.print();
+            document.body.classList.remove('printing-sales');
+        });
+    }
+
+    const printStockBtn = document.getElementById('printStockBtn');
+    if (printStockBtn) {
+        printStockBtn.addEventListener('click', () => {
+            document.body.classList.add('printing-stock');
+            window.print();
+            document.body.classList.remove('printing-stock');
+        });
+    }
+
+    // 1. Graphique Ventes
+    const ctxSalesElem = document.getElementById('salesChart');
+    if (ctxSalesElem) {
+        const ctxSales = ctxSalesElem.getContext('2d');
+        new Chart(ctxSales, {
+            type: 'line',
+            data: {
+                labels: sales.length > 0 ? sales.map((s, index) => getProp(s, ['reference', 'ref', 'code']) || `Vente #${index + 1}`) : ['Aucune vente'],
+                datasets: [{
+                    label: 'Montant (FCFA)',
+                    data: sales.length > 0 ? sales.map(s => parseFloat(getProp(s, ['montant_total', 'total', 'montant', 'prix_total'])) || 0) : [0],
+                    borderColor: '#1e3a8a',
+                    borderWidth: 3,
+                    backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        ticks: { maxRotation: 35, minRotation: 35, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Graphique Stock
+    const ctxStockElem = document.getElementById('stockChart');
+    if (ctxStockElem) {
+        const ctxStock = ctxStockElem.getContext('2d');
+        new Chart(ctxStock, {
+            type: 'doughnut',
+            data: {
+                labels: products.length > 0 ? products.map(p => getProp(p, ['nom', 'name', 'produit', 'libelle']) || 'Produit') : ['Aucun produit'],
+                datasets: [{
+                    data: products.length > 0 ? products.map(p => parseInt(getProp(p, ['stock', 'quantite', 'qte', 'stock_actuel'])) || 0) : [1],
+                    backgroundColor: ['#1e3a8a', '#f97316', '#0284c7', '#10b981', '#f59e0b', '#8b5cf6'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { 
+                        position: 'bottom',
+                        labels: { boxWidth: 12, font: { size: 11 } }
+                    } 
+                }, 
+                cutout: '68%' 
+            }
+        });
+    }
+
+    // 3. Tableau Ventes Récentes
+    const salesTable = document.getElementById('recentSalesTable');
+    if (salesTable) {
+        if (sales.length === 0) {
+            salesTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Aucune vente enregistrée pour le moment</td></tr>`;
+        } else {
+            salesTable.innerHTML = '';
+            sales.slice(-5).reverse().forEach(s => {
+                let ref = getProp(s, ['reference', 'ref', 'code']) || 'Vente';
+                
+                let clientData = getProp(s, ['client_nom', 'client_name', 'nom_client', 'client', 'client_str']);
+                let clientNom = 'Client comptoir';
+                if (typeof clientData === 'object' && clientData !== null) {
+                    clientNom = clientData.nom || clientData.name || clientData.username || clientData.raison_sociale || 'Client';
+                } else if (clientData && typeof clientData === 'string' && !/^\d+$/.test(clientData)) {
+                    clientNom = clientData;
+                } else {
+                    clientNom = clientData ? `Client #${clientData}` : 'Client comptoir';
+                }
+
+                let montant = parseFloat(getProp(s, ['montant_total', 'total', 'montant', 'prix_total'])) || 0;
+                
+                salesTable.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3 font-mono text-xs font-bold text-slate-500">${ref}</td>
+                        <td class="p-3 font-semibold text-slate-800">${clientNom}</td>
+                        <td class="p-3 text-right font-black text-slate-900">${montant.toLocaleString()} FCFA</td>
+                    </tr>`;
+            });
+        }
+    }
+
+    // 4. Tableau Approvisionnements Récents (CORRECTION RADICALE : INTERDICTION DE GÉNÉRER "Fournisseur #X" SI C'EST JUSTE UN ID NUMÉRIQUE BRUT)
+    const approsTable = document.getElementById('recentApprosTable');
+    if (approsTable) {
+        if (appros.length === 0) {
+            approsTable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">Aucun approvisionnement enregistré</td></tr>`;
+        } else {
+            approsTable.innerHTML = '';
+            appros.slice(-5).reverse().forEach(a => {
+                let ref = getProp(a, ['reference', 'ref', 'code', 'numero', 'id']) || 'Appro';
+                
+                let fournisseurData = getProp(a, ['fournisseur_nom', 'fournisseur_name', 'nom_fournisseur', 'fournisseur', 'fournisseur_str', 'supplier', 'supplier_name']);
+                let fournisseurNom = '';
+                
+                if (typeof fournisseurData === 'object' && fournisseurData !== null) {
+                    fournisseurNom = fournisseurData.nom || fournisseurData.name || fournisseurData.username || fournisseurData.raison_sociale || fournisseurData.libelle || '';
+                } else if (fournisseurData !== undefined && fournisseurData !== null && fournisseurData !== '') {
+                    let strVal = String(fournisseurData).trim();
+                    // Si ce n'est PAS uniquement un chiffre brut, on prend la valeur textuelle (ex: "Nom du fournisseur")
+                    if (!/^\d+$/.test(strVal)) {
+                        fournisseurNom = strVal;
+                    }
+                }
+
+                // S'il ne reste rien ou si c'était juste un ID numérique brut, on affiche un libellé neutre et propre au lieu d'inventer "Fournisseur #X"
+                if (!fournisseurNom) {
+                    fournisseurNom = 'Fournisseur externe';
+                }
+
+                let cout = parseFloat(getProp(a, ['montant_total', 'total', 'montant', 'cout', 'cout_total', 'prix_total', 'valeur'])) || 0;
+                
+                approsTable.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3 font-mono text-xs font-bold text-slate-500">${ref}</td>
+                        <td class="p-3 font-semibold text-slate-800">${fournisseurNom}</td>
+                        <td class="p-3 text-right font-black text-slate-900">${cout.toLocaleString()} FCFA</td>
+                    </tr>`;
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

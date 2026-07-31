@@ -1,0 +1,42 @@
+/* Fond global clair */
+  body, main, .main-content, #content {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+  }
+
+  /* RESTRUCTURATION DES CARTES KPI */
+  .kpi-card {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+  }
+
+  .kpi-top-bar {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      width: 100% !important;
+      margin-bottom: 12px !important;
+  }
+
+  .kpi-label {
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      white-space: nowrap !important; /* EMPÊCHE DE COMPRESSER LES LETTRES */
+      color: #ffffff !important;
+      opacity: 0.95 !important;
+  }
+
+  .kpi-icon-box {
+      width: 36px !important;
+      height: 36px !important;
+      flex-shrink: 0 !important;
+      border-radius: 12px !important;
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+  }

@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - ASTRA TECH</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+</head>
+
+<body class="login-body">
+
+    <div id="vanta-canvas"></div>
+
+    <div class="login-container" data-aos="zoom-in">
+
+        <div class="login-header">
+            <img src="{% static 'image/logoo.png' %}" class="logo" alt="Logo ASTRA TECH">
+            <h1>ASTRA TECH</h1>
+            <p>Espace professionnel sécurisé</p>
+        </div>
+
+        <div class="login-form">
+
+            <!-- Affichage du message d'erreur si les identifiants sont faux -->
+            {% if erreur %}
+            <div class="alert-message" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center;">
+                <i class="fas fa-exclamation-circle"></i> {{ erreur }}
+            </div>
+            {% endif %}
+
+           <form method="POST" action="">
+    {% csrf_token %}
+
+    {% if next %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+
+    <div class="input-group">
+        <label for="email">
+            <i class="fas fa-envelope"></i> Adresse email ou Nom d'utilisateur
+        </label>
+        <input 
+            type="text" 
+            id="email" 
+            name="email" 
+            placeholder="exemple@astratech.com" 
+            required>
+    </div>
+
+    <div class="input-group">
+        <label for="password">
+            <i class="fas fa-lock"></i> Mot de passe
+        </label>
+        <div class="password-box">
+            <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                placeholder="Votre mot de passe" 
+                required>
+            <button type="button" class="password-toggle" id="togglePassword">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="remember-forgot">
+        <div class="remember-me">
+            <input type="checkbox" id="remember" name="remember">
+            <label for="remember">Rester connecté</label>
+        </div>
+
+        <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+    </div>
+
+    <button type="submit" class="login-btn">
+        <i class="fas fa-arrow-right-to-bracket"></i> Se connecter
+    </button>
+
+    <div class="signup-link">
+        <i class="fas fa-shield-alt"></i> Espace sécurisé (Accès administrateur)
+    </div>
+
+</form>
+        </div>
+    </div>
+
+    <!-- Scripts CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <script>
+        AOS.init();
+
+        // Animation Vanta.js
+        if (typeof VANTA !== "undefined") {
+            VANTA.NET({
+                el: "#vanta-canvas",
+                color: 0xff7a29,
+                backgroundColor: 0x0057D8,
+                points: 12,
+                maxDistance: 20,
+                spacing: 18
+            });
+        }
+
+        // Afficher / Masquer le mot de passe
+        const togglePassword = document.getElementById("togglePassword");
+        const password = document.getElementById("password");
+
+        togglePassword.onclick = function () {
+            if (password.type === "password") {
+                password.type = "text";
+                this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                password.type = "password";
+                this.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        };
+    </script>
+
+</body>
+
+</html>

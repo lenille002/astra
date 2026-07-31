@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Astra Tech - Gestion des Stocks
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/stock.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+
+<!-- CONTENU PRINCIPAL -->
+    <main class="main-content">
+        <div class="stock-container">
+
+            <!-- TITRE -->
+            <div class="stock-title">
+                <h1>
+                    <span style="color:#004E8C;">Vue d’ensemble</span>
+                    <span style="color:#F39C12;">des Stocks</span>
+                </h1>
+
+                <div>
+                    <button class="stock-btn btn-refresh" onclick="location.reload();">
+                        <i class="fas fa-sync"></i> Actualiser
+                    </button>
+
+                    <button class="stock-btn btn-add" id="add-product-btn" type="button">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                </div>
+            </div>
+
+            <!-- STATISTIQUES -->
+            <section class="stats-container">
+                <div class="stat-card">
+                    <h3>Total Produits</h3>
+                    <p id="total-products">{{ total_produits|default:"0" }}</p>
+                </div>
+
+                <div class="stat-card" style="border-left-color:#F39C12;">
+                    <h3>Stock faible</h3>
+                    <p id="low-stock-items">{{ stock_faible|default:"0" }}</p>
+                </div>
+
+                <div class="stat-card" style="border-left-color:#16a34a;">
+                    <h3>Valeur Stock</h3>
+                    <p id="total-stock-value">{{ valeur_stock|default:"0" }} FCFA</p>
+                </div>
+            </section>
+
+            <!-- TABLEAU STOCK -->
+            <div class="card-stock">
+                <div class="search-zone">
+                    <input type="text" id="search-product" placeholder="Rechercher un produit...">
+
+                    <select id="filter-category">
+                        <option value="">Toutes les catégories</option>
+                        {% for categorie in categories %}
+                        <option value="{{ categorie.nom }}">{{ categorie.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Référence</th>
+                                <th>Nom</th>
+                                <th>Catégorie</th>
+                                <th>Prix Achat</th>
+                                <th>Prix Vente</th>
+                                <th>Quantité</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="inventory-body">
+                        {% for produit in produits %}
+                            <tr data-id="{{ produit.id }}">
+                                <td>{{ produit.reference }}</td>
+                                <td>{{ produit.nom }}</td>
+                                <td>{% if produit.categorie %}{{ produit.categorie.nom }}{% else %}Non catégorisé{% endif %}</td>
+                                <td>{{ produit.prix_achat }} FCFA</td>
+                                <td>{{ produit.prix_vente }} FCFA</td>
+                                <td>{{ produit.stock }}</td>
+                                <td>
+                                    {% if produit.stock == 0 %}
+                                    <span class="status-rupture">Rupture</span>
+                                    {% elif produit.stock <= produit.seuil_alerte %}
+                                    <span class="status-faible">Faible</span>
+                                    {% else %}
+                                    <span class="status-disponible">Disponible</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="view-btn" 
+                                                data-id="{{ produit.id }}"
+                                                data-ref="{{ produit.reference }}"
+                                                data-nom="{{ produit.nom }}"
+                                                data-cat="{% if produit.categorie %}{{ produit.categorie.nom }}{% else %}Non catégorisé{% endif %}"
+                                                data-achat="{{ produit.prix_achat }}"
+                                                data-vente="{{ produit.prix_vente }}"
+                                                data-stock="{{ produit.stock }}"
+                                                data-statut="{% if produit.stock == 0 %}Rupture{% elif produit.stock <= produit.seuil_alerte %}Faible{% else %}Disponible{% endif %}"
+                                                data-processeur="{{ produit.processeur|default:'N/A' }}"
+                                                data-ram="{{ produit.ram|default:'N/A' }}"
+                                                type="button" title="Voir les caractéristiques">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+
+                                        <button class="edit-btn" 
+                                                data-id="{{ produit.id }}"
+                                                data-ref="{{ produit.reference }}"
+                                                data-nom="{{ produit.nom }}"
+                                                data-cat="{% if produit.categorie %}{{ produit.categorie.id }}{% endif %}"
+                                                data-achat="{{ produit.prix_achat }}"
+                                                data-vente="{{ produit.prix_vente }}"
+                                                data-stock="{{ produit.stock }}"
+                                                type="button" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+
+                                        <button class="delete-btn" data-id="{{ produit.id }}" type="button" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" style="text-align:center; padding: 30px; color: #6b7280;">Aucun produit disponible en stock</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODALE DE VISUALISATION -->
+    <div id="view-product-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1050; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: #ffffff; color: #333333; padding: 30px; border-radius: 12px; width: 450px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <h2 style="margin-bottom: 20px; color: #004E8C; font-size: 1.3rem; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-info-circle"></i> Caractéristiques du Produit
+            </h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.95rem;">
+                <div><strong>Référence :</strong> <span id="view-ref" style="color: #555;"></span></div>
+                <div><strong>Nom du produit :</strong> <span id="view-name" style="color: #555;"></span></div>
+                <div><strong>Catégorie :</strong> <span id="view-cat" style="color: #555;"></span></div>
+                <div><strong>Processeur :</strong> <span id="view-processeur" style="color: #555;"></span></div>
+                <div><strong>RAM :</strong> <span id="view-ram" style="color: #555;"></span></div>
+                <div><strong>Prix d'achat :</strong> <span id="view-buy" style="color: #555;"></span> FCFA</div>
+                <div><strong>Prix de vente :</strong> <span id="view-sell" style="color: #555;"></span> FCFA</div>
+                <div><strong>Quantité en stock :</strong> <span id="view-stock" style="color: #555;"></span></div>
+                <div><strong>Statut :</strong> <span id="view-status" style="font-weight: bold;"></span></div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 25px;">
+                <button type="button" id="close-view-modal" style="padding: 8px 20px; background: #004E8C; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE D'AJOUT / MODIFICATION -->
+    <div id="product-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: #ffffff; color: #333333; padding: 30px; border-radius: 12px; width: 450px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <h2 id="modal-title" style="margin-bottom: 20px; color: #004E8C; font-size: 1.3rem;">Ajouter un produit</h2>
+            
+            <form id="product-form" method="POST">
+                {% csrf_token %}
+                <input type="hidden" id="product-id" name="product_id">
+                
+                <div style="margin-bottom: 12px;">
+                    <label for="ref-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Référence :</label>
+                    <input type="text" id="ref-input" name="reference" required style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background: #fff;">
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label for="name-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Nom du produit :</label>
+                    <input type="text" id="name-input" name="nom" required style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background: #fff;">
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label for="category-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Catégorie :</label>
+                    <select id="category-input" name="categorie_id" style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background:#fff;">
+                        <option value="">Sélectionner une catégorie</option>
+                        {% for categorie in categories %}
+                        <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label for="buy-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Prix d'achat (FCFA) :</label>
+                    <input type="number" step="any" id="buy-input" name="prix_achat" required style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background: #fff;">
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label for="sell-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Prix de vente (FCFA) :</label>
+                    <input type="number" step="any" id="sell-input" name="prix_vente" required style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background: #fff;">
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label for="stock-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Quantité en stock :</label>
+                    <input type="number" id="stock-input" name="stock" required style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background: #fff;">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" id="close-modal" style="padding: 8px 15px; background: #e5e7eb; color: #374151; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Annuler</button>
+                    <button type="submit" style="padding: 8px 15px; background: #004E8C; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALE DE NOTIFICATION -->
+    <div id="notification-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1100; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: #ffffff; padding: 25px; border-radius: 12px; width: 350px; max-width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div id="notif-icon" style="font-size: 2.5rem; margin-bottom: 10px;"></div>
+            <h3 id="notif-title" style="margin-bottom: 8px; font-size: 1.2rem;"></h3>
+            <p id="notif-message" style="color: #666; margin-bottom: 20px; font-size: 0.95rem;"></p>
+            <button type="button" id="close-notif-btn" style="padding: 8px 20px; background: #004E8C; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">OK</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const modal = document.getElementById("product-modal");
+        const addBtn = document.getElementById("add-product-btn");
+        const closeBtn = document.getElementById("close-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const productForm = document.getElementById("product-form");
+
+        const viewModal = document.getElementById("view-product-modal");
+        const closeViewBtn = document.getElementById("close-view-modal");
+
+        document.querySelectorAll(".view-btn").forEach(function(btn) {
+            btn.addEventListener("click", function() {
+                document.getElementById("view-ref").innerText = btn.getAttribute("data-ref");
+                document.getElementById("view-name").innerText = btn.getAttribute("data-nom");
+                document.getElementById("view-cat").innerText = btn.getAttribute("data-cat");
+                document.getElementById("view-processeur").innerText = btn.getAttribute("data-processeur");
+                document.getElementById("view-ram").innerText = btn.getAttribute("data-ram");
+                document.getElementById("view-buy").innerText = btn.getAttribute("data-achat");
+                document.getElementById("view-sell").innerText = btn.getAttribute("data-vente");
+                document.getElementById("view-stock").innerText = btn.getAttribute("data-stock");
+                
+                const statusEl = document.getElementById("view-status");
+                const statusText = btn.getAttribute("data-statut");
+                statusEl.innerText = statusText;
+                
+                if(statusText === 'Rupture') statusEl.style.color = '#dc2626';
+                else if(statusText === 'Faible') statusEl.style.color = '#F39C12';
+                else statusEl.style.color = '#16a34a';
+
+                viewModal.style.display = "flex";
+            });
+        });
+
+        if (closeViewBtn) {
+            closeViewBtn.addEventListener("click", function() {
+                viewModal.style.display = "none";
+            });
+        }
+
+        function showNotification(isSuccess, message) {
+            const notifModal = document.getElementById("notification-modal");
+            const notifIcon = document.getElementById("notif-icon");
+            const notifTitle = document.getElementById("notif-title");
+            const notifText = document.getElementById("notif-message");
+
+            if (isSuccess) {
+                notifIcon.innerHTML = '<i class="fas fa-check-circle" style="color: #16a34a;"></i>';
+                notifTitle.innerText = "Succès";
+                notifTitle.style.color = "#16a34a";
+            } else {
+                notifIcon.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc2626;"></i>';
+                notifTitle.innerText = "Erreur";
+                notifTitle.style.color = "#dc2626";
+            }
+
+            notifText.innerText = message;
+            notifModal.style.display = "flex";
+
+            const closeNotifBtn = document.getElementById("close-notif-btn");
+            closeNotifBtn.onclick = function() {
+                notifModal.style.display = "none";
+                if (isSuccess) {
+                    location.reload();
+                }
+            };
+        }
+
+        if (addBtn) {
+            addBtn.addEventListener("click", function() {
+                modalTitle.innerText = "Ajouter un produit";
+                productForm.reset();
+                document.getElementById("product-id").value = ""; 
+                modal.style.display = "flex";
+            });
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener("click", function() {
+                modal.style.display = "none";
+            });
+        }
+
+        if (productForm) {
+            productForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                const formData = new FormData(productForm);
+                const productId = document.getElementById("product-id").value;
+                
+                let url = productId ? "{% url 'astra:modifier_produit' 0 %}".replace('/0/', '/' + productId + '/') : "{% url 'astra:ajouter_produit' %}";
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(res => {
+                    if (res.status === 200 && res.body.status === 'success') {
+                        modal.style.display = "none"; 
+                        showNotification(true, res.body.message); 
+                    } else {
+                        showNotification(false, res.body.message || "Une erreur est survenue.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Erreur:", error);
+                    showNotification(false, "Erreur de communication avec le serveur.");
+                });
+            });
+        }
+
+        document.querySelectorAll(".edit-btn").forEach(function(btn) {
+            btn.addEventListener("click", function() {
+                modalTitle.innerText = "Modifier le produit";
+                document.getElementById("product-id").value = btn.getAttribute("data-id");
+                document.getElementById("ref-input").value = btn.getAttribute("data-ref");
+                document.getElementById("name-input").value = btn.getAttribute("data-nom");
+                document.getElementById("category-input").value = btn.getAttribute("data-cat");
+                document.getElementById("buy-input").value = btn.getAttribute("data-achat");
+                document.getElementById("sell-input").value = btn.getAttribute("data-vente");
+                document.getElementById("stock-input").value = btn.getAttribute("data-stock");
+
+                modal.style.display = "flex";
+            });
+        });
+
+        document.querySelectorAll(".delete-btn").forEach(function(btn) {
+            btn.addEventListener("click", function() {
+                const productId = btn.getAttribute("data-id");
+                if (confirm("Voulez-vous vraiment supprimer définitivement ce produit du stock ?")) {
+                    const deleteUrl = "{% url 'astra:supprimer_produit' 0 %}".replace('/0/', '/' + productId + '/');
+
+                    fetch(deleteUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response.success || response.status === 'success') {
+                            showNotification(true, "Produit supprimé avec succès de la base de données.");
+                        } else {
+                            showNotification(false, response.error || "Impossible de supprimer le produit.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur:', err);
+                        showNotification(false, "Erreur de communication un serveur.");
+                    });
+                }
+            });
+        });
+
+        const searchInput = document.getElementById("search-product");
+        if (searchInput) {
+            searchInput.addEventListener("keyup", function(e) {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll("#inventory-body tr").forEach(row => {
+                    row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none";
+                });
+            });
+        }
+
+        const filterCategory = document.getElementById("filter-category");
+        if (filterCategory) {
+            filterCategory.addEventListener("change", function(e) {
+                const selectedCat = e.target.value.toLowerCase();
+                document.querySelectorAll("#inventory-body tr").forEach(row => {
+                    if (row.cells.length > 2) {
+                        const catText = row.cells[2].innerText.toLowerCase();
+                        if (!selectedCat || catText === selectedCat) {
+                            row.style.display = "";
+                        } else {
+                            row.style.display = "none";
+                        }
+                    }
+                });
+            });
+        }
+    });
+    </script>
+{% endblock %}

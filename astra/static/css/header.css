@@ -1,0 +1,446 @@
+/* ==================================================
+   ASTRA TECH - HEADER
+================================================== */
+
+.app-header {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 35px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #1a237e, #2563eb);
+    border-bottom: 4px solid #ff6f00;
+    position: relative;
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+/* LOGO */
+.logo-container {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.logo-container img {
+    width: 140px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* MENU NAV */
+.nav-menu {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    margin: 0 20px;
+}
+
+.nav-item {
+    color: #ffffff !important; /* Blanc par défaut pour bien contraster avec le fond bleu */
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 12px;
+    position: relative;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+}
+
+.nav-item::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: #ff6f00;
+    transition: 0.3s;
+    border-radius: 2px;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    color: #ff7a00 !important; /* Orange vif */
+    opacity: 1;
+}
+
+.nav-item:hover::after,
+.nav-item.active::after {
+    width: 100%;
+}
+
+/* ZONE UTILISATEUR & ACTIONS */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 20px;
+    position: relative;
+    cursor: pointer;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #ff6f00;
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.btn-retour {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    border-radius: 25px;
+    background: #ff6f00;
+    color: white !important;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.3s;
+    border: none;
+}
+
+.btn-retour:hover {
+    background: #e65100;
+}
+
+
+/* ==================================================
+   ASTRA TECH - STOCK CSS
+================================================== */
+
+.stock-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 25px;
+    box-sizing: border-box;
+}
+
+.page-content {
+    width: 100%;
+}
+
+/* TITRE PAGE */
+.stock-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.stock-title h1 {
+    color: #333;
+    font-size: 28px;
+    margin: 0;
+    font-weight: 700;
+}
+
+/* BOUTONS ACTIONS */
+.stock-btn {
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.btn-refresh {
+    background: #16a34a;
+}
+
+.btn-add {
+    background: #F39C12;
+}
+
+/* STATISTIQUES (GRID) */
+.stats-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 5px solid #004E8C;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card h3 {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card p {
+    font-size: 26px;
+    font-weight: bold;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* ONGLETS */
+.tabs {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #e5e7eb;
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.tab-btn.active {
+    background: #004E8C;
+    color: white;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* CONTENANT DU TABLEAU & RECHERCHE */
+.card-stock {
+    width: 100%;
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.search-zone {
+    width: 100%;
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.search-zone input,
+.search-zone select {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+}
+
+.search-zone input:focus,
+.search-zone select:focus {
+    border-color: #2563eb;
+}
+
+/* TABLEAU ADAPTATIF */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+thead {
+    background: #004E8C;
+    color: white;
+}
+
+thead th {
+    padding: 14px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+tbody td {
+    padding: 14px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #334155;
+}
+
+tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* BADGES DE STATUT */
+.status-disponible {
+    background: #dcfce7;
+    color: #166534;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-faible {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-rupture {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* BOUTONS D'ACTION */
+.edit-btn, .delete-btn, .history-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    margin: 0 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.edit-btn { color: #2563eb; }
+.delete-btn { color: #dc2626; }
+.history-btn { color: #F39C12; }
+
+.edit-btn:hover, .delete-btn:hover, .history-btn:hover {
+    transform: scale(1.15);
+}
+
+/* MODALES CUSTOM */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 5000;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.custom-modal-content {
+    width: 100%;
+    max-width: 600px;
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* TOAST */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #004E8C;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    display: none;
+    z-index: 6000;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.toast.show {
+    display: block;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .app-header {
+        flex-wrap: wrap;
+        padding: 15px 20px;
+        gap: 15px;
+    }
+
+    .nav-menu {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        margin: 10px 0 0 0;
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+
+    .stock-container {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 640px) {
+    .search-zone {
+        flex-direction: column;
+    }
+
+    .stock-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .stock-title h1 {
+        font-size: 22px;
+    }
+
+    .logo-container img {
+        width: 110px;
+    }
+}

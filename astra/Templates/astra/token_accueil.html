@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRA TECH - Gestion des Tokens</title>
+
+    <!-- ========================================================================= -->
+    <!-- SCRIPT CRUCIAL D'ACTIVATION INSTANTANÉE (Synchronisé avec les Paramètres) -->
+    <!-- ========================================================================= -->
+    <script>
+        if (localStorage.getItem('astra_dark_mode') === 'true') {
+            document.documentElement.classList.add('dark-mode-preload'); // Sécurité anti-flash
+        }
+    </script>
+
+    <!-- FontAwesome & EmailJS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <style>
+        :root {
+            --tech-blue: #0078D7;
+            --tech-bleu-fonce: #004E8C;
+            --tech-sidebar-bg: #003366;
+            --tech-orange: #FF8C00;
+            --tech-orange-hover: #e67e00;
+            --tech-white: #FFFFFF;
+            --tech-gris-clair: #F4F6F9;
+            --tech-card-bg: #ffffff;
+            --tech-gris-fonce: #333333;
+            --frontiere-technologique: #E0E0E0;
+            --largeur-sidebar: 280px;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --rayon-lg: 16px;
+            --rayon-md: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--tech-gris-clair);
+            color: var(--tech-gris-fonce);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* --- BARRE LATÉRALE --- */
+        .sidebar {
+            width: var(--largeur-sidebar);
+            background: linear-gradient(180deg, var(--tech-bleu-fonce) 0%, #003366 100%);
+            color: var(--tech-white);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-brand {
+            padding: 30px 24px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--tech-white);
+            border-radius: 8px;
+            transform: rotate(45deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-logo-inner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--tech-orange);
+            border-radius: 5px;
+            transform: rotate(-45deg);
+        }
+
+        .sidebar-title {
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-title span {
+            color: var(--tech-orange);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 24px 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+        }
+
+        .nav-menu li a,
+        .nav-menu a.back-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: var(--rayon-md);
+            transition: all 0.25s ease;
+        }
+
+        .nav-menu li a i,
+        .nav-menu a.back-link i {
+            margin-right: 14px;
+            font-size: 16px;
+            width: 22px;
+            text-align: center;
+            transition: transform 0.25s;
+        }
+
+        .nav-menu li a:hover,
+        .nav-menu a.back-link:hover {
+            color: var(--tech-white);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-menu li a:hover i,
+        .nav-menu a.back-link:hover i {
+            transform: translateX(3px);
+        }
+
+        .nav-menu li a.active {
+            color: var(--tech-white);
+            background-color: rgba(255, 255, 255, 0.12);
+            border-left: 4px solid var(--tech-orange);
+            font-weight: 600;
+        }
+
+        .nav-menu a.back-link {
+            margin-top: auto;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-footer {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-logout {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--tech-white);
+            border: none;
+            padding: 12px;
+            border-radius: var(--rayon-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: #ff4d4d;
+            box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
+        }
+
+        /* --- CONTENU PRINCIPAL --- */
+        .main-content {
+            margin-left: var(--largeur-sidebar);
+            flex: 1;
+            padding: 40px;
+            max-width: calc(100% - var(--largeur-sidebar));
+        }
+
+        .page-header {
+            margin-bottom: 35px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            color: var(--tech-bleu-fonce);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .page-subtitle {
+            color: #666;
+            margin-top: 6px;
+            font-size: 15px;
+            transition: color 0.3s ease;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        @media (max-width: 1300px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--tech-card-bg);
+            border-radius: var(--rayon-lg);
+            padding: 32px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--frontiere-technologique);
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-title {
+            font-size: 18px;
+            color: var(--tech-bleu-fonce);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--tech-gris-clair);
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--tech-gris-fonce);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        label i {
+            color: var(--tech-blue);
+            margin-right: 6px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid var(--frontiere-technologique);
+            border-radius: var(--rayon-md);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+            background-color: var(--tech-input-bg, #fafbfc);
+            color: var(--tech-gris-fonce);
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--tech-blue);
+            background-color: var(--tech-card-bg);
+            box-shadow: 0 0 0 4px rgba(0, 120, 215, 0.1);
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border-radius: var(--rayon-md);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background-color: var(--tech-orange);
+            color: var(--tech-white);
+            width: 100%;
+            box-shadow: 0 4px 14px rgba(255, 140, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--tech-orange-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(255, 140, 0, 0.4);
+        }
+
+        .token-display {
+            background: var(--tech-token-bg, #f8f9fa);
+            border: 2px dashed var(--tech-blue);
+            border-radius: var(--rayon-md);
+            padding: 20px;
+            text-align: center;
+            margin-top: 24px;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .token-value {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--tech-bleu-fonce);
+            letter-spacing: 2px;
+            word-break: break-all;
+            margin: 10px 0;
+            padding: 8px;
+            background: var(--tech-card-bg);
+            border-radius: 6px;
+            border: 1px solid var(--frontiere-technologique);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .status-message {
+            padding: 14px;
+            border-radius: var(--rayon-md);
+            margin-top: 20px;
+            display: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* --- TABLEAU CORRIGÉ ET OPTIMISÉ --- */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 5px;
+            border-radius: var(--rayon-md);
+            border: 1px solid var(--frontiere-technologique);
+            background: var(--tech-card-bg);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            table-layout: fixed;
+        }
+
+        th:nth-child(1), td:nth-child(1) { width: 34%; }
+        th:nth-child(2), td:nth-child(2) { width: 36%; }
+        th:nth-child(3), td:nth-child(3) { width: 18%; }
+        th:nth-child(4), td:nth-child(4) { width: 12%; text-align: center; }
+
+        th,
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--frontiere-technologique);
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: border-color 0.3s ease, color 0.3s ease;
+        }
+
+        th {
+            background-color: var(--tech-gris-clair);
+            color: var(--tech-bleu-fonce);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: var(--tech-row-hover, #fafbfc);
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-active {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        /* --- MODE SOMBRE (NIGHT MODE) SYNCHRONISÉ --- */
+        body.dark-mode {
+            --tech-gris-clair: #0b0f19;
+            --tech-card-bg: #0f172a;
+            --tech-gris-fonce: #f8fafc;
+            --frontiere-technologique: #1e293b;
+            --tech-bleu-fonce: #60a5fa;
+            --tech-input-bg: #1e293b;
+            --tech-token-bg: #1e293b;
+            --tech-row-hover: rgba(30, 41, 59, 0.4);
+        }
+
+        body.dark-mode .page-subtitle {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .status-success {
+            background-color: rgba(22, 163, 74, 0.2);
+            color: #4ade80;
+            border-color: rgba(22, 163, 74, 0.3);
+        }
+
+        body.dark-mode .status-error {
+            background-color: rgba(220, 38, 38, 0.2);
+            color: #f87171;
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+
+        body.dark-mode .badge-active {
+            background-color: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-inner"></div>
+            </div>
+            <div class="sidebar-title">ASTRA <span>TECH</span></div>
+        </div>
+
+        <ul class="nav-menu">
+            <li><a href="{% url 'astra:token_accueil' %}" class="active"><i class="fas fa-key"></i> Gestion des Tokens</a></li>
+            <li><a href="{% url 'astra:page_utilisateurs' %}"><i class="fas fa-users"></i> Utilisateurs</a></li>
+            <li><a href="{% url 'astra:permissions_page' %}"><i class="fas fa-shield-alt"></i> Permissions</a></li>
+            <li><a href="{% url 'astra:historiques_page' %}"><i class="fas fa-history"></i> Historique</a></li>
+            <li><a href="{% url 'astra:parametres_page' %}"><i class="fas fa-cog"></i> Paramètres</a></li>
+
+            <a href="#" onclick="history.back(); return false;" class="back-link">
+                <i class="fas fa-arrow-left text-white text-lg"></i>
+                <span>Retour</span>
+            </a>
+        </ul>
+
+        <div class="sidebar-footer">
+            <form action="{% url 'astra:logout' %}" method="post" style="width: 100%;">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout" id="sidebarLogout">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Génération & Envoi de Tokens d'Accès</h1>
+            <p class="page-subtitle">Créez des jetons de sécurité sécurisés et transmettez-les directement par email aux utilisateurs.</p>
+        </div>
+
+        <div class="grid-container">
+            <!-- Formulaire de Génération -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-shield-alt" style="color: var(--tech-orange);"></i> Générer un Token
+                </div>
+
+                <form id="tokenForm">
+                    <div class="form-group">
+                        <label for="recipientEmail"><i class="fas fa-envelope"></i> Email du destinataire</label>
+                        <select id="recipientEmail" required>
+                            <option value="" disabled selected>Sélectionner un utilisateur enregistré</option>
+                            {% for u in registered_users %}
+                                <option value="{{ u.email }}">{{ u.username }} ({{ u.email }})</option>
+                            {% empty %}
+                                <option value="" disabled>Aucun utilisateur trouvé</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userRole"><i class="fas fa-user-tag"></i> Rôle attribué</label>
+                        <select id="userRole">
+                            <option value="caissier">Caissier / Vendeur</option>
+                            <option value="gestionnaire_stock">Gestionnaire de Stock</option>
+                            <option value="admin">Administrateur</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="validity"><i class="fas fa-clock"></i> Durée de validité</label>
+                        <select id="validity">
+                            <option value="24">24 Heures</option>
+                            <option value="168">7 Jours</option>
+                            <option value="720">30 Jours</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btnGenerate">
+                        <i class="fas fa-paper-plane"></i> Générer et Envoyer par Email
+                    </button>
+                </form>
+
+                <div class="status-message" id="statusMessage"></div>
+
+                <div class="token-display" id="tokenDisplay">
+                    <div style="font-size: 13px;" class="page-subtitle">Token généré avec succès :</div>
+                    <div class="token-value" id="generatedTokenVal">ASTRA-XXXX-XXXX</div>
+                    <p style="font-size: 12px; color: #888;">Un email contenant ce token a été envoyé au destinataire.</p>
+                </div>
+            </div>
+
+            <!-- Historique des Tokens émis -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-history" style="color: var(--tech-blue);"></i> Tokens émis récemment
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Destinataire</th>
+                                <th>Token</th>
+                                <th>Rôle</th>
+                                <th style="text-align: center;">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tokenTableBody">
+                            {% if tokens %}
+                                {% for t in tokens %}
+                                <tr>
+                                    <td title="{{ t.email }}">{{ t.email }}</td>
+                                    <td title="{{ t.token }}"><strong style="font-family: 'Courier New', monospace; color: var(--tech-bleu-fonce);">{{ t.token }}</strong></td>
+                                    <td title="{{ t.role }}">{{ t.role }}</td>
+                                    <td style="text-align: center;"><span class="badge badge-active">Actif</span></td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr id="emptyRow">
+                                    <td colspan="4" style="text-align: center; color: #888; padding: 25px;">Aucun token émis pour le moment.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- SYNCHRONISATION AUTOMATIQUE DU MODE SOMBRE (CLÉ UNIFIÉE astra_dark_mode) ---
+            if (localStorage.getItem('astra_dark_mode') === 'true') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+
+            // --- LOGIQUE DES TOKENS ---
+            const tokenForm = document.getElementById('tokenForm');
+            const statusMessage = document.getElementById('statusMessage');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            const generatedTokenVal = document.getElementById('generatedTokenVal');
+            const tokenTableBody = document.getElementById('tokenTableBody');
+
+            function handleSuccess(email, token, role) {
+                statusMessage.className = "status-message status-success";
+                statusMessage.textContent = `Le token a été généré et envoyé avec succès à ${email} !`;
+                statusMessage.style.display = "block";
+
+                generatedTokenVal.textContent = token;
+                tokenDisplay.style.display = "block";
+
+                addTokenToHistory(email, token, role);
+                tokenForm.reset();
+            }
+
+            function addTokenToHistory(email, token, role) {
+                const emptyRow = document.getElementById('emptyRow');
+                if (emptyRow) {
+                    emptyRow.remove();
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td title="${email}">${email}</td>
+                    <td title="${token}"><strong style="font-family: 'Courier New', monospace; color: var(--tech-bleu-fonce);">${token}</strong></td>
+                    <td title="${role}">${role}</td>
+                    <td style="text-align: center;"><span class="badge badge-active">Actif</span></td>
+                `;
+                tokenTableBody.prepend(tr);
+            }
+
+            tokenForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                statusMessage.style.display = 'none';
+                tokenDisplay.style.display = 'none';
+
+                const email = document.getElementById('recipientEmail').value;
+                const role = document.getElementById('userRole').value;
+                const validity = document.getElementById('validity').value;
+
+                const btn = document.getElementById('btnGenerate');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+
+                fetch("{% url 'astra:generer_token_api' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        role: role,
+                        validite: validity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Générer et Envoyer par Email';
+
+                    if (data.status === 'success') {
+                        handleSuccess(email, data.token, role);
+                    } else {
+                        statusMessage.className = "status-message status-error";
+                        statusMessage.textContent = "Erreur : " + (data.message || "Une erreur est survenue.");
+                        statusMessage.style.display = "block";
+                    }
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Générer et Envoyer par Email';
+                    statusMessage.className = "status-message status-error";
+                    statusMessage.textContent = "Une erreur est survenue lors de la communication avec le serveur.";
+                    statusMessage.style.display = "block";
+                });
+            });
+        });
+    </script>
+</body>
+</html>

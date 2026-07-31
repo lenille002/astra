@@ -1,0 +1,131 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ASTRA TECH Connexion</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <link rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<div class="auth-section">
+
+
+<div class="auth-content">
+
+
+<div class="logo">
+
+<div class="logo-shape">
+<div class="logo-inner"></div>
+</div>
+
+
+<div class="logo-text">
+<div class="astra">
+ASTRA
+</div>
+
+<div class="tech">
+TECH
+</div>
+
+</div>
+
+</div>
+
+
+
+<h1 class="auth-title">
+Accès Sécurisé
+</h1>
+
+
+<p class="auth-subtitle">
+Veuillez entrer votre token
+</p>
+
+
+
+{% if error %}
+
+<div class="error-message">
+
+{{ error }}
+
+</div>
+
+{% endif %}
+
+
+
+<form method="POST" class="auth-form">
+
+{% csrf_token %}
+
+
+<div class="form-group">
+
+
+<label>
+Token d'accès
+</label>
+
+
+<div class="input-with-icon">
+
+<i class="fas fa-key"></i>
+
+
+<input 
+type="password"
+name="token"
+placeholder="Votre token"
+required>
+
+
+</div>
+
+</div>
+
+
+
+<button class="btn btn-primary">
+
+<i class="fas fa-lock-open"></i>
+
+Connexion
+
+</button>
+
+
+
+</form>
+ <div class="token-info">
+                    <p><i class="fas fa-info-circle"></i> Pour obtenir un token d'accès, contactez votre administrateur système.</p>
+                    <p>Tokens valides : <strong>ASTRA-2025-TECH</strong> ou <strong>1234</strong></p>
+                </div>
+
+</div>
+
+</div>
+
+
+</div>
+
+
+</body>
+
+</html>

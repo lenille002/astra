@@ -1,0 +1,43 @@
+/* RESET GLOBAL */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f4f6fb;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    color: #333;
+    overflow-x: hidden; /* Empêche le scroll horizontal dérangeant */
+}
+
+/* LAYOUT EN COLONNE (Header -> Contenu -> Footer) */
+.app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.app-header {
+    width: 100%;
+    flex-shrink: 0;
+    position: relative !important; /* Neutralise les position: absolute parasites */
+}
+
+.app-main {
+    flex: 1; /* Prend tout l'espace disponible au milieu */
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.app-footer {
+    width: 100%;
+    flex-shrink: 0;
+    position: relative !important;
+}

@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Astra Tech - Gestion des Fournisseurs
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/fournisseurs.css' %}">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- En-tête de la page -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+        <div>
+            <h1 class="text-3xl font-extrabold text-blue-900 tracking-tight">
+                Gestion des Fournisseurs
+            </h1>
+            <p class="text-sm text-gray-500 mt-1 font-medium">
+                Gérez le répertoire de vos partenaires commerciaux et leurs coordonnées.
+            </p>
+        </div>
+
+        <button id="addSupplierBtn" type="button" class="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 gap-2 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2">
+            <i class="fas fa-plus text-xs"></i>
+            <span>Nouveau Fournisseur</span>
+        </button>
+    </div>
+
+    <!-- Tableau des fournisseurs -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-blue-900 text-white">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Référence</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Raison Sociale</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Nom du Contact</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Téléphone</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Email</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliersTableBody" class="divide-y divide-gray-200 bg-white">
+                    {% if fournisseurs %}
+                        {% for f in fournisseurs %}
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-6 py-4 text-xs font-mono text-gray-500">{{ f.reference|default:f.id }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ f.nom }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ f.contact|default:"N/A" }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ f.telephone|default:"N/A" }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ f.email|default:"N/A" }}</td>
+                            <td class="px-6 py-4 text-sm text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <!-- Bouton Envoyer un e-mail -->
+                                    <button type="button" class="text-gray-400 hover:text-blue-600 p-1 transition" 
+                                            onclick="ouvrirModalEmail('{{ f.id }}', '{{ f.nom|escapejs }}', '{{ f.email|default:"" }}')" 
+                                            title="Envoyer un e-mail">
+                                        <i class="fas fa-envelope text-sm"></i>
+                                    </button>
+                                    <!-- Bouton Modifier -->
+                                    <button class="edit-btn text-gray-400 hover:text-blue-600 p-1 transition" 
+                                            data-id="{{ f.id }}" 
+                                            data-nom="{{ f.nom }}" 
+                                            data-contact="{{ f.contact }}" 
+                                            data-telephone="{{ f.telephone }}" 
+                                            data-email="{{ f.email }}" 
+                                            title="Modifier">
+                                        <i class="fas fa-pen text-sm"></i>
+                                    </button>
+                                    <!-- Bouton Supprimer -->
+                                    <button class="delete-btn text-gray-400 hover:text-red-600 p-1 transition" 
+                                            data-id="{{ f.id }}" 
+                                            data-url="{% url 'astra:supprimer_fournisseur' f.id %}"
+                                            title="Supprimer">
+                                        <i class="fas fa-trash text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                                <p class="text-sm font-medium">Aucun fournisseur enregistré.</p>
+                                <p class="text-xs text-gray-400 mt-1">Cliquez sur « Nouveau Fournisseur » pour commencer.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Formulaire Fournisseur (Ajout / Modification) -->
+<div id="supplierModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen p-4 bg-gray-900/60 backdrop-blur-sm modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg relative border border-gray-100">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
+                <h2 id="modalTitle" class="text-xl font-bold text-gray-900">Ajouter un fournisseur</h2>
+                <button id="closeModalBtn" type="button" class="text-gray-400 hover:text-gray-600 transition duration-200">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="supplierForm" method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" id="supplierId" name="supplier_id" value="">
+
+                <div>
+                    <label for="supplierName" class="block text-sm font-medium text-gray-700 mb-1">Raison Sociale / Nom entreprise</label>
+                    <input type="text" id="supplierName" name="nom" required placeholder="ex: Tech Distribution S.A." class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-sm p-2.5 border outline-none">
+                </div>
+
+                <div>
+                    <label for="supplierContact" class="block text-sm font-medium text-gray-700 mb-1">Personne de contact</label>
+                    <input type="text" id="supplierContact" name="contact" required placeholder="ex: Jean Dupont" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-sm p-2.5 border outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="supplierPhone" class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                        <input type="tel" id="supplierPhone" name="telephone" required placeholder="+237 ..." class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-sm p-2.5 border outline-none">
+                    </div>
+                    <div>
+                        <label for="supplierEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="supplierEmail" name="email" required placeholder="contact@entreprise.com" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-sm p-2.5 border outline-none">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100 mt-6">
+                    <button type="button" id="cancelModalBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-5 rounded-xl transition duration-200 text-sm">
+                        Annuler
+                    </button>
+                    <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 px-6 rounded-xl shadow-sm transition duration-200 text-sm">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modale d'envoi d'e-mail -->
+<div id="modalEmail" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen p-4 bg-gray-900/60 backdrop-blur-sm modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg relative border border-gray-100">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
+                <h3 class="text-xl font-bold text-gray-900">Envoyer un e-mail à <span id="nomFournisseurEmail" class="text-blue-900"></span></h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition duration-200" onclick="fermerModalEmail()">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="formEnvoyerEmail" onsubmit="envoyerEmailFournisseur(event)" class="space-y-4">
+                <input type="hidden" id="fournisseurIdInput">
+                
+                <div>
+                    <label for="sujetEmail" class="block text-sm font-medium text-gray-700 mb-1">Sujet :</label>
+                    <input type="text" id="sujetEmail" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-sm p-2.5 border outline-none" value="Message de la part de ASTRA TECH" required>
+                </div>
+                
+                <div>
+                    <label for="messageEmail" class="block text-sm font-medium text-gray-700 mb-1">Message :</label>
+                    <textarea id="messageEmail" rows="5" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 text-sm p-2.5 border outline-none" placeholder="Rédigez votre message professionnel ici..." required></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100 mt-6">
+                    <button type="button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-5 rounded-xl transition duration-200 text-sm" onclick="fermerModalEmail()">
+                        Annuler
+                    </button>
+                    <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white font-medium py-2.5 px-6 rounded-xl shadow-sm transition duration-200 text-sm">
+                        Envoyer l'e-mail
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modale de confirmation de suppression -->
+<div id="confirmModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen p-4 bg-gray-900/60 backdrop-blur-sm modal-backdrop">
+        <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-sm text-center border border-gray-100">
+            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-lg"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Confirmation</h3>
+            <p class="text-sm text-gray-500 mb-6">Êtes-vous sûr de vouloir supprimer ce fournisseur ?</p>
+            <div class="flex justify-center space-x-3">
+                <button id="confirmNoBtn" type="button" class="bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-xl hover:bg-gray-200 transition duration-200 text-sm">
+                    Annuler
+                </button>
+                <button id="confirmYesBtn" type="button" class="bg-red-600 text-white font-medium py-2 px-4 rounded-xl hover:bg-red-700 transition duration-200 text-sm">
+                    Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const suppliersTableBody = document.getElementById('suppliersTableBody');
+        const addSupplierBtn = document.getElementById('addSupplierBtn');
+        const supplierModal = document.getElementById('supplierModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const supplierForm = document.getElementById('supplierForm');
+        
+        const supplierIdInput = document.getElementById('supplierId');
+        const supplierNameInput = document.getElementById('supplierName');
+        const supplierContactInput = document.getElementById('supplierContact');
+        const supplierPhoneInput = document.getElementById('supplierPhone');
+        const supplierEmailInput = document.getElementById('supplierEmail');
+
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmYesBtn = document.getElementById('confirmYesBtn');
+        const confirmNoBtn = document.getElementById('confirmNoBtn');
+        
+        let supplierToDeleteUrl = null;
+
+        const openModal = (modal) => modal.classList.remove('hidden');
+        const closeModal = (modal) => modal.classList.add('hidden');
+
+        // Gestion de l'ouverture de la modale d'ajout
+        addSupplierBtn.addEventListener('click', () => {
+            modalTitle.textContent = "Ajouter un fournisseur";
+            supplierForm.reset();
+            supplierIdInput.value = '';
+            openModal(supplierModal);
+        });
+
+        closeModalBtn.addEventListener('click', () => closeModal(supplierModal));
+        cancelModalBtn.addEventListener('click', () => closeModal(supplierModal));
+        confirmNoBtn.addEventListener('click', () => closeModal(confirmModal));
+
+        // Soumission du formulaire (Ajout ou Modification)
+        supplierForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(supplierForm);
+
+            fetch("", {
+                method: "POST",
+                body: formData,
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(response => {
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    window.location.reload();
+                    return { status: "success" };
+                }
+            })
+            .then(data => {
+                if (data && data.status === "success") {
+                    closeModal(supplierModal);
+                    window.location.reload();
+                } else if (data && data.status === "error") {
+                    alert("Erreur : " + (data.message || "Une erreur est survenue."));
+                }
+            })
+            .catch(error => {
+                console.error("Erreur:", error);
+                supplierForm.submit();
+            });
+        });
+
+        // Gestion des clics sur Modifier / Supprimer dans le tableau
+        suppliersTableBody.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+
+            if (editBtn) {
+                modalTitle.textContent = "Modifier le fournisseur";
+                supplierIdInput.value = editBtn.dataset.id;
+                supplierNameInput.value = editBtn.dataset.nom;
+                supplierContactInput.value = editBtn.dataset.contact;
+                supplierPhoneInput.value = editBtn.dataset.telephone;
+                supplierEmailInput.value = editBtn.dataset.email;
+                openModal(supplierModal);
+            } else if (deleteBtn) {
+                supplierToDeleteUrl = deleteBtn.dataset.url;
+                openModal(confirmModal);
+            }
+        });
+
+        // Confirmation de suppression
+        confirmYesBtn.addEventListener('click', () => {
+            if (supplierToDeleteUrl) {
+                window.location.href = supplierToDeleteUrl;
+            }
+        });
+
+        // Fermer les modales en cliquant en dehors
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-backdrop')) {
+                closeModal(supplierModal);
+                closeModal(confirmModal);
+                fermerModalEmail();
+            }
+        });
+    });
+
+    // Fonctions spécifiques pour la gestion de l'e-mail
+    function ouvrirModalEmail(id, nom, email) {
+        if (!email || email === 'None' || email === 'N/A' || email === '') {
+            alert("Erreur : Ce fournisseur ne possède pas d'adresse e-mail valide enregistrée.");
+            return;
+        }
+        document.getElementById('fournisseurIdInput').value = id;
+        document.getElementById('nomFournisseurEmail').innerText = nom;
+        document.getElementById('modalEmail').classList.remove('hidden');
+    }
+
+    function fermerModalEmail() {
+        document.getElementById('modalEmail').classList.add('hidden');
+    }
+
+    function envoyerEmailFournisseur(event) {
+        event.preventDefault();
+        const id = document.getElementById('fournisseurIdInput').value;
+        const sujet = document.getElementById('sujetEmail').value;
+        const message = document.getElementById('messageEmail').value;
+
+        // URL dynamique générée via Django pour éviter les erreurs 404 / 500
+        const url = `{% url 'astra:envoyer_email_fournisseur' 0 %}`.replace('0', id);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `sujet=${encodeURIComponent(sujet)}&message=${encodeURIComponent(message)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                fermerModalEmail();
+                document.getElementById('formEnvoyerEmail').reset();
+            } else {
+                alert("Erreur : " + (data.message || "Une erreur est survenue."));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert("Une erreur technique est survenue lors de l'envoi de l'e-mail.");
+        });
+    }
+</script>
+{% endblock %}
