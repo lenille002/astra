@@ -775,38 +775,29 @@ def supprimer_fournisseur(request, pk):
     fournisseur.save()
     return redirect('astra:fournisseurs')
 
-
-@csrf_exempt
-@verifier_acces_strict
-def envoyer_email_fournisseur(request, fournisseur_id):
-    if request.method == 'POST':
-        try:
-            fournisseur = get_object_or_404(Fournisseur, id=fournisseur_id, is_active=True)
-            
-            sujet = request.POST.get('sujet', 'Message de la part de ASTRA TECH')
-            message = request.POST.get('message', '')
-
-            if not fournisseur.email:
-                return JsonResponse({'status': 'error', 'message': "Ce fournisseur n'a pas d'adresse e-mail enregistrée."}, status=400)
-
-            if not message:
-                return JsonResponse({'status': 'error', 'message': "Le message ne peut pas être vide."}, status=400)
-
-            send_mail(
-                subject=sujet,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[fournisseur.email],
-                fail_silently=False,
-            )
-
-            return JsonResponse({'status': 'success', 'message': f'E-mail envoyé avec succès à {fournisseur.nom} !'})
-
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
-
+def envoyer_mail_fournisseur(request, pk):
+    approvisionnement = get_object_or_404(Approvisionnement, pk=pk)
+    
+    # 1. Votre logique d'envoi d'e-mail
+    sujet = f"Commande / Approvisionnement n° {approvisionnement.id}"
+    message = "Bonjour, voici les détails de notre commande..."
+    expediteur = "votre_email@gmail.com"
+    destinataire = [approvisionnement.fournisseur.email] # Adaptez selon votre modèle
+    
+    try:
+        # Envoi effectif de l'e-mail
+        send_mail(sujet, message, expediteur, destinataire, fail_silently=False)
+        
+        # 2. AUTOMATISATION : Le mail est parti, on passe le statut à "Livrée" (ou "Commandée/En cours" selon votre logique, ici "Livrée")
+        approvisionnement.statut = 'Livrée'
+        approvisionnement.save()
+        
+        messages.success(request, "L'e-mail a été envoyé et l'approvisionnement est passé au statut 'Livrée' avec succès.")
+        
+    except Exception as e:
+        messages.error(request, f"Erreur lors de l'envoi du mail : {e}")
+        
+    return redirect('nom_de_la_vue_de_liste') # Redirigez vers la page appropriée
 
 # ==========================
 # GESTION DES APPROVISIONNEMENTS
@@ -858,31 +849,65 @@ def ajouter_approvisionnement(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
+@csrf_exempt
+@verifier_acces_strict
+def details_approvisionnement(request, pk):
+    appro = get_object_or_404(Approvisionnement, pk=pk)
+    data = {
+        'id': appro.id,
+        'reference': appro.reference,
+        'fournisseur_id': appro.fournisseur.id if appro.fournisseur else '',
+        'fournisseur': appro.fournisseur.nom if appro.fournisseur else 'N/A',
+        'date': str(appro.date_vente) if hasattr(appro, 'date_vente') else '',
+        'montant_total': appro.montant_total,
+        'statut': appro.statut,
+    }
+    return JsonResponse(data)
 
-
+@csrf_exempt
 @verifier_acces_strict
 def modifier_approvisionnement(request, pk):
-    appro = get_object_or_404(Approvisionnement, pk=pk, is_active=True)
+    appro = get_object_or_404(Approvisionnement, pk=pk)
     if request.method == 'POST':
-        fournisseur_id = request.POST.get('fournisseur')
-        nouveau_statut = request.POST.get('statut')
-        
-        if fournisseur_id:
-            appro.fournisseur = get_object_or_404(Fournisseur, pk=fournisseur_id, is_active=True)
-        if nouveau_statut:
-            appro.statut = nouveau_statut
+        try:
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+
+            # Ligne de débogage : imprime dans votre terminal ce que Django reçoit
+            print("DONNÉES REÇUES POUR MODIFICATION :", data)
+
+            fournisseur_id = data.get('fournisseur')
+            montant_total = data.get('montant_total')
+            statut = data.get('statut')
+
+            if fournisseur_id:
+                fournisseur = get_object_or_404(Fournisseur, id=fournisseur_id)
+                appro.fournisseur = fournisseur
             
-        appro.save()
-        
-    return redirect('astra:approvisionnements')
+            if montant_total is not None and montant_total != '':
+                appro.montant_total = montant_total
+                
+            if statut:
+                appro.statut = statut
 
-
-@verifier_acces_strict
+            appro.save()
+            return JsonResponse({'success': True, 'message': 'Approvisionnement modifié avec succès.'})
+        except Exception as e:
+            print("ERREUR LORS DE LA MODIFICATION :", str(e))
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            
+    return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
 def supprimer_approvisionnement(request, pk):
     appro = get_object_or_404(Approvisionnement, pk=pk)
-    appro.is_active = False  # Soft delete
-    appro.save()
-    return redirect('astra:approvisionnements')
+    if request.method == 'POST':
+        try:
+            appro.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
 
 @verifier_acces_strict
 def rapports(request):

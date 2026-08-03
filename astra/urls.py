@@ -32,9 +32,9 @@ urlpatterns = [
     # Approvisionnements
     path("approvisionnements/", views.approvisionnements, name="approvisionnements"),
     path("approvisionnements/ajouter/", views.ajouter_approvisionnement, name="ajouter_approvisionnement"),
-    path("approvisionnements/modifier/<int:pk>/", views.modifier_approvisionnement, name="modifier_approvisionnement"),
-    path("approvisionnements/supprimer/<int:pk>/", views.supprimer_approvisionnement, name="supprimer_approvisionnement"),
-
+    path('approvisionnements/<int:pk>/details/', views.details_approvisionnement, name='details_approvisionnement'),
+    path('approvisionnements/<int:pk>/modifier/', views.modifier_approvisionnement, name='modifier_approvisionnement'),
+    path('approvisionnements/<int:pk>/supprimer/', views.supprimer_approvisionnement, name='supprimer_approvisionnement'),
     # Rapports, Clients, Tokens & Divers
     path("rapports/", views.rapports, name="rapports"),
     path("propos/", views.propos, name="propos"),
