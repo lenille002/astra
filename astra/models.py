@@ -1,3 +1,4 @@
+from django.db.models import Max
 from datetime import timedelta
 from django.contrib import admin
 from django.contrib.auth.models import User
@@ -99,52 +100,36 @@ class Produit(models.Model):
 
     def __str__(self):
         return f"{self.nom} - {self.prix_vente} FCFA"
-
-
 # ==================================================
 # CLIENTS
 # ==================================================
 
 class Client(models.Model):
-    nom = models.CharField(
-        max_length=255
+    reference = models.CharField(
+        max_length=100, unique=True, blank=True, null=True
     )
-
-    telephone = models.CharField(
-        max_length=50,
-        blank=True
-    )
-
-    email = models.EmailField(
-        blank=True,
-        null=True
-    )
-
-    adresse = models.TextField(
-        blank=True
-    )
-
-    date_inscription = models.DateField(
-        auto_now_add=True,
-        null=True,
-        blank=True
-    )
-
+    nom = models.CharField(max_length=255)
+    telephone = models.CharField(max_length=50, blank=True)
+    email = models.EmailField(blank=True, null=True)
+    adresse = models.TextField(blank=True)
+    date_inscription = models.DateField(auto_now_add=True, null=True, blank=True)
     total_depense = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0
+        max_digits=12, decimal_places=2, default=0
     )
+    is_active = models.BooleanField(default=True)
 
-    is_active = models.BooleanField(
-        default=True
-    )
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            # Utilisation de Max('id') pour éviter les collisions si des clients ont été supprimés
+            max_id = Client.objects.all().aggregate(Max('id'))['id__max']
+            numero = (max_id or 0) + 1
+            self.reference = f'CLI-{numero:04d}'
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        statut = "Actif" if self.is_active else "Inactif"
-        return f"{self.nom} ({statut})"
-
-
+        statut = 'Actif' if self.is_active else 'Inactif'
+        return f'{self.nom} ({self.reference}) - {statut}'
 # ==================================================
 # VENTES
 # ==================================================
@@ -233,7 +218,6 @@ class LigneVente(models.Model):
 
 DetailVente = LigneVente
 
-
 # ==================================================
 # FOURNISSEURS
 # ==================================================
@@ -249,11 +233,12 @@ class Fournisseur(models.Model):
     )
 
     telephone = models.CharField(
-        max_length=50
+        max_length=50,
+        blank=True
     )
 
     email = models.EmailField(
-        unique=True
+        blank=True, null=True
     )
 
     is_active = models.BooleanField(
@@ -261,9 +246,8 @@ class Fournisseur(models.Model):
     )
 
     def __str__(self):
-        return self.nom
-
-
+        statut = 'Actif' if self.is_active else 'Inactif'
+        return f'{self.nom} - {statut}'
 # ==================================================
 # APPROVISIONNEMENTS
 # ==================================================

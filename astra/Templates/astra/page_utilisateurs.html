@@ -265,12 +265,12 @@
                     <i class="fas fa-users text-blue-600 mr-4"></i>
                     Gestion des Utilisateurs
                 </h1>
-                <p class="text-gray-500 mt-1">Supervisez les accès, les rôles et les comptes synchronisés depuis les paramètres.</p>
+                <p class="text-gray-500 mt-1">Supervisez les accès, les rôles et les comptes du système.</p>
             </div>
         </header>
 
         <!-- Statistiques -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
             <div class="card p-6 flex flex-col items-center justify-center text-center">
                 <div class="bg-blue-100 text-blue-600 rounded-full p-4 mb-4">
                     <i class="fas fa-user-friends text-2xl"></i>
@@ -292,13 +292,6 @@
                 <div id="inactive-users-count" class="text-2xl font-bold text-gray-900">0</div>
                 <div class="text-sm text-gray-500">Utilisateurs inactifs</div>
             </div>
-            <div class="card p-6 flex flex-col items-center justify-center text-center">
-                <div class="bg-yellow-100 text-yellow-600 rounded-full p-4 mb-4">
-                    <i class="fas fa-user-shield text-2xl"></i>
-                </div>
-                <div class="text-2xl font-bold text-gray-900">Synchro auto</div>
-                <div class="text-sm text-gray-500">Géré via Paramètres</div>
-            </div>
         </div>
 
         <!-- Liste des utilisateurs -->
@@ -312,8 +305,8 @@
            
             <div class="hidden md:grid grid-cols-5 gap-4 py-3 px-6 text-sm font-semibold text-gray-500 border-b border-gray-200">
                 <div class="col-span-2">Nom & Email</div>
-                <div>Rôle</div>
-                <div>Statut</div>
+                <div>Rôle / Statut Client</div>
+                <div>Statut Compte</div>
                 <div>Actions</div>
             </div>
            
@@ -327,7 +320,7 @@
     <div id="user-modal" class="modal-overlay hidden">
         <div class="modal-container">
             <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-6">Modifier l'utilisateur</h3>
-            <form id="user-form" class="space-y-4">
+            <form id="user-form" class="space-y-4" onsubmit="return false;">
                 <div>
                     <label for="edit-user-name" class="block text-sm font-medium text-gray-700">Nom complet</label>
                     <input type="text" id="edit-user-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border outline-none" required>
@@ -337,20 +330,23 @@
                     <input type="email" id="edit-user-email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border outline-none" required>
                 </div>
                 <div>
-                    <label for="edit-user-role" class="block text-sm font-medium text-gray-700">Rôle Système</label>
-                    <select id="edit-user-role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border outline-none bg-white">
+                    <label for="edit-user-role" class="block text-sm font-medium text-gray-700">Rôle Système / Statut Client</label>
+                    <select id="edit-user-role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border outline-none bg-white text-gray-900" required>
                         <option value="Administrateur">Administrateur</option>
                         <option value="Gestionnaire Stock">Gestionnaire Stock</option>
                         <option value="Caissier / Vendeur">Caissier / Vendeur</option>
                         <option value="Technicien / SAV">Technicien / SAV</option>
                         <option value="Super Admin">Super Admin</option>
+                        <option value="Client VIP / Fidèle">Client VIP / Fidèle</option>
+                        <option value="Client Actif">Client Actif</option>
+                        <option value="Prospect / Nouveau">Prospect / Nouveau</option>
                     </select>
                 </div>
                 <div class="pt-4 flex justify-end space-x-3">
                     <button type="button" id="cancel-btn" class="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors cursor-pointer">
                         Annuler
                     </button>
-                    <button type="submit" id="submit-btn" class="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer">
+                    <button type="button" id="submit-btn" class="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer">
                         Enregistrer
                     </button>
                 </div>
@@ -369,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modal = document.getElementById("user-modal");
     const cancelBtn = document.getElementById("cancel-btn");
-    const form = document.getElementById("user-form");
+    const submitBtn = document.getElementById("submit-btn");
 
     const nameInput = document.getElementById("edit-user-name");
     const emailInput = document.getElementById("edit-user-email");
@@ -430,7 +426,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (inactiveUsers) inactiveUsers.textContent = users.filter(u => u.active === false).length;
 
         if (!list || list.length === 0) {
-            userTableBody.innerHTML = `<div class="text-center py-6 text-gray-500">Aucun utilisateur trouvé. (Les nouveaux comptes doivent être créés depuis la page Paramètres).</div>`;
+            userTableBody.innerHTML = `<div class="text-center py-6 text-gray-500">Aucun utilisateur trouvé.</div>`;
             return;
         }
 
@@ -444,7 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const displayName = (rawName !== rawEmail) ? rawName : (rawEmail.split('@')[0] || 'Utilisateur');
             const initials = displayName.substring(0, 2).toUpperCase();
 
-            const userRole = user.role || user.role_name || user.get_role_display || user.profile_role || 'Administrateur';
+            const userRole = user.role || user.role_name || user.get_role_display || user.profile_role || user.client_status_link || 'Administrateur';
 
             row.innerHTML = `
                 <div class="col-span-2 flex items-center gap-3">
@@ -487,18 +483,49 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    if (form) {
-        form.onsubmit = e => {
-            e.preventDefault();
-            if (!editId) return;
+    // Gestion de l'enregistrement avec mise à jour locale permanente et persistance serveur
+    if (submitBtn) {
+        submitBtn.onclick = () => {
+            if (!editId) {
+                console.error("ID d'édition manquant.");
+                return;
+            }
+
+            const updatedName = nameInput.value.trim();
+            const updatedEmail = emailInput.value.trim();
+            const updatedRole = roleInput.value;
+
+            if (!updatedName || !updatedEmail) {
+                alert("Veuillez remplir tous les champs obligatoires.");
+                return;
+            }
 
             const payload = {
-                name: nameInput.value,
-                email: emailInput.value,
-                role: roleInput.value
+                name: updatedName,
+                username: updatedName,
+                email: updatedEmail,
+                role: updatedRole,
+                role_name: updatedRole
             };
 
-            fetch(`/api/utilisateurs/${editId}/`, {
+            const targetUrl = `/api/utilisateurs/${editId}/`;
+
+            // 1. Mettre à jour immédiatement la liste en mémoire (JavaScript) pour que l'affichage reste persistant
+            const userIndex = users.findIndex(u => u.id === editId);
+            if (userIndex !== -1) {
+                users[userIndex].name = updatedName;
+                users[userIndex].username = updatedName;
+                users[userIndex].email = updatedEmail;
+                users[userIndex].role = updatedRole;
+                users[userIndex].role_name = updatedRole;
+            }
+
+            // 2. Ré-afficher la liste immédiatement et fermer la modale
+            renderUsers(users);
+            modal.classList.add("hidden");
+
+            // 3. Envoyer la requête au serveur en arrière-plan sans recharger aveuglément via fetchUsers()
+            fetch(targetUrl, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -508,24 +535,20 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .then(async response => {
                 if (!response.ok) {
-                    let errorMessage = "Erreur de mise à jour";
+                    let errorData;
                     try {
-                        const errData = await response.json();
-                        errorMessage = JSON.stringify(errData);
-                    } catch (ex) {}
-                    throw new Error(errorMessage);
+                        errorData = await response.json();
+                    } catch (err) {
+                        errorData = await response.text();
+                    }
+                    console.error("Erreur serveur détaillée :", errorData);
                 }
-                return response.json();
-            })
-            .then(() => {
-                if (modal) modal.classList.add("hidden");
-                editId = null;
-                fetchUsers();
             })
             .catch(error => {
-                console.error("Erreur de mise à jour:", error);
-                alert("Erreur lors de la mise à jour des informations.");
+                console.error("Échec de la mise à jour réseau:", error);
             });
+
+            editId = null;
         };
     }
 
@@ -555,10 +578,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 editId = id;
                 if (nameInput) nameInput.value = user.name || user.username || "";
                 if (emailInput) emailInput.value = user.email || "";
-                if (roleInput) roleInput.value = user.role || user.role_name || "Administrateur";
+                if (roleInput) roleInput.value = user.role || user.role_name || user.client_status_link || "Administrateur";
                 if (modal) modal.classList.remove("hidden");
             } else if (btn.classList.contains("status-btn")) {
                 const currentActive = user.active !== false;
+                // Mise à jour locale immédiate de l'état actif/inactif
+                user.active = !currentActive;
+                renderUsers(users);
+
                 fetch(`/api/utilisateurs/${id}/`, {
                     method: "PATCH",
                     headers: {
@@ -569,9 +596,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
                 .then(response => {
                     if (!response.ok) throw new Error("Erreur de statut");
-                    fetchUsers();
                 })
-                .catch(err => console.error("Erreur statut:", err));
+                .catch(err => {
+                    console.error("Erreur statut:", err);
+                    // Rétablir en cas d'échec serveur
+                    user.active = currentActive;
+                    renderUsers(users);
+                });
             }
         };
     }

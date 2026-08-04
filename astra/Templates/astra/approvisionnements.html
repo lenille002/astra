@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 
 {% block title %}
 Astra Tech - Gestion des Approvisionnements
@@ -8,7 +9,9 @@ Astra Tech - Gestion des Approvisionnements
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    html, body, .main-container {
+    html,
+    body,
+    .main-container {
         background-color: #ffffff !important;
         background: #ffffff !important;
     }
@@ -20,9 +23,10 @@ Astra Tech - Gestion des Approvisionnements
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- En-tête -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+        <div
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
             <div>
-                <h1 class="text-3xl font-extrabold text-blue-900 tracking-tight">
+                <h1 class="text-3xl font-extrabold text-blue-950 tracking-tight">
                     Gestion des Approvisionnements
                 </h1>
                 <p class="text-sm text-gray-600 mt-1 font-medium">
@@ -30,7 +34,8 @@ Astra Tech - Gestion des Approvisionnements
                 </p>
             </div>
 
-            <button id="addApproBtn" type="button" class="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 gap-2 focus:outline-none">
+            <button id="addApproBtn" type="button"
+                class="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 gap-2 focus:outline-none">
                 <i class="fas fa-plus text-xs"></i>
                 <span>Nouvel approvisionnement</span>
             </button>
@@ -42,7 +47,8 @@ Astra Tech - Gestion des Approvisionnements
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
                     <i class="fas fa-search"></i>
                 </span>
-                <input type="text" id="searchInput" placeholder="Rechercher par référence ou fournisseur..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 shadow-sm text-gray-900 placeholder-gray-400 transition">
+                <input type="text" id="searchInput" placeholder="Rechercher par référence ou fournisseur..."
+                    class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 shadow-sm text-gray-900 placeholder-gray-400 transition">
             </div>
         </div>
 
@@ -50,7 +56,7 @@ Astra Tech - Gestion des Approvisionnements
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-blue-900 text-white">
+                    <thead class="bg-blue-950 text-white">
                         <tr>
                             <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Référence</th>
                             <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Fournisseur</th>
@@ -62,46 +68,65 @@ Astra Tech - Gestion des Approvisionnements
                     </thead>
                     <tbody id="approTableBody" class="divide-y divide-gray-200 bg-white">
                         {% if approvisionnements %}
-                            {% for a in approvisionnements %}
-                            <tr class="appro-row hover:bg-gray-50 transition duration-150">
-                                <td class="px-6 py-4 text-xs font-mono text-gray-500 reference-cell">{{ a.reference }}</td>
-                                <td class="px-6 py-4 text-sm font-medium text-gray-900 fournisseur-cell">{{ a.fournisseur.nom }}</td>
-                                <!-- Correction ici : Utilisation de date_creation ou date_vente selon votre modèle -->
-                                <td class="px-6 py-4 text-sm text-gray-600">
-                                    {{ a.date_vente|default:a.date_creation|default:"--" }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 font-semibold">{{ a.montant_total }} FCFA</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <span class="px-3 py-1 text-xs font-medium rounded-full {% if a.statut == 'livree' %}bg-green-100 text-green-700{% else %}bg-purple-100 text-purple-700{% endif %}">
-                                        {{ a.statut }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-right">
-                                    <div class="flex items-center justify-end space-x-2">
-                                        {% if a.statut == 'en_attente' %}
-                                        <button class="text-gray-400 hover:text-green-600 p-1 transition btnValider" data-id="{{ a.id }}" type="button" title="Valider la réception">
+                        {% for a in approvisionnements %}
+                        <tr class="appro-row hover:bg-gray-50 transition duration-150">
+                            <td class="px-6 py-4 text-xs font-mono text-gray-500 reference-cell">APP-{{ a.id }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 fournisseur-cell">
+                                {{ a.fournisseur }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                {{ a.date_vente|default:a.date_creation|default:"--" }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 font-semibold">{{ a.montant_total }} FCFA</td>
+                            <td class="px-6 py-4 text-sm">
+                                <span
+                                    class="px-3 py-1 text-xs font-medium rounded-full {% if a.statut == 'livree' %}bg-green-100 text-green-700{% else %}bg-purple-100 text-purple-700{% endif %}">
+                                    {{ a.statut }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    {% if a.statut == 'en_attente' %}
+                                    <form action="/approvisionnements/{{ a.id }}/modifier/" method="POST"
+                                        class="inline form-validation">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="fournisseur"
+                                            value="{% if a.fournisseur.id %}{{ a.fournisseur.id }}{% else %}{{ a.fournisseur }}{% endif %}">
+                                        <input type="hidden" name="montant_total"
+                                            value="{{ a.montant_total|unlocalize|stringformat:'s' }}">
+                                        <input type="hidden" name="statut" value="livree">
+                                        <button type="submit" class="text-gray-400 hover:text-green-600 p-1 transition"
+                                            title="Valider la réception">
                                             <i class="fas fa-check-circle text-sm"></i>
                                         </button>
-                                        {% endif %}
-                                        <button class="text-gray-400 hover:text-blue-600 p-1 transition btnVoir" data-id="{{ a.id }}" type="button" title="Voir">
-                                            <i class="fas fa-eye text-sm"></i>
-                                        </button>
-                                        <button class="text-gray-400 hover:text-blue-600 p-1 transition btnModifier" data-id="{{ a.id }}" data-fournisseur="{{ a.fournisseur.id }}" data-montant="{{ a.montant_total }}" data-statut="{{ a.statut }}" type="button" title="Modifier">
-                                            <i class="fas fa-pen text-sm"></i>
-                                        </button>
-                                        <button class="text-gray-400 hover:text-red-600 p-1 transition btnSupprimer" data-id="{{ a.id }}" type="button" title="Supprimer">
-                                            <i class="fas fa-trash text-sm"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                                    </form>
+                                    {% endif %}
+
+                                    <button class="text-gray-400 hover:text-blue-900 p-1 transition btnVoir"
+                                        data-id="{{ a.id }}" type="button" title="Voir">
+                                        <i class="fas fa-eye text-sm"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-blue-900 p-1 transition btnModifier"
+                                        data-id="{{ a.id }}"
+                                        data-fournisseur="{% if a.fournisseur.id %}{{ a.fournisseur.id }}{% else %}{{ a.fournisseur }}{% endif %}"
+                                        data-montant="{{ a.montant_total|unlocalize|stringformat:'s' }}"
+                                        data-statut="{{ a.statut }}" type="button" title="Modifier">
+                                        <i class="fas fa-pen text-sm"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-red-600 p-1 transition btnSupprimer"
+                                        data-id="{{ a.id }}" type="button" title="Supprimer">
+                                        <i class="fas fa-trash text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
                         {% else %}
-                            <tr>
-                                <td colspan="6" class="px-6 py-10 text-center text-gray-500">
-                                    <p class="text-sm font-medium">Aucun approvisionnement enregistré.</p>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                                <p class="text-sm font-medium">Aucun approvisionnement enregistré.</p>
+                            </td>
+                        </tr>
                         {% endif %}
                     </tbody>
                 </table>
@@ -113,41 +138,50 @@ Astra Tech - Gestion des Approvisionnements
 <!-- Modale Nouvel approvisionnement -->
 <div id="approModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
     <div class="flex items-center justify-center min-h-screen p-4 bg-gray-900/60 backdrop-blur-sm modal-backdrop">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg relative border border-gray-100 text-gray-900">
+        <div
+            class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg relative border border-gray-100 text-gray-900">
             <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
-                <h2 class="text-xl font-bold text-blue-900"><i class="fas fa-truck-loading"></i> Nouvel approvisionnement</h2>
-                <button id="closeModalBtn" type="button" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+                <h2 class="text-xl font-bold text-blue-950"><i class="fas fa-truck-loading"></i> Nouvel
+                    approvisionnement</h2>
+                <button id="closeModalBtn" type="button" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times text-lg"></i></button>
             </div>
-            
+
             <form id="approForm" method="POST" class="space-y-4">
                 {% csrf_token %}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fournisseur</label>
-                    <select name="fournisseur" required class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900">
+                    <select name="fournisseur" required
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900">
                         <option value="" disabled selected>Choisir un fournisseur</option>
                         {% for f in fournisseurs %}
-                            <option value="{{ f.id }}">{{ f.nom }}</option>
+                        <option value="{{ f.id }}">{{ f }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input type="datetime-local" name="date_vente" required class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border text-gray-900 bg-white">
+                    <input type="datetime-local" name="date_vente" required
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border text-gray-900 bg-white">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Montant</label>
-                    <input type="number" step="0.01" name="montant_total" required placeholder="0.00" class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border text-gray-900 bg-white">
+                    <input type="number" step="0.01" name="montant_total" required placeholder="0.00"
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border text-gray-900 bg-white">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                    <select name="statut" required class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900">
+                    <select name="statut" required
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900">
                         <option value="en_attente">En attente</option>
                         <option value="livree">Livrée</option>
                     </select>
                 </div>
                 <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100 mt-6">
-                    <button type="button" id="cancelModalBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-5 rounded-xl text-sm">Annuler</button>
-                    <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white font-medium py-2.5 px-6 rounded-xl text-sm">Enregistrer</button>
+                    <button type="button" id="cancelModalBtn"
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-5 rounded-xl text-sm">Annuler</button>
+                    <button type="submit"
+                        class="bg-blue-950 hover:bg-blue-900 text-white font-medium py-2.5 px-6 rounded-xl text-sm">Enregistrer</button>
                 </div>
             </form>
         </div>
@@ -157,10 +191,12 @@ Astra Tech - Gestion des Approvisionnements
 <!-- MODAL DETAILS -->
 <div id="modalDetails" class="fixed inset-0 z-50 overflow-y-auto hidden">
     <div class="flex items-center justify-center min-h-screen p-4 bg-gray-900/60 backdrop-blur-sm modal-backdrop">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md relative border border-gray-100 text-gray-900">
+        <div
+            class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md relative border border-gray-100 text-gray-900">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
-                <h2 class="text-lg font-bold text-blue-900">Détails de l'approvisionnement</h2>
-                <button id="btnFermerDetails" type="button" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+                <h2 class="text-lg font-bold text-blue-950">Détails de l'approvisionnement</h2>
+                <button id="btnFermerDetails" type="button" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times text-lg"></i></button>
             </div>
             <div id="detailsContent" class="text-sm text-gray-700 space-y-2">Chargement...</div>
         </div>
@@ -170,35 +206,45 @@ Astra Tech - Gestion des Approvisionnements
 <!-- MODAL MODIFIER -->
 <div id="modalModifier" class="fixed inset-0 z-50 overflow-y-auto hidden">
     <div class="flex items-center justify-center min-h-screen p-4 bg-gray-900/60 backdrop-blur-sm modal-backdrop">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg relative border border-gray-100 text-gray-900">
+        <div
+            class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-lg relative border border-gray-100 text-gray-900">
             <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
-                <h2 class="text-xl font-bold text-blue-900">Modifier l'approvisionnement</h2>
-                <button id="btnFermerModifier" type="button" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+                <h2 class="text-xl font-bold text-blue-950">Modifier l'approvisionnement</h2>
+                <button id="btnFermerModifier" type="button" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times text-lg"></i></button>
             </div>
             <form id="formModifierAppro" class="space-y-4">
                 <input type="hidden" id="modifierApproId">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fournisseur</label>
-                    <select id="modifierFournisseur" class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900" required>
+                    <select id="modifierFournisseur"
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900"
+                        required>
                         {% for f in fournisseurs %}
-                            <option value="{{ f.id }}">{{ f.nom }}</option>
+                        <option value="{{ f.id }}">{{ f }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Montant total (FCFA)</label>
-                    <input type="number" step="any" id="modifierMontant" class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border text-gray-900 bg-white" required>
+                    <input type="number" step="any" id="modifierMontant"
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border text-gray-900 bg-white"
+                        required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                    <select id="modifierStatut" class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900" required>
+                    <select id="modifierStatut"
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm p-2.5 border bg-white text-gray-900"
+                        required>
                         <option value="en_attente">En attente</option>
                         <option value="livree">Livrée</option>
                     </select>
                 </div>
                 <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100 mt-6">
-                    <button type="button" id="btnAnnulerModifier" class="bg-gray-100 text-gray-700 font-medium py-2.5 px-5 rounded-xl text-sm">Annuler</button>
-                    <button type="submit" class="bg-blue-900 text-white font-medium py-2.5 px-6 rounded-xl text-sm">Enregistrer</button>
+                    <button type="button" id="btnAnnulerModifier"
+                        class="bg-gray-100 text-gray-700 font-medium py-2.5 px-5 rounded-xl text-sm">Annuler</button>
+                    <button type="submit"
+                        class="bg-blue-950 text-white font-medium py-2.5 px-6 rounded-xl text-sm">Enregistrer</button>
                 </div>
             </form>
         </div>
@@ -210,14 +256,12 @@ Astra Tech - Gestion des Approvisionnements
         const openModal = (m) => m.classList.remove('hidden');
         const closeModal = (m) => m.classList.add('hidden');
 
-        // Gestion modale ajout
         const addBtn = document.getElementById('addApproBtn');
         const approModal = document.getElementById('approModal');
-        if(addBtn) addBtn.addEventListener('click', () => openModal(approModal));
+        if (addBtn) addBtn.addEventListener('click', () => openModal(approModal));
         document.getElementById('closeModalBtn')?.addEventListener('click', () => closeModal(approModal));
         document.getElementById('cancelModalBtn')?.addEventListener('click', () => closeModal(approModal));
 
-        // Fermeture globale des modales
         window.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-backdrop')) {
                 closeModal(approModal);
@@ -226,45 +270,77 @@ Astra Tech - Gestion des Approvisionnements
             }
         });
 
-        // Validation rapide
-        document.querySelectorAll('.btnValider').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!confirm("Marquer comme 'Livrée' ?")) return;
-                const id = this.getAttribute('data-id');
-                const row = this.closest('tr');
-                const montant = row.querySelector('.font-semibold').textContent.replace(' FCFA', '').trim();
-                const fournisseurId = row.querySelector('.btnModifier').getAttribute('data-fournisseur');
-                const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        document.querySelectorAll('.form-validation').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const url = this.getAttribute('action');
+                const csrf = this.querySelector('[name=csrfmiddlewaretoken]').value;
+                const formData = new FormData(this);
 
-                fetch(`/astra/approvisionnements/${id}/modifier/`, {
+                fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                    body: JSON.stringify({ montant_total: montant, fournisseur: fournisseurId, statut: 'livree' })
+                    headers: {
+                        'X-CSRFToken': csrf,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams(formData)
                 })
-                .then(res => res.json())
-                .then(data => { if(data.success) location.reload(); else alert("Erreur"); });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) location.reload();
+                        else alert("Erreur lors de la validation.");
+                    })
+                    .catch(() => alert("Erreur de connexion au serveur."));
             });
         });
 
-        // Suppression
+        document.querySelectorAll('.btnVoir').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const detailsContent = document.getElementById('detailsContent');
+                detailsContent.innerHTML = "Chargement...";
+                openModal(document.getElementById('modalDetails'));
+
+                fetch(`/approvisionnements/${id}/details/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            detailsContent.innerHTML = `
+                                <p><strong>Référence :</strong> ${data.reference || 'N/A'}</p>
+                                <p><strong>Fournisseur :</strong> ${data.fournisseur || 'N/A'}</p>
+                                <p><strong>Date :</strong> ${data.date || 'N/A'}</p>
+                                <p><strong>Montant :</strong> ${data.montant_total} FCFA</p>
+                                <p><strong>Statut :</strong> ${data.statut}</p>
+                            `;
+                        } else {
+                            detailsContent.innerHTML = "<p class='text-red-500'>Impossible de charger les détails.</p>";
+                        }
+                    })
+                    .catch(() => {
+                        detailsContent.innerHTML = "<p class='text-red-500'>Erreur de connexion au serveur.</p>";
+                    });
+            });
+        });
+
+        document.getElementById('btnFermerDetails')?.addEventListener('click', () => closeModal(document.getElementById('modalDetails')));
+
         document.querySelectorAll('.btnSupprimer').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 if (!confirm("Voulez-vous supprimer cet élément ?")) return;
                 const id = this.getAttribute('data-id');
                 const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-                fetch(`/astra/approvisionnements/${id}/supprimer/`, {
+                fetch(`/approvisionnements/${id}/supprimer/`, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': csrf }
                 })
-                .then(res => res.json())
-                .then(data => { if(data.success) location.reload(); else alert("Erreur"); });
+                    .then(res => res.json())
+                    .then(data => { if (data.success) location.reload(); else alert("Erreur"); });
             });
         });
 
-        // Modification
         document.querySelectorAll('.btnModifier').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 document.getElementById('modifierApproId').value = this.getAttribute('data-id');
                 document.getElementById('modifierMontant').value = this.getAttribute('data-montant');
                 document.getElementById('modifierFournisseur').value = this.getAttribute('data-fournisseur');
@@ -273,7 +349,7 @@ Astra Tech - Gestion des Approvisionnements
             });
         });
 
-        document.getElementById('formModifierAppro')?.addEventListener('submit', function(e) {
+        document.getElementById('formModifierAppro')?.addEventListener('submit', function (e) {
             e.preventDefault();
             const id = document.getElementById('modifierApproId').value;
             const montant_total = document.getElementById('modifierMontant').value;
@@ -281,13 +357,13 @@ Astra Tech - Gestion des Approvisionnements
             const statut = document.getElementById('modifierStatut').value;
             const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-            fetch(`/astra/approvisionnements/${id}/modifier/`, {
+            fetch(`/approvisionnements/${id}/modifier/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
                 body: JSON.stringify({ montant_total, fournisseur, statut })
             })
-            .then(res => res.json())
-            .then(data => { if(data.success) location.reload(); else alert("Erreur"); });
+                .then(res => res.json())
+                .then(data => { if (data.success) location.reload(); else alert("Erreur lors de la modification"); });
         });
 
         document.getElementById('btnFermerModifier')?.addEventListener('click', () => closeModal(document.getElementById('modalModifier')));

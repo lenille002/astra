@@ -10,12 +10,14 @@
         white-space: nowrap;
         width: 1%;
     }
+
     .actions-cell {
         display: flex;
         gap: 6px;
         align-items: center;
         justify-content: flex-start;
     }
+
     .actions-cell button {
         cursor: pointer;
         border: none;
@@ -27,14 +29,33 @@
         font-size: 14px;
         transition: background 0.2s;
     }
-    .btn-view { background-color: #e0f2fe; color: #0284c7; }
-    .btn-view:hover { background-color: #bae6fd; }
-    
-    .btn-edit { background-color: #fef9c3; color: #ca8a04; }
-    .btn-edit:hover { background-color: #fef08a; }
-    
-    .btn-delete { background-color: #fee2e2; color: #dc2626; }
-    .btn-delete:hover { background-color: #fecaca; }
+
+    .btn-view {
+        background-color: #e0f2fe;
+        color: #0284c7;
+    }
+
+    .btn-view:hover {
+        background-color: #bae6fd;
+    }
+
+    .btn-edit {
+        background-color: #fef9c3;
+        color: #ca8a04;
+    }
+
+    .btn-edit:hover {
+        background-color: #fef08a;
+    }
+
+    .btn-delete {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .btn-delete:hover {
+        background-color: #fecaca;
+    }
 
     .search-filter-container {
         display: flex;
@@ -46,6 +67,7 @@
         flex: 1;
         max-width: 350px;
     }
+
     .search-filter-container input {
         border: none;
         background: transparent;
@@ -54,40 +76,91 @@
         padding: 6px;
         font-size: 14px;
     }
+
     .search-filter-container i {
         color: #64748b;
     }
 
-    @media print {
-        body * {
-            visibility: hidden;
-        }
-        #printArea, #printArea * {
-            visibility: visible;
-        }
-        #printArea {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 20px;
-            background: white;
-            color: black;
-        }
+    /* Style du conteneur des deux reçus pour l'aperçu */
+    .recu-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
+
+    .recu-item {
+        border-bottom: 2px dashed #94a3b8;
+        padding-bottom: 10px;
+    }
+
+    .recu-item:last-child {
+        border-bottom: none;
+    }
+@media print {
+    /* 1. Configuration de la page */
+    @page {
+        size: portrait;
+        margin: 5mm;
+    }
+
+    /* 2. Masquer tout le corps de la page par défaut */
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* 3. Rendre visible uniquement la zone d'impression et tout son contenu */
+    #printArea, #printArea * {
+        visibility: visible !important;
+    }
+
+    /* 4. Forcer l'affichage de la modale et de son conteneur en plein écran d'impression */
+    #modalDetails, .modal-content {
+        visibility: visible !important;
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: white !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 5. Cacher les éléments superflus de la modale (boutons de fermeture, etc.) */
+    .modal-header,
+    .modal-actions,
+    .modal-footer,
+    #btnFermerDetails,
+    #btnImprimerRecu {
+        display: none !important;
+    }
+
+    /* 6. Mise en forme compacte du reçu pour tenir sur une seule page */
+    .recu-container {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        width: 100% !important;
+    }
+
+    .recu-item {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        font-size: 9px !important;
+        padding-bottom: 4px !important;
+        margin-bottom: 4px !important;
+        border-bottom: 1px dashed #000 !important;
+    }
+
+    .recu-item:last-child {
+        border-bottom: none !important;
+        margin-bottom: 0 !important;
+    }
+}
 </style>
 
 <main class="page-vente">
-
-    <!-- MESSAGE INFORMATION STOCK -->
-    <section class="info-message">
-        <i class="fas fa-link"></i>
-        <div>
-            <strong>Liaison automatique :</strong>
-            Chaque vente diminue automatiquement le stock dans la page Stocks.
-            <p>{{ produits|length }} produit(s) disponible(s) en stock</p>
-        </div>
-    </section>
 
     <!-- STATISTIQUES -->
     <section class="stats-container">
@@ -103,21 +176,18 @@
 
         <div class="stat-card">
             <h4>Produits vendus</h4>
-            <span id="statProduits">0</span>
+            <span id="statProduits">{{ produits_vendus_count|default:"0" }}</span>
         </div>
     </section>
 
     <!-- BOUTONS ACTION & RECHERCHE -->
-    <section class="actions" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;">
+    <section class="actions"
+        style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button id="btnNouvelleVente" class="btn-primary" type="button">
                 <i class="fas fa-plus"></i> Nouvelle vente
             </button>
 
-            <button id="btnRafraichir" class="btn-secondary" type="button" onclick="location.reload();">
-                <i class="fas fa-sync-alt"></i> Rafraîchir
-            </button>
-            
             <a href="{% url 'astra:stock' %}" class="btn-stock">
                 <i class="fas fa-boxes"></i> Voir le stock
             </a>
@@ -149,41 +219,41 @@
                 </thead>
                 <tbody id="tableBody">
                     {% if ventes %}
-                        {% for v in ventes %}
-                        <tr data-montant="{{ v.montant_total }}">
-                            <td>{{ v.reference }}</td>
-                            <td>{% if v.client %}{{ v.client.nom }}{% else %}Client comptoir{% endif %}</td>
-                            <td>{{ v.date_vente|date:"d/m/Y H:i" }}</td>
-                            <td class="money">{{ v.montant_total }} FCFA</td>
-                            <td class="actions-cell">
-                                <button class="btn-view btnVoir" data-id="{{ v.id }}" type="button" title="Voir les détails & Imprimer">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn-edit btnModifier" 
-                                        data-id="{{ v.id }}" 
-                                        data-client="{% if v.client %}{{ v.client.nom }}{% else %}{{ v.client_nom }}{% endif %}" 
-                                        data-date="{{ v.date_vente|date:'Y-m-d' }}T{{ v.date_vente|time:'H:i' }}" 
-                                        data-montant="{{ v.montant_total }}" 
-                                        data-paiement="{{ v.mode_paiement }}" 
-                                        type="button" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-delete btnSupprimer" data-id="{{ v.id }}" type="button" title="Mettre dans la corbeille">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                         </tr>
-                        {% endfor %}
-                   {% else %}
-                        <tr>
-                            <td colspan="5" class="empty">
-                                <i class="fas fa-shopping-cart"></i>
-                                <p>Aucune vente enregistrée.</p>
-                            </td>
-                        </tr>
-                   {% endif %}
+                    {% for v in ventes %}
+                    <tr data-montant="{{ v.montant_total }}">
+                        <td>{{ v.reference }}</td>
+                        <td>{% if v.client %}{{ v.client.nom }}{% else %}Client comptoir{% endif %}</td>
+                        <td>{{ v.date_vente|date:"d/m/Y H:i" }}</td>
+                        <td class="money">{{ v.montant_total }} FCFA</td>
+                        <td class="actions-cell">
+                            <button class="btn-view btnVoir" data-id="{{ v.id }}" type="button"
+                                title="Voir les détails & Imprimer">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-edit btnModifier" data-id="{{ v.id }}"
+                                data-client="{% if v.client %}{{ v.client.nom }}{% else %}{{ v.client_nom }}{% endif %}"
+                                data-date="{{ v.date_vente|date:'Y-m-d' }}T{{ v.date_vente|time:'H:i' }}"
+                                data-montant="{{ v.montant_total }}" data-paiement="{{ v.mode_paiement }}" type="button"
+                                title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-delete btnSupprimer" data-id="{{ v.id }}" type="button"
+                                title="Mettre dans la corbeille">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty">
+                            <i class="fas fa-shopping-cart"></i>
+                            <p>Aucune vente enregistrée.</p>
+                        </td>
+                    </tr>
+                    {% endif %}
                 </tbody>
-           </table>
+            </table>
         </div>
     </section>
 
@@ -200,14 +270,15 @@
             {% if produits %}
             <form id="formVente">
                 {% csrf_token %}
-                
+
                 <div class="form-group">
                     <label for="clientNom">Nom du Client</label>
                     <input type="text" name="client_nom" id="clientNom" required placeholder="Ex: Jean Dupont">
                 </div>
 
                 <div class="form-group">
-                    <label for="inputFiltreProduit"><i class="fas fa-laptop"></i> Matériel informatique disponible</label>
+                    <label for="inputFiltreProduit"><i class="fas fa-laptop"></i> Matériel informatique
+                        disponible</label>
                     <div class="search-box">
                         <input type="text" id="inputFiltreProduit" placeholder="Filtrer par nom...">
                         <i class="fas fa-search"></i>
@@ -216,84 +287,83 @@
 
                 <div class="form-group">
                     <label for="selectProduit">Sélection du matériel :</label>
-                    <select id="selectProduit" size="5" class="form-select-list">
-                      {% for p in produits %}
-                      <option value="{{ p.id }}"
-                            data-prix="{{ p.prix_vente }}"
-                            data-stock="{{ p.stock }}"
-                            data-nom="{{ p.nom }}"
-                            {% if p.stock <= 0 %}style="color: #94a3b8; background-color: #f1f5f9;"{% endif %}>
-                          {{ p.nom }} — {{ p.prix_vente }} FCFA {% if p.stock <= 0 %}(Rupture de stock){% else %}(Stock : {{ p.stock }}){% endif %}
-                      </option>
-                      {% endfor %}
-                    </select>
-               </div>
+                     <select id="selectProduit" size="5" class="form-select-list">
+                        {% for p in produits %}
+                     <option value="{{ p.id }}" data-prix="{{ p.prix_vente }}" data-stock="{{ p.stock }}" data-nom="{{ p.nom }}" {% if p.stock <= 0 %}style="color: #94a3b8; background-color: #f1f5f9;"{% endif %}>
+                       {{ p.nom }} — {{ p.prix_vente }} FCFA {% if p.stock <= 0 %}(Rupture de stock){% else %}(Stock : {{ p.stock }}){% endif %}
+    </option>
+    {% endfor %}
+</select>
+                </div>
 
-               <div class="form-row-inline">
-                 <div class="form-group flex-grow">
-                     <label for="quantiteProduit">Quantité :</label>
-                     <input type="number" id="quantiteProduit" value="1" min="1" class="form-control">
-                 </div>
-                 <button type="button" id="btnAjouterProduit" class="btn-primary">
-                     <i class="fas fa-plus-circle"></i> Ajouter / Mettre à jour
-                 </button>
-               </div>
+                <div class="form-row-inline">
+                    <div class="form-group flex-grow">
+                        <label for="quantiteProduit">Quantité :</label>
+                        <input type="number" id="quantiteProduit" value="1" min="1" class="form-control">
+                    </div>
+                    <button type="button" id="btnAjouterProduit" class="btn-primary">
+                        <i class="fas fa-plus-circle"></i> Ajouter / Mettre à jour
+                    </button>
+                </div>
 
-               <!-- PANIER -->
-               <div class="panier-box">
+                <!-- PANIER -->
+                <div class="panier-box">
                     <h3><i class="fas fa-shopping-cart"></i> Panier d'articles (<span id="panierCount">0</span>)</h3>
                     <div id="listeProduits" class="panier-list">
-                      <p class="text-muted">Panier vide</p>
+                        <p class="text-muted">Panier vide</p>
                     </div>
-                    
+
                     <div class="form-group" style="margin-top: 15px;">
-                      <label for="remisePourcentage"><i class="fas fa-percent"></i> Rabais appliqué (%) :</label>
-                      <input type="number" id="remisePourcentage" value="0" min="0" max="100" step="0.5" class="form-control" placeholder="0">
-                      <small class="text-muted" id="infoRegleRabais" style="display: block; margin-top: 4px; color: #0284c7;"></small>
+                        <label for="remisePourcentage"><i class="fas fa-percent"></i> Rabais appliqué (%) :</label>
+                        <input type="number" id="remisePourcentage" value="0" min="0" max="100" step="0.5"
+                            class="form-control" placeholder="0">
+                        <small class="text-muted" id="infoRegleRabais"
+                            style="display: block; margin-top: 4px; color: #0284c7;"></small>
                     </div>
 
                     <div class="total-box">
-                      <div>Sous-total : <span id="sousTotalPanier">0</span> FCFA</div>
-                      <div>Montant de la réduction (<span id="txtPourcentageRemise">0</span>%) : - <span id="montantRemise">0</span> FCFA</div>
-                      <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ddd;">
-                      Total net à payer : <strong><span id="totalPanier">0</span> FCFA</strong>
+                        <div>Sous-total : <span id="sousTotalPanier">0</span> FCFA</div>
+                        <div>Montant de la réduction (<span id="txtPourcentageRemise">0</span>%) : - <span
+                                id="montantRemise">0</span> FCFA</div>
+                        <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ddd;">
+                        Total net à payer : <strong><span id="totalPanier">0</span> FCFA</strong>
                     </div>
-               </div>
+                </div>
 
-               <div class="form-grid-2">
-                 <div class="form-group">
-                     <label for="modePaiement">Mode de paiement</label>
-                     <select name="mode_paiement" id="modePaiement" class="form-control">
-                         <option value="especes">Espèces</option>
-                         <option value="mobile_money">Mobile Money / OM</option>
-                         <option value="carte">Carte Bancaire</option>
-                         <option value="virement">Virement</option>
-                     </select>
-                 </div>
-                 <div class="form-group">
-                     <label for="montantVerse">Montant Versé (FCFA)</label>
-                     <input type="number" id="montantVerse" class="form-control" placeholder="0">
-                 </div>
-               </div>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="modePaiement">Mode de paiement</label>
+                        <select name="mode_paiement" id="modePaiement" class="form-control">
+                            <option value="especes">Espèces</option>
+                            <option value="mobile_money">Mobile Money / OM</option>
+                            <option value="carte">Carte Bancaire</option>
+                            <option value="virement">Virement</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="montantVerse">Montant Versé (FCFA)</label>
+                        <input type="number" id="montantVerse" class="form-control" placeholder="0">
+                    </div>
+                </div>
 
-               <div class="monnaie-box">
-                 Monnaie à rendre : <span id="monnaieARendre">0</span> FCFA
-               </div>
+                <div class="monnaie-box">
+                    Monnaie à rendre : <span id="monnaieARendre">0</span> FCFA
+                </div>
 
-               <div class="modal-actions">
-                 <button type="button" id="btnAnnuler" class="btn-secondary">Annuler</button>
-                 <button type="submit" class="btn-primary">
-                     <i class="fas fa-print"></i> Enregistrer & Valider
-                 </button>
-               </div>
+                <div class="modal-actions">
+                    <button type="button" id="btnAnnuler" class="btn-secondary">Annuler</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-print"></i> Enregistrer & Valider
+                    </button>
+                </div>
             </form>
-          {% else %}
-          <div class="empty">
-              <i class="fas fa-exclamation-triangle"></i>
-              <p>Aucun produit disponible en stock.</p>
-          </div>
-          {% endif %}
-       </div>
+            {% else %}
+            <div class="empty">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Aucun produit disponible en stock.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
 
     <!-- MODAL DETAILS VENTE -->
@@ -303,7 +373,7 @@
                 <h2><i class="fas fa-file-invoice"></i> Détails et Reçu de vente</h2>
                 <button id="btnFermerDetails" class="btn-secondary" type="button"><i class="fas fa-times"></i></button>
             </div>
-            
+
             <div id="printArea">
                 <div id="detailsContent" class="details-content">
                     <p>Chargement...</p>
@@ -358,436 +428,418 @@
 
     <div id="toast" class="toast" style="display:none;"></div>
 </main>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let totalMontant = 0;
-    document.querySelectorAll('#tableBody tr[data-montant]').forEach(row => {
-        totalMontant += parseFloat(row.getAttribute('data-montant')) || 0;
-    });
-    const statMontantEl = document.getElementById('statMontant');
-    if (statMontantEl) {
-        statMontantEl.textContent = totalMontant.toLocaleString() + ' FCFA';
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        let totalMontant = 0;
+        document.querySelectorAll('#tableBody tr[data-montant]').forEach(row => {
+            totalMontant += parseFloat(row.getAttribute('data-montant')) || 0;
+        });
+        const statMontantEl = document.getElementById('statMontant');
+        if (statMontantEl) {
+            statMontantEl.textContent = totalMontant.toLocaleString() + ' FCFA';
+        }
 
-    const inputRechercheVente = document.getElementById('inputRechercheVente');
-    if (inputRechercheVente) {
-        inputRechercheVente.addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase().trim();
-            const rows = document.querySelectorAll('#tableBody tr');
-            
-            rows.forEach(row => {
-                if (row.querySelector('.empty')) return;
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
+        const inputRechercheVente = document.getElementById('inputRechercheVente');
+        if (inputRechercheVente) {
+            inputRechercheVente.addEventListener('input', function (e) {
+                const term = e.target.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('#tableBody tr');
+
+                rows.forEach(row => {
+                    if (row.querySelector('.empty')) return;
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
             });
-        });
-    }
-
-    const modalVente = document.getElementById('modalVente');
-    const modalDetails = document.getElementById('modalDetails');
-    const modalModifier = document.getElementById('modalModifier');
-    
-    const btnNouvelleVente = document.getElementById('btnNouvelleVente');
-    if (btnNouvelleVente) btnNouvelleVente.addEventListener('click', () => { if (modalVente) modalVente.style.display = 'flex'; });
-    
-    const btnFermerModal = document.getElementById('btnFermerModal');
-    if (btnFermerModal) btnFermerModal.addEventListener('click', () => { if (modalVente) modalVente.style.display = 'none'; });
-    
-    const btnAnnuler = document.getElementById('btnAnnuler');
-    if (btnAnnuler) btnAnnuler.addEventListener('click', () => { if (modalVente) modalVente.style.display = 'none'; });
-    
-    const btnFermerDetails = document.getElementById('btnFermerDetails');
-    if (btnFermerDetails) btnFermerDetails.addEventListener('click', () => { if (modalDetails) modalDetails.style.display = 'none'; });
-    
-    const btnFermerModifier = document.getElementById('btnFermerModifier');
-    if (btnFermerModifier) btnFermerModifier.addEventListener('click', () => { if (modalModifier) modalModifier.style.display = 'none'; });
-    
-    const btnAnnulerModifier = document.getElementById('btnAnnulerModifier');
-    if (btnAnnulerModifier) btnAnnulerModifier.addEventListener('click', () => { if (modalModifier) modalModifier.style.display = 'none'; });
-
-    let panier = [];
-
-    function calculerRabaisAutomatique(totalArticles) {
-        let pourcentage = 0;
-        let message = "";
-
-        if (totalArticles >= 10) {
-            pourcentage = 10;
-            message = "✨ Rabais de 10% appliqué (10 articles ou plus)";
-        } else if (totalArticles >= 5) {
-            pourcentage = 5;
-            message = "✨ Rabais de 5% appliqué (5 articles ou plus)";
-        } else {
-            pourcentage = 0;
-            message = "Achetez au moins 5 articles pour bénéficier d'un rabais.";
         }
 
-        const infoRegleRabais = document.getElementById('infoRegleRabais');
-        if (infoRegleRabais) {
-            infoRegleRabais.textContent = message;
-        }
-        return pourcentage;
-    }
+        const modalVente = document.getElementById('modalVente');
+        const modalDetails = document.getElementById('modalDetails');
+        const modalModifier = document.getElementById('modalModifier');
 
-    const btnAjouterProduit = document.getElementById('btnAjouterProduit');
-    if (btnAjouterProduit) {
-        btnAjouterProduit.addEventListener('click', () => {
-            const select = document.getElementById('selectProduit');
-            if (!select) return;
-            const opt = select.options[select.selectedIndex];
-            
-            if (!opt || !opt.value) {
-                alert("Veuillez sélectionner un produit valide.");
-                return;
-            }
+        const btnNouvelleVente = document.getElementById('btnNouvelleVente');
+        if (btnNouvelleVente) btnNouvelleVente.addEventListener('click', () => { if (modalVente) modalVente.style.display = 'flex'; });
 
-            const id = opt.value;
-            const nom = opt.getAttribute('data-nom');
-            const prix = parseFloat(opt.getAttribute('data-prix')) || 0;
-            const stockMax = parseInt(opt.getAttribute('data-stock'), 10) || 0;
-            const quantiteInputEl = document.getElementById('quantiteProduit');
-            const quantiteInput = quantiteInputEl ? parseInt(quantiteInputEl.value, 10) || 1 : 1;
+        const btnFermerModal = document.getElementById('btnFermerModal');
+        if (btnFermerModal) btnFermerModal.addEventListener('click', () => { if (modalVente) modalVente.style.display = 'none'; });
 
-            if (stockMax <= 0) {
-                alert("Ce produit est en rupture de stock.");
-                return;
-            }
+        const btnAnnuler = document.getElementById('btnAnnuler');
+        if (btnAnnuler) btnAnnuler.addEventListener('click', () => { if (modalVente) modalVente.style.display = 'none'; });
 
-            if (quantiteInput <= 0) {
-                alert("Veuillez entrer une quantité valide supérieure à 0.");
-                return;
-            }
+        const btnFermerDetails = document.getElementById('btnFermerDetails');
+        if (btnFermerDetails) btnFermerDetails.addEventListener('click', () => { if (modalDetails) modalDetails.style.display = 'none'; });
 
-            const existing = panier.find(item => item.id === id);
-            const quantiteActuelleDansPanier = existing ? existing.quantite : 0;
-            const quantiteTotaleDemandee = quantiteActuelleDansPanier + quantiteInput;
+        const btnFermerModifier = document.getElementById('btnFermerModifier');
+        if (btnFermerModifier) btnFermerModifier.addEventListener('click', () => { if (modalModifier) modalModifier.style.display = 'none'; });
 
-            if (quantiteTotaleDemandee > stockMax) {
-                alert(`Stock insuffisant ! Stock disponible : ${stockMax} | Déjà dans le panier : ${quantiteActuelleDansPanier} | Demandé en plus : ${quantiteInput}`);
-                return;
-            }
+        const btnAnnulerModifier = document.getElementById('btnAnnulerModifier');
+        if (btnAnnulerModifier) btnAnnulerModifier.addEventListener('click', () => { if (modalModifier) modalModifier.style.display = 'none'; });
 
-            if (existing) {
-                existing.quantite = quantiteTotaleDemandee;
+        let panier = [];
+
+        function calculerRabaisAutomatique(totalArticles) {
+            let pourcentage = 0;
+            let message = "";
+
+            if (totalArticles >= 10) {
+                pourcentage = 10;
+                message = "✨ Rabais de 10% appliqué (10 articles ou plus)";
+            } else if (totalArticles >= 5) {
+                pourcentage = 5;
+                message = "✨ Rabais de 5% appliqué (5 articles ou plus)";
             } else {
-                panier.push({ id, nom, prix, quantite: quantiteInput, stock: stockMax });
+                pourcentage = 0;
+                message = "Achetez au moins 5 articles pour bénéficier d'un rabais.";
             }
-            renderPanier();
-        });
-    }
 
-    function renderPanier() {
-        const container = document.getElementById('listeProduits');
-        if (!container) return;
-        container.innerHTML = '';
-        let sousTotal = 0;
-        let totalArticles = 0;
-
-        if (panier.length === 0) {
-            container.innerHTML = '<p class="text-muted">Panier vide</p>';
+            const infoRegleRabais = document.getElementById('infoRegleRabais');
+            if (infoRegleRabais) {
+                infoRegleRabais.textContent = message;
+            }
+            return pourcentage;
         }
 
-        panier.forEach((item, index) => {
-            sousTotal += item.prix * item.quantite;
-            totalArticles += item.quantite;
-            
-            const div = document.createElement('div');
-            div.className = 'panier-item';
-            div.innerHTML = `
+        const btnAjouterProduit = document.getElementById('btnAjouterProduit');
+        if (btnAjouterProduit) {
+            btnAjouterProduit.addEventListener('click', () => {
+                const select = document.getElementById('selectProduit');
+                if (!select) return;
+                const opt = select.options[select.selectedIndex];
+
+                if (!opt || !opt.value) {
+                    alert("Veuillez sélectionner un produit valide.");
+                    return;
+                }
+
+                const id = opt.value;
+                const nom = opt.getAttribute('data-nom');
+                const prix = parseFloat(opt.getAttribute('data-prix')) || 0;
+                const stockMax = parseInt(opt.getAttribute('data-stock'), 10) || 0;
+                const quantiteInputEl = document.getElementById('quantiteProduit');
+                const quantiteInput = quantiteInputEl ? parseInt(quantiteInputEl.value, 10) || 1 : 1;
+
+                if (stockMax <= 0) {
+                    alert("Ce produit est en rupture de stock.");
+                    return;
+                }
+
+                if (quantiteInput <= 0) {
+                    alert("Veuillez entrer une quantité valide supérieure à 0.");
+                    return;
+                }
+
+                const existing = panier.find(item => item.id === id);
+                const quantiteTotaleDemandee = quantiteInput;
+
+                if (quantiteTotaleDemandee > stockMax) {
+                    alert(`Stock insuffisant ! Stock disponible : ${stockMax} | Demandé : ${quantiteInput}`);
+                    return;
+                }
+
+                if (existing) {
+                    existing.quantite = quantiteTotaleDemandee;
+                } else {
+                    panier.push({ id, nom, prix, quantite: quantiteInput, stock: stockMax });
+                }
+                renderPanier();
+            });
+        }
+
+        function renderPanier() {
+            const container = document.getElementById('listeProduits');
+            if (!container) return;
+            container.innerHTML = '';
+            let sousTotal = 0;
+            let totalArticles = 0;
+
+            if (panier.length === 0) {
+                container.innerHTML = '<p class="text-muted">Panier vide</p>';
+            }
+
+            panier.forEach((item, index) => {
+                sousTotal += item.prix * item.quantite;
+                totalArticles += item.quantite;
+
+                const div = document.createElement('div');
+                div.className = 'panier-item';
+                div.innerHTML = `
                 <span>${item.nom} (x${item.quantite})</span>
                 <span class="panier-item-price">${(item.prix * item.quantite).toLocaleString()} FCFA 
-                    <button type="button" onclick="supprimerDuPanier(${index})" class="btn-delete-item" title="Supprimer"><i class="fas fa-trash"></i></button>
+                    <button type="button" data-index="${index}" class="btn-delete-item btnSupprimerPanier" title="Supprimer"><i class="fas fa-trash"></i></button>
                 </span>
             `;
-            container.appendChild(div);
-        });
-
-        const sousTotalPanier = document.getElementById('sousTotalPanier');
-        const panierCount = document.getElementById('panierCount');
-        const remisePourcentage = document.getElementById('remisePourcentage');
-
-        if (sousTotalPanier) sousTotalPanier.textContent = sousTotal.toLocaleString();
-        if (panierCount) panierCount.textContent = totalArticles;
-        
-        const pourcentageAutomatique = calculerRabaisAutomatique(totalArticles);
-        if (remisePourcentage) remisePourcentage.value = pourcentageAutomatique;
-
-        calculerTotauxFinaux(sousTotal);
-    }
-
-    window.supprimerDuPanier = function(index) {
-        panier.splice(index, 1);
-        renderPanier();
-    };
-
-    const remisePourcentageEl = document.getElementById('remisePourcentage');
-    if (remisePourcentageEl) {
-        remisePourcentageEl.addEventListener('input', () => {
-            const sousTotalEl = document.getElementById('sousTotalPanier');
-            const sousTotalText = sousTotalEl ? sousTotalEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
-            calculerTotauxFinaux(parseFloat(sousTotalText) || 0);
-        });
-    }
-
-    const montantVerseEl = document.getElementById('montantVerse');
-    if (montantVerseEl) {
-        montantVerseEl.addEventListener('input', () => {
-            calculerMonnaie();
-        });
-    }
-
-    function calculerTotauxFinaux(sousTotal) {
-        const remiseInput = document.getElementById('remisePourcentage');
-        const pourcentageRemise = remiseInput ? parseFloat(remiseInput.value) || 0 : 0;
-        const montantRemise = (sousTotal * pourcentageRemise) / 100;
-        const totalNet = Math.max(0, sousTotal - montantRemise);
-
-        const txtPourcentageRemise = document.getElementById('txtPourcentageRemise');
-        const montantRemiseEl = document.getElementById('montantRemise');
-        const totalPanier = document.getElementById('totalPanier');
-
-        if (txtPourcentageRemise) txtPourcentageRemise.textContent = pourcentageRemise;
-        if (montantRemiseEl) montantRemiseEl.textContent = montantRemise.toLocaleString();
-        if (totalPanier) totalPanier.textContent = totalNet.toLocaleString();
-
-        calculerMonnaie();
-    }
-
-    function calculerMonnaie() {
-        const totalPanierEl = document.getElementById('totalPanier');
-        const montantVerseEl = document.getElementById('montantVerse');
-        const monnaieARendreEl = document.getElementById('monnaieARendre');
-
-        if (!totalPanierEl || !montantVerseEl || !monnaieARendreEl) return;
-
-        const totalText = totalPanierEl.textContent.replace(/\s/g, '').replace('FCFA', '');
-        const total = parseFloat(totalText) || 0;
-        const verse = parseFloat(montantVerseEl.value) || 0;
-        const monnaie = verse - total;
-        monnaieARendreEl.textContent = monnaie >= 0 ? monnaie.toLocaleString() : '0';
-    }
-
-    const inputFiltreProduit = document.getElementById('inputFiltreProduit');
-    if (inputFiltreProduit) {
-        inputFiltreProduit.addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            const selectProduit = document.getElementById('selectProduit');
-            if (!selectProduit) return;
-            const options = selectProduit.options;
-            for (let i = 0; i < options.length; i++) {
-                const text = options[i].text.toLowerCase();
-                options[i].style.display = text.includes(term) ? '' : 'none';
-            }
-        });
-    }
-
-    const formVente = document.getElementById('formVente');
-    if (formVente) {
-        formVente.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (panier.length === 0) {
-                alert("Ajoutez au moins un produit au panier.");
-                return;
-            }
-
-            const totalPanierEl = document.getElementById('totalPanier');
-            const sousTotalPanierEl = document.getElementById('sousTotalPanier');
-            const remisePourcentageEl = document.getElementById('remisePourcentage');
-            const montantRemiseEl = document.getElementById('montantRemise');
-            const montantVerseInput = document.getElementById('montantVerse');
-
-            const totalText = totalPanierEl ? totalPanierEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
-            const sousTotalText = sousTotalPanierEl ? sousTotalPanierEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
-            const remisePourcentage = remisePourcentageEl ? parseFloat(remisePourcentageEl.value) || 0 : 0;
-            const montantRemiseText = montantRemiseEl ? montantRemiseEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
-            const montantVerse = montantVerseInput ? parseFloat(montantVerseInput.value) || 0 : 0;
-
-            const clientNomInput = document.getElementById('clientNom');
-            const modePaiementInput = document.getElementById('modePaiement');
-            const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
-
-            const data = {
-                client_nom: clientNomInput ? clientNomInput.value : 'Client comptoir',
-                montant_total: parseFloat(totalText) || 0,
-                montant_verse: montantVerse,
-                sous_total: parseFloat(sousTotalText) || 0,
-                remise_pourcentage: remisePourcentage,
-                montant_remise: parseFloat(montantRemiseText) || 0,
-                mode_paiement: modePaiementInput ? modePaiementInput.value : 'especes',
-                produits: panier
-            };
-
-            fetch("{% url 'astra:enregistrer_vente' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfTokenEl ? csrfTokenEl.value : ''
-                },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(response => {
-                if (response.success) {
-                    alert("Vente validée avec succès ! Stock mis à jour.");
-                    location.reload();
-                } else {
-                    alert("Erreur de validation : " + (response.error || "Une erreur est survenue lors de l'enregistrement."));
-                }
-            })
-            .catch(err => {
-                console.error('Erreur:', err);
-                alert("Erreur de communication avec le serveur.");
+                container.appendChild(div);
             });
-        });
-    }
 
-    document.querySelectorAll('.btnVoir').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const venteId = this.getAttribute('data-id');
-            modalDetails.style.display = 'flex';
-            const detailsContent = document.getElementById('detailsContent');
-            if (detailsContent) detailsContent.innerHTML = '<p>Chargement...</p>';
-
-            const detailsUrlTemplate = "{% url 'astra:details_vente' 0 %}".replace('/0/', '/' + venteId + '/');
-
-            fetch(detailsUrlTemplate)
-            .then(res => {
-                if (!res.ok) throw new Error("Erreur réseau");
-                return res.json();
-            })
-            .then(data => {
-                let html = `
-                    <div class="details-summary" style="text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px;">
-                        <h3>FACTURE / REÇU DE VENTE</h3>
-                        <p><strong>Réf :</strong> ${data.reference}</p>
-                        <p><strong>Client :</strong> ${data.client}</p>
-                        <p><strong>Date :</strong> ${data.date}</p>
-                        <p><strong>Paiement :</strong> ${data.mode_paiement}</p>
-                    </div>
-                    <h4 class="details-subtitle">Détails des articles :</h4>
-                    <ul class="details-list" style="list-style: none; padding: 0;">
-                `;
-                data.lignes.forEach(l => {
-                    html += `<li style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>${l.produit} (x${l.quantite})</span> <strong>${l.sous_total} FCFA</strong></li>`;
+            document.querySelectorAll('.btnSupprimerPanier').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const idx = parseInt(this.getAttribute('data-index'), 10);
+                    supprimerDuPanier(idx);
                 });
-                html += `</ul><hr style="border: 0; border-top: 1px dashed #ccc; margin: 10px 0;">`;
-                
-                if (data.sous_total) {
-                    html += `<div style="display: flex; justify-content: space-between; margin: 4px 0;"><span>Sous-total articles :</span> <span>${data.sous_total} FCFA</span></div>`;
+            });
+
+            const sousTotalPanier = document.getElementById('sousTotalPanier');
+            const panierCount = document.getElementById('panierCount');
+            const remisePourcentage = document.getElementById('remisePourcentage');
+
+            if (sousTotalPanier) sousTotalPanier.textContent = sousTotal.toLocaleString();
+            if (panierCount) panierCount.textContent = totalArticles;
+
+            const pourcentageAutomatique = calculerRabaisAutomatique(totalArticles);
+            if (remisePourcentage) remisePourcentage.value = pourcentageAutomatique;
+
+            calculerTotauxFinaux(sousTotal);
+        }
+
+        function supprimerDuPanier(index) {
+            panier.splice(index, 1);
+            renderPanier();
+        }
+
+        const remisePourcentageEl = document.getElementById('remisePourcentage');
+        if (remisePourcentageEl) {
+            remisePourcentageEl.addEventListener('input', () => {
+                const sousTotalEl = document.getElementById('sousTotalPanier');
+                const sousTotalText = sousTotalEl ? sousTotalEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
+                calculerTotauxFinaux(parseFloat(sousTotalText) || 0);
+            });
+        }
+
+        const montantVerseEl = document.getElementById('montantVerse');
+        if (montantVerseEl) {
+            montantVerseEl.addEventListener('input', () => {
+                calculerMonnaie();
+            });
+        }
+
+        function calculerTotauxFinaux(sousTotal) {
+            const remiseInput = document.getElementById('remisePourcentage');
+            const pourcentageRemise = remiseInput ? parseFloat(remiseInput.value) || 0 : 0;
+            const montantRemise = (sousTotal * pourcentageRemise) / 100;
+            const totalNet = Math.max(0, sousTotal - montantRemise);
+
+            const txtPourcentageRemise = document.getElementById('txtPourcentageRemise');
+            const montantRemiseEl = document.getElementById('montantRemise');
+            const totalPanier = document.getElementById('totalPanier');
+
+            if (txtPourcentageRemise) txtPourcentageRemise.textContent = pourcentageRemise;
+            if (montantRemiseEl) montantRemiseEl.textContent = montantRemise.toLocaleString();
+            if (totalPanier) totalPanier.textContent = totalNet.toLocaleString();
+
+            calculerMonnaie();
+        }
+
+        function calculerMonnaie() {
+            const totalPanierEl = document.getElementById('totalPanier');
+            const montantVerseEl = document.getElementById('montantVerse');
+            const monnaieARendreEl = document.getElementById('monnaieARendre');
+
+            if (!totalPanierEl || !montantVerseEl || !monnaieARendreEl) return;
+
+            const totalText = totalPanierEl.textContent.replace(/\s/g, '').replace('FCFA', '');
+            const total = parseFloat(totalText) || 0;
+            const verse = parseFloat(montantVerseEl.value) || 0;
+            const monnaie = verse - total;
+            monnaieARendreEl.textContent = monnaie >= 0 ? monnaie.toLocaleString() : '0';
+        }
+
+        const inputFiltreProduit = document.getElementById('inputFiltreProduit');
+        if (inputFiltreProduit) {
+            inputFiltreProduit.addEventListener('input', function (e) {
+                const term = e.target.value.toLowerCase();
+                const selectProduit = document.getElementById('selectProduit');
+                if (!selectProduit) return;
+                const options = selectProduit.options;
+                for (let i = 0; i < options.length; i++) {
+                    const text = options[i].text.toLowerCase();
+                    options[i].style.display = text.includes(term) ? '' : 'none';
+                }
+            });
+        }
+
+        const formVente = document.getElementById('formVente');
+        if (formVente) {
+            formVente.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (panier.length === 0) {
+                    alert("Ajoutez au moins un produit au panier.");
+                    return;
                 }
 
-                if (data.remise_pourcentage && data.remise_pourcentage > 0) {
-                    html += `<div style="display: flex; justify-content: space-between; margin: 4px 0; color: #16a34a;"><span>Rabais appliqué (${data.remise_pourcentage}%) :</span> <span>- ${data.montant_remise || 0} FCFA</span></div>`;
-                } else {
-                    html += `<div style="display: flex; justify-content: space-between; margin: 4px 0; color: #64748b;"><span>Rabais appliqué (0%) :</span> <span>0 FCFA</span></div>`;
+                const totalPanierEl = document.getElementById('totalPanier');
+                const sousTotalPanierEl = document.getElementById('sousTotalPanier');
+                const remisePourcentageEl = document.getElementById('remisePourcentage');
+                const montantRemiseEl = document.getElementById('montantRemise');
+                const montantVerseInput = document.getElementById('montantVerse');
+
+                const totalText = totalPanierEl ? totalPanierEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
+                const sousTotalText = sousTotalPanierEl ? sousTotalPanierEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
+                const remisePourcentage = remisePourcentageEl ? parseFloat(remisePourcentageEl.value) || 0 : 0;
+                const montantRemiseText = montantRemiseEl ? montantRemiseEl.textContent.replace(/\s/g, '').replace('FCFA', '') : '0';
+                const montantVerse = montantVerseInput ? parseFloat(montantVerseInput.value) || 0 : 0;
+
+                const clientNomInput = document.getElementById('clientNom');
+                const modePaiementInput = document.getElementById('modePaiement');
+                const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
+
+                const data = {
+                    client_nom: clientNomInput ? clientNomInput.value : 'Client comptoir',
+                    montant_total: parseFloat(totalText) || 0,
+                    montant_verse: montantVerse,
+                    sous_total: parseFloat(sousTotalText) || 0,
+                    remise_pourcentage: remisePourcentage,
+                    montant_remise: parseFloat(montantRemiseText) || 0,
+                    mode_paiement: modePaiementInput ? modePaiementInput.value : 'especes',
+                    produits: panier
+                };
+
+                fetch("{% url 'astra:enregistrer_vente' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfTokenEl ? csrfTokenEl.value : ''
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response.success) {
+                            alert("Vente validée avec succès ! Stock mis à jour.");
+                            location.reload();
+                        } else {
+                            alert("Erreur de validation : " + (response.error || "Une erreur est survenue lors de l'enregistrement."));
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur:', err);
+                        alert("Erreur de communication avec le serveur.");
+                    });
+            });
+        }
+
+        document.querySelectorAll('.btnVoir').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const venteId = this.getAttribute('data-id');
+                modalDetails.style.display = 'flex';
+                const detailsContent = document.getElementById('detailsContent');
+                if (detailsContent) detailsContent.innerHTML = '<p>Chargement...</p>';
+
+                const detailsUrlTemplate = "{% url 'astra:details_vente' 0 %}".replace('/0/', '/' + venteId + '/');
+
+                fetch(detailsUrlTemplate)
+                    .then(res => {
+                        if (!res.ok) throw new Error("Erreur réseau");
+                        return res.json();
+                    })
+                    .then(data => {
+                        let htmlTemplate = `
+                    <div class="details-summary" style="text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 8px; margin-bottom: 8px;">
+                        <h3 style="margin: 0 0 5px 0; font-size: 16px;">FACTURE / REÇU DE VENTE</h3>
+                        <p style="margin: 2px 0;"><strong>Réf :</strong> ${data.reference}</p>
+                        <p style="margin: 2px 0;"><strong>Client :</strong> ${data.client}</p>
+                        <p style="margin: 2px 0;"><strong>Date :</strong> ${data.date}</p>
+                        <p style="margin: 2px 0;"><strong>Paiement :</strong> ${data.mode_paiement}</p>
+                    </div>
+                    <h4 class="details-subtitle" style="margin: 5px 0; font-size: 14px;">Détails des articles :</h4>
+                    <ul class="details-list" style="list-style: none; padding: 0; margin: 0 0 8px 0;">
+                `;
+                        data.lignes.forEach(l => {
+                            htmlTemplate += `<li style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 13px;"><span>${l.produit} (x${l.quantite})</span> <strong>${l.sous_total} FCFA</strong></li>`;
+                        });
+                        htmlTemplate += `</ul><hr style="border: 0; border-top: 1px dashed #ccc; margin: 5px 0;">`;
+
+                        if (data.sous_total) {
+                            htmlTemplate += `<div style="display: flex; justify-content: space-between; margin: 2px 0; font-size: 13px;"><span>Sous-total articles :</span> <span>${data.sous_total} FCFA</span></div>`;
+                        }
+
+                        if (data.remise_pourcentage && data.remise_pourcentage > 0) {
+                            htmlTemplate += `<div style="display: flex; justify-content: space-between; margin: 2px 0; color: #16a34a; font-size: 13px;"><span>Rabais appliqué (${data.remise_pourcentage}%) :</span> <span>- ${data.montant_remise || 0} FCFA</span></div>`;
+                        } else {
+                            htmlTemplate += `<div style="display: flex; justify-content: space-between; margin: 2px 0; color: #64748b; font-size: 13px;"><span>Rabais appliqué (0%) :</span> <span>0 FCFA</span></div>`;
+                        }
+
+                        htmlTemplate += `<h3 class="details-total" style="text-align: right; margin-top: 5px; border-top: 1px solid #333; padding-top: 4px; font-size: 14px;">Total Net : ${data.montant_total} FCFA</h3>`;
+
+                        let htmlComplet = `
+                    <div class="recu-container">
+                        <div class="recu-item">${htmlTemplate}</div>
+                        <div class="recu-item">${htmlTemplate}</div>
+                    </div>
+                `;
+
+                        if (detailsContent) detailsContent.innerHTML = htmlComplet;
+                    })
+                    .catch(() => {
+                        if (detailsContent) detailsContent.innerHTML = '<p style="color:red;">Erreur lors du chargement des détails de la vente.</p>';
+                    });
+            });
+        });
+
+        const btnImprimerRecu = document.getElementById('btnImprimerRecu');
+        if (btnImprimerRecu) {
+            btnImprimerRecu.addEventListener('click', function () {
+                window.print();
+            });
+        }
+
+        document.querySelectorAll('.btnModifier').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const venteId = this.getAttribute('data-id');
+                const clientNom = this.getAttribute('data-client');
+                const dateVente = this.getAttribute('data-date');
+                const montantTotal = this.getAttribute('data-montant');
+                const modePaiement = this.getAttribute('data-paiement');
+
+                const modifierVenteId = document.getElementById('modifierVenteId');
+                const modifierClient = document.getElementById('modifierClient');
+                const modifierDate = document.getElementById('modifierDate');
+                const modifierMontant = document.getElementById('modifierMontant');
+                const modifierModePaiement = document.getElementById('modifierModePaiement');
+
+                if (modifierVenteId) modifierVenteId.value = venteId;
+                if (modifierClient) modifierClient.value = clientNom;
+                if (modifierDate) modifierDate.value = dateVente;
+                if (modifierMontant) modifierMontant.value = montantTotal;
+                if (modifierModePaiement) modifierModePaiement.value = modePaiement;
+
+                if (modalModifier) modalModifier.style.display = 'flex';
+            });
+        });
+
+        // --- GESTION DE LA SUPPRESSION (MISE À LA CORBEILLE) ---
+        document.querySelectorAll('.btnSupprimer').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const venteId = this.getAttribute('data-id');
+                const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
+
+                if (confirm("Voulez-vous vraiment placer cette vente dans la corbeille ?")) {
+                    const deleteUrlTemplate = "{% url 'astra:supprimer_vente' 0 %}".replace('/0/', '/' + venteId + '/');
+
+                    fetch(deleteUrlTemplate, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfTokenEl ? csrfTokenEl.value : ''
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response.success) {
+                            alert(response.message || "Vente placée dans la corbeille avec succès.");
+                            location.reload();
+                        } else {
+                            alert("Erreur : " + (response.error || "Impossible de supprimer cette vente."));
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur:', err);
+                        alert("Erreur de communication avec le serveur.");
+                    });
                 }
-                
-                html += `<h3 class="details-total" style="text-align: right; margin-top: 10px; border-top: 2px solid #333; padding-top: 5px;">Total Net : ${data.montant_total} FCFA</h3>`;
-                if (detailsContent) detailsContent.innerHTML = html;
-            })
-            .catch(() => {
-                if (detailsContent) detailsContent.innerHTML = '<p style="color:red;">Erreur lors du chargement des détails de la vente.</p>';
             });
         });
     });
-
-    const btnImprimerRecu = document.getElementById('btnImprimerRecu');
-    if (btnImprimerRecu) {
-        btnImprimerRecu.addEventListener('click', function() {
-            window.print();
-        });
-    }
-
-    document.querySelectorAll('.btnModifier').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const venteId = this.getAttribute('data-id');
-            const clientNom = this.getAttribute('data-client');
-            const dateVente = this.getAttribute('data-date');
-            const montantTotal = this.getAttribute('data-montant');
-            const modePaiement = this.getAttribute('data-paiement');
-
-            const modifierVenteId = document.getElementById('modifierVenteId');
-            const modifierClient = document.getElementById('modifierClient');
-            const modifierDate = document.getElementById('modifierDate');
-            const modifierMontant = document.getElementById('modifierMontant');
-            const modifierModePaiement = document.getElementById('modifierModePaiement');
-
-            if (modifierVenteId) modifierVenteId.value = venteId;
-            if (modifierClient) modifierClient.value = clientNom;
-            if (modifierDate) modifierDate.value = dateVente;
-            if (modifierMontant) modifierMontant.value = montantTotal;
-            if (modifierModePaiement) modifierModePaiement.value = modePaiement;
-
-            if (modalModifier) modalModifier.style.display = 'flex';
-        });
-    });
-
-    const formModifierVente = document.getElementById('formModifierVente');
-    if (formModifierVente) {
-        formModifierVente.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const venteId = document.getElementById('modifierVenteId').value;
-            const client = document.getElementById('modifierClient').value;
-            const date_vente = document.getElementById('modifierDate').value;
-            const montant_total = document.getElementById('modifierMontant').value;
-            const mode_paiement = document.getElementById('modifierModePaiement').value;
-            const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
-
-            const data = { client, date_vente, montant_total, mode_paiement };
-            const editUrlTemplate = "{% url 'astra:modifier_vente' 0 %}".replace('/0/', '/' + venteId + '/');
-
-            fetch(editUrlTemplate, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfTokenEl ? csrfTokenEl.value : ''
-                },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(response => {
-                if (response.success) {
-                    alert("Vente modifiée avec succès !");
-                    location.reload();
-                } else {
-                    alert("Erreur : " + (response.error || "Impossible de modifier la vente."));
-                }
-            })
-            .catch(() => {
-                alert("Erreur de communication avec le serveur.");
-            });
-        });
-    }
-
-    document.querySelectorAll('.btnSupprimer').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (!confirm("Voulez-vous vraiment supprimer cette vente ? Le stock sera restauré.")) return;
-            const venteId = this.getAttribute('data-id');
-            const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
-            const deleteUrlTemplate = "{% url 'astra:supprimer_vente' 0 %}".replace('/0/', '/' + venteId + '/');
-
-            fetch(deleteUrlTemplate, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfTokenEl ? csrfTokenEl.value : ''
-                }
-            })
-            .then(res => res.json())
-            .then(response => {
-                if (response.success) {
-                    alert("Vente supprimée et stock restauré.");
-                    location.reload();
-                } else {
-                    alert("Erreur : " + (response.error || "Impossible de supprimer la vente."));
-                }
-            })
-            .catch(() => {
-                alert("Erreur de communication avec le serveur.");
-            });
-        });
-    });
-});
 </script>
 {% endblock %}

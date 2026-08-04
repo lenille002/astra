@@ -365,53 +365,48 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for client in clients %}
-                    <tr class="client-row" data-search="{{ client.nom|lower }} {{ client.email|default:''|lower }} {{ client.telephone|lower }} cli-{{ client.id|stringformat:'03d' }}">
-                        <td style="font-weight: 700; color: #3730a3;">CLI-{{ client.id|stringformat:"03d" }}</td>
-                        <td style="font-weight: 600;">{{ client.nom }}</td>
-                        <td>{{ client.email|default:"N/A" }}</td>
-                        <td>{{ client.telephone }}</td>
-                        <td>{{ client.date_inscription|date:"d/m/Y"|default:"N/A" }}</td>
-                        <td style="font-weight: 700; color: {% if client.total_depense > 100000 %}#16a34a{% else %}#334155{% endif %};">
-                            {{ client.total_depense|default:0|floatformat:0 }} FCFA
-                        </td>
-                        <td style="text-align: center;">
-                            <a href="{% url 'astra:detail_client_activites' client.id %}" style="display: inline-flex; align-items: center; gap: 5px; background-color: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none;" title="Voir le cahier d'activités">
-                                <i class="fa-solid fa-book-open"></i> Cahier ({{ client.nombre_achats|default:0 }})
-                            </a>
-                        </td>
-                        <td style="text-align: center; white-space: nowrap;">
-                            <button type="button" class="details-btn" data-id="{{ client.id }}" 
-                                    data-nom="{{ client.nom }}" 
-                                    data-email="{{ client.email|default:'' }}" 
-                                    data-telephone="{{ client.telephone }}" 
-                                    data-dernier="{{ client.dernier_achat|date:'d/m/Y'|default:'Aucun' }}" 
-                                    data-total="{{ client.total_depense|default:0|floatformat:0 }}" 
-                                    data-inscription="{{ client.date_inscription|date:'d/m/Y'|default:'N/A' }}"
-                                    style="background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer; margin-right: 8px;">Détails</button>
-                            
-                            <!-- Bouton de Modification -->
-                            <button type="button" class="edit-btn" data-id="{{ client.id }}" 
-                                    data-nom="{{ client.nom }}" 
-                                    data-email="{{ client.email|default:'' }}" 
-                                    data-telephone="{{ client.telephone }}" 
-                                    data-inscription="{{ client.date_inscription|date:'Y-m-d'|default:'' }}"
-                                    data-total="{{ client.total_depense|default:0|floatformat:0 }}"
-                                    style="background: none; border: none; color: #d97706; font-weight: 600; cursor: pointer; margin-right: 8px;">Modifier</button>
+    {% for client in clients %}
+    <tr class="client-row" data-search="{{ client.nom|lower }} {{ client.email|default:''|lower }} {{ client.telephone|lower }} cli-{{ client.id|stringformat:'03d' }}">
+        <td style="font-weight: 700; color: #3730a3;">CLI-{{ client.id|stringformat:"03d" }}</td>
+        <td style="font-weight: 600;">{{ client.nom }}</td>
+        <td>{{ client.email|default:"N/A" }}</td>
+        <td>{{ client.telephone }}</td>
+        <td>{{ client.date_inscription|date:"d/m/Y"|default:"N/A" }}</td>
+        <td style="font-weight: 700; color: {% if client.total_depenses_calcule > 100000 %}#16a34a{% else %}#334155{% endif %};">{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>
+        <td style="text-align: center;">
+            <a href="{% url 'astra:detail_client_activites' client.id %}" style="display: inline-flex; align-items: center; gap: 5px; background-color: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none;" title="Voir le cahier d'activités">
+                <i class="fa-solid fa-book-open"></i> Cahier ({{ client.nombre_achats|default:0 }})
+            </a>
+        </td>
+        <td style="text-align: center; white-space: nowrap;">
+            <button type="button" class="details-btn" data-id="{{ client.id }}" 
+                    data-nom="{{ client.nom }}" 
+                    data-email="{{ client.email|default:'' }}" 
+                    data-telephone="{{ client.telephone }}" 
+                    data-dernier="{{ client.dernier_achat|date:'d/m/Y'|default:'Aucun' }}" 
+                    data-total="{{ client.total_depenses_calcule|default:0|floatformat:0 }}" 
+                    data-inscription="{{ client.date_inscription|date:'d/m/Y'|default:'N/A' }}"
+                    style="background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer; margin-right: 8px;">Détails</button>
+            
+            <button type="button" class="edit-btn" data-id="{{ client.id }}" 
+                    data-nom="{{ client.nom }}" 
+                    data-email="{{ client.email|default:'' }}" 
+                    data-telephone="{{ client.telephone }}" 
+                    data-adresse="{{ client.adresse|default:'' }}"
+                    style="background: none; border: none; color: #d97706; font-weight: 600; cursor: pointer; margin-right: 8px;">Modifier</button>
 
-                            <!-- Archivage / Suppression -->
-                            <a href="{% url 'astra:supprimer_client' client.id %}" class="delete-link" onclick="return confirm('Voulez-vous archiver / désactiver le client {{ client.nom }} ? Son historique financier sera conservé.');" style="background: none; border: none; color: #dc2626; font-weight: 600; cursor: pointer; text-decoration: none;">Archiver</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr id="empty-db-row">
-                        <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun client trouvé dans la base de données.</td>
-                    </tr>
-                    {% endfor %}
-                    <tr id="no-search-results" style="display: none;">
-                        <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun résultat ne correspond à votre recherche.</td>
-                    </tr>
-                </tbody>
+            <a href="{% url 'astra:supprimer_client' client.id %}" class="delete-link" onclick="return confirm('Voulez-vous archiver / désactiver le client {{ client.nom }} ? Son historique financier sera conservé.');" style="background: none; border: none; color: #dc2626; font-weight: 600; cursor: pointer; text-decoration: none;">Archiver</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr id="empty-db-row">
+        <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun client trouvé dans la base de données.</td>
+    </tr>
+    {% endfor %}
+    <tr id="no-search-results" style="display: none;">
+        <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun résultat ne correspond à votre recherche.</td>
+    </tr>
+</tbody>
             </table>
         </div>
     </div>
@@ -439,12 +434,8 @@
                 <input type="tel" name="telephone" required>
             </div>
             <div class="astra-form-group">
-                <label>Date d'inscription</label>
-                <input type="date" name="date_inscription">
-            </div>
-            <div class="astra-form-group">
-                <label>Total dépensé (FCFA)</label>
-                <input type="number" name="total_depense" value="0" min="0">
+                <label>Adresse</label>
+                <input type="text" name="adresse">
             </div>
             <button type="submit" class="btn-astra-orange" style="width: 100%; justify-content: center; margin-top: 10px;">Enregistrer</button>
         </form>
@@ -473,12 +464,8 @@
                 <input type="tel" id="edit-telephone" name="telephone" required>
             </div>
             <div class="astra-form-group">
-                <label>Date d'inscription</label>
-                <input type="date" id="edit-inscription" name="date_inscription">
-            </div>
-            <div class="astra-form-group">
-                <label>Total dépensé (FCFA)</label>
-                <input type="number" id="edit-total-depense" name="total_depense" min="0" step="any">
+                <label>Adresse</label>
+                <input type="text" id="edit-adresse" name="adresse">
             </div>
             <button type="submit" class="btn-astra-orange" style="width: 100%; justify-content: center; margin-top: 10px;">Mettre à jour</button>
         </form>
@@ -560,8 +547,7 @@
                 document.getElementById('edit-nom').value = btn.getAttribute('data-nom');
                 document.getElementById('edit-email').value = btn.getAttribute('data-email');
                 document.getElementById('edit-telephone').value = btn.getAttribute('data-telephone');
-                document.getElementById('edit-inscription').value = btn.getAttribute('data-inscription');
-                document.getElementById('edit-total-depense').value = btn.getAttribute('data-total');
+                document.getElementById('edit-adresse').value = btn.getAttribute('data-adresse') || '';
 
                 editClientModal.classList.remove('hidden');
             });
@@ -604,21 +590,22 @@
                                 row.cells[1].innerText = data.nom;
                                 row.cells[2].innerText = data.email || 'N/A';
                                 row.cells[3].innerText = data.telephone;
-                                row.cells[4].innerText = data.date_inscription;
-                                row.cells[5].innerText = `${data.total_depense} FCFA`;
 
                                 const detailsBtn = row.querySelector('.details-btn');
                                 if(detailsBtn) {
                                     detailsBtn.setAttribute('data-nom', data.nom);
                                     detailsBtn.setAttribute('data-email', data.email === 'N/A' ? '' : data.email);
                                     detailsBtn.setAttribute('data-telephone', data.telephone);
-                                    detailsBtn.setAttribute('data-inscription', data.date_inscription);
-                                    detailsBtn.setAttribute('data-total', data.total_depense);
+                                    if(data.adresse !== undefined) {
+                                        editButton.setAttribute('data-adresse', data.adresse);
+                                    }
                                 }
                                 editButton.setAttribute('data-nom', data.nom);
                                 editButton.setAttribute('data-email', data.email === 'N/A' ? '' : data.email);
                                 editButton.setAttribute('data-telephone', data.telephone);
-                                editButton.setAttribute('data-total', data.total_depense);
+                                if(data.adresse !== undefined) {
+                                    editButton.setAttribute('data-adresse', data.adresse);
+                                }
                             }
                         }
                         editClientModal.classList.add('hidden');

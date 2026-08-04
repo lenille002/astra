@@ -24,13 +24,24 @@ Astra Tech - Gestion des Stocks
                 </h1>
 
                 <div>
-                    <button class="stock-btn btn-refresh" onclick="location.reload();">
-                        <i class="fas fa-sync"></i> Actualiser
-                    </button>
-
                     <button class="stock-btn btn-add" id="add-product-btn" type="button">
                         <i class="fas fa-plus"></i> Ajouter
                     </button>
+                </div>
+            </div>
+
+            <!-- CARTE DE LIAISON AUTOMATIQUE -->
+            <div style="background: #eff6ff; border-left: 4px solid #004E8C; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <div style="font-size: 1.5rem; color: #004E8C;">
+                    <i class="fas fa-link"></i>
+                </div>
+                <div>
+                    <div style="font-weight: bold; color: #004E8C; margin-bottom: 2px;">
+                        Liaison automatique : <span style="font-weight: normal; color: #333;">Chaque vente diminue automatiquement le stock dans la page Stocks.</span>
+                    </div>
+                    <div id="dynamic-available-count" style="font-size: 0.95rem; color: #555;">
+                        Chargement des produits disponibles...
+                    </div>
                 </div>
             </div>
 
@@ -82,8 +93,8 @@ Astra Tech - Gestion des Stocks
 
                         <tbody id="inventory-body">
                         {% for produit in produits %}
-                            <tr data-id="{{ produit.id }}">
-                                <td>{{ produit.reference }}</td>
+                          <tr data-id="{{ produit.id }}" data-stock="{{ produit.stock }}" {% if produit.stock == 0 %}style="display: none;"{% endif %}>
+    <td>{{ produit.reference }}</td>
                                 <td>{{ produit.nom }}</td>
                                 <td>{% if produit.categorie %}{{ produit.categorie.nom }}{% else %}Non catégorisé{% endif %}</td>
                                 <td>{{ produit.prix_achat }} FCFA</td>
@@ -134,7 +145,7 @@ Astra Tech - Gestion des Stocks
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr>
+                            <tr id="empty-row">
                                 <td colspan="8" style="text-align:center; padding: 30px; color: #6b7280;">Aucun produit disponible en stock</td>
                             </tr>
                         {% endfor %}
@@ -235,6 +246,41 @@ Astra Tech - Gestion des Stocks
 
     <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // URLs Django sécurisées pour l'utilisation JS
+        const urlAjouter = "{% url 'astra:ajouter_produit' %}";
+        const urlModifierTemplate = "{% url 'astra:modifier_produit' 0 %}";
+        const urlSupprimerTemplate = "{% url 'astra:supprimer_produit' 0 %}";
+
+        // Fonction pour recalculer dynamiquement le nombre de produits disponibles et masquer ceux en rupture
+        function updateStockDisplay() {
+            const rows = document.querySelectorAll("#inventory-body tr[data-stock]");
+            let availableCount = 0;
+            let activeTotalProducts = 0;
+
+            rows.forEach(row => {
+                const stock = parseInt(row.getAttribute("data-stock"), 10) || 0;
+                if (stock <= 0) {
+                    row.style.display = "none";
+                } else {
+                    row.style.display = "";
+                    availableCount++;
+                    activeTotalProducts++;
+                }
+            });
+
+            const countEl = document.getElementById("dynamic-available-count");
+            if (countEl) {
+                countEl.innerText = `${availableCount} produit(s) disponible(s) en stock`;
+            }
+
+            const totalProductsEl = document.getElementById("total-products");
+            if (totalProductsEl) {
+                totalProductsEl.innerText = activeTotalProducts;
+            }
+        }
+
+        updateStockDisplay();
+
         const modal = document.getElementById("product-modal");
         const addBtn = document.getElementById("add-product-btn");
         const closeBtn = document.getElementById("close-modal");
@@ -322,7 +368,7 @@ Astra Tech - Gestion des Stocks
                 const formData = new FormData(productForm);
                 const productId = document.getElementById("product-id").value;
                 
-                let url = productId ? "{% url 'astra:modifier_produit' 0 %}".replace('/0/', '/' + productId + '/') : "{% url 'astra:ajouter_produit' %}";
+                let url = productId ? urlModifierTemplate.replace('/0/', '/' + productId + '/') : urlAjouter;
 
                 fetch(url, {
                     method: 'POST',
@@ -367,7 +413,7 @@ Astra Tech - Gestion des Stocks
             btn.addEventListener("click", function() {
                 const productId = btn.getAttribute("data-id");
                 if (confirm("Voulez-vous vraiment supprimer définitivement ce produit du stock ?")) {
-                    const deleteUrl = "{% url 'astra:supprimer_produit' 0 %}".replace('/0/', '/' + productId + '/');
+                    const deleteUrl = urlSupprimerTemplate.replace('/0/', '/' + productId + '/');
 
                     fetch(deleteUrl, {
                         method: 'POST',
@@ -386,7 +432,7 @@ Astra Tech - Gestion des Stocks
                     })
                     .catch(err => {
                         console.error('Erreur:', err);
-                        showNotification(false, "Erreur de communication un serveur.");
+                        showNotification(false, "Erreur de communication avec le serveur.");
                     });
                 }
             });
@@ -396,8 +442,11 @@ Astra Tech - Gestion des Stocks
         if (searchInput) {
             searchInput.addEventListener("keyup", function(e) {
                 const term = e.target.value.toLowerCase();
-                document.querySelectorAll("#inventory-body tr").forEach(row => {
-                    row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none";
+                document.querySelectorAll("#inventory-body tr[data-stock]").forEach(row => {
+                    const stock = parseInt(row.getAttribute("data-stock"), 10) || 0;
+                    if (stock > 0) {
+                        row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none";
+                    }
                 });
             });
         }
@@ -406,8 +455,9 @@ Astra Tech - Gestion des Stocks
         if (filterCategory) {
             filterCategory.addEventListener("change", function(e) {
                 const selectedCat = e.target.value.toLowerCase();
-                document.querySelectorAll("#inventory-body tr").forEach(row => {
-                    if (row.cells.length > 2) {
+                document.querySelectorAll("#inventory-body tr[data-stock]").forEach(row => {
+                    const stock = parseInt(row.getAttribute("data-stock"), 10) || 0;
+                    if (stock > 0 && row.cells.length > 2) {
                         const catText = row.cells[2].innerText.toLowerCase();
                         if (!selectedCat || catText === selectedCat) {
                             row.style.display = "";

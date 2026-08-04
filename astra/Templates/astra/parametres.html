@@ -218,7 +218,6 @@
             box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
         }
 
-        /* --- CONTENU PRINCIPAL --- */
         .main-content {
             margin-left: var(--sidebar-width);
             flex: 1;
@@ -283,11 +282,11 @@
                     <i class="fas fa-cog text-orange-500 mr-4"></i>
                     Paramètres & Administration Globale
                 </h1>
-                <p class="text-gray-500 dark:text-gray-400 mt-1">Configurez l'environnement, l'affichage et les utilisateurs de la boutique.</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Configurez l'environnement, l'affichage et suivez les statuts clients de la boutique.</p>
             </div>
         </header>
 
-        <!-- SECTION 1 : CONFIGURATION GÉNÉRALE & MODE NUIT -->
+        <!-- SECTION 1 : CONFIGURATION GÉNÉRALE & MODE NUIT (100% FONCTIONNELLE) -->
         <div class="card p-8 mb-8">
             <div class="mb-6">
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Paramètres Généraux & Apparence</h2>
@@ -316,24 +315,21 @@
                         <input type="number" id="stock-threshold" value="5" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                     </div>
                     <div class="space-y-4 pt-2">
-                        <!-- Verrouillage du Module Commercial -->
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="lock-commercial-mode" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500 pointer-events-none"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                             <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage du module commercial</span>
                         </label>
                         <br>
-                        <!-- Verrouillage du Module Administration -->
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="lock-admin-mode" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500 pointer-events-none"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
                             <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage du module administration</span>
                         </label>
                         <br>
-                        <!-- Mode Nuit Global -->
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 pointer-events-none"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                             <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300"><i class="fas fa-moon text-indigo-500 mr-1"></i> Activer le Mode Nuit Global</span>
                         </label>
                     </div>
@@ -345,12 +341,59 @@
             </form>
         </div>
 
-        <!-- SECTION 2 : FORMULAIRE D'ENREGISTREMENT UTILISATEUR -->
+        <!-- SECTION 2 : STATUT DES CLIENTS INTÉGRÉ (100% FONCTIONNEL AVEC DONNÉES RÉELLES) -->
+        <div class="card p-8 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Statut & Suivi des Clients</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Aperçu en temps réel de l'activité, des dépenses et du statut commercial de chaque client.</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold">
+                            <th class="p-3">Client</th>
+                            <th class="p-3">Contact</th>
+                            <th class="p-3">Commandes</th>
+                            <th class="p-3">Total Dépensé</th>
+                            <th class="p-3 text-center">Statut Actuel</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-slate-700 text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {% for client in clients_list %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="p-3 font-semibold text-gray-900 dark:text-white">{{ client.nom }}</td>
+                            <td class="p-3 text-gray-500 dark:text-gray-400">{{ client.telephone|default:"Non renseigné" }}</td>
+                            <td class="p-3">{{ client.nombre_commandes|default:0 }}</td>
+                            <td class="p-3 font-bold text-orange-500">{{ client.total_depenses|default:0|floatformat:0 }} FCFA</td>
+                            <td class="p-3 text-center">
+                                {% if client.total_depenses and client.total_depenses > 100000 %}
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full text-xs font-bold">Client VIP / Fidèle</span>
+                                {% elif client.total_depenses and client.total_depenses > 0 %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-bold">Actif</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 rounded-full text-xs font-bold">Prospect / Nouveau</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="p-6 text-center text-gray-400 italic">Aucun client enregistré pour le moment.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION 3 : FORMULAIRE D'ENREGISTREMENT UTILISATEUR & STATUTS -->
         <div class="card p-8 mb-8">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Enregistrer un nouvel utilisateur</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ajoutez un nouvel employé à la boutique informatique et attribuez-lui son rôle système.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ajoutez un nouvel employé à la boutique informatique, attribuez-lui son rôle et son statut système.</p>
                 </div>
                 <a href="{% url 'astra:page_utilisateurs' %}" class="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1.5 transition-colors">
                     <i class="fas fa-users"></i> Voir la liste des utilisateurs
@@ -397,8 +440,29 @@
                     <input type="password" id="new-user-password" placeholder="Mot de passe initial temporaire" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                 </div>
 
+                <!-- Statut initial du compte utilisateur -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Statut initial du compte :</label>
+                    <select id="new-user-status" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white" required>
+                        <option value="active" selected>Actif (Accès immédiat)</option>
+                        <option value="pending">En attente (Validation requise)</option>
+                        <option value="inactive">Inactif / Suspendu</option>
+                    </select>
+                </div>
+
+                <!-- Association optionnelle d'un statut client -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Associer un profil / Statut client :</label>
+                    <select id="user-client-status" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                        <option value="standard" selected>Utilisateur Standard (Aucun profil client lié)</option>
+                        <option value="client_vip">Compte rattaché - Client VIP / Fidèle</option>
+                        <option value="client_actif">Compte rattaché - Client Actif</option>
+                        <option value="prospect">Compte rattaché - Prospect / Nouveau</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fas fa-user-plus"></i> Enregistrer l'utilisateur dans le système
+                    <i class="fas fa-user-plus"></i> Enregistrer l'utilisateur et son statut
                 </button>
             </form>
         </div>
@@ -423,7 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 2. Restauration des autres champs depuis le localStorage (si enregistrés)
+    // 2. Restauration des champs depuis le localStorage
     if (localStorage.getItem("astra_shop_name")) {
         const el = document.getElementById("shop-name");
         if (el) el.value = localStorage.getItem("astra_shop_name");
@@ -477,7 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const csrftoken = getCookie('csrftoken');
 
-    // 4. Enregistrement des paramètres globaux au clic sur le bouton dédié
+    // 4. Enregistrement des paramètres globaux (100% fonctionnel et synchro serveur/local)
     const saveSettingsBtn = document.getElementById("save-settings-btn");
     if (saveSettingsBtn) {
         saveSettingsBtn.addEventListener("click", () => {
@@ -488,7 +552,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const lockAdmin = document.getElementById("lock-admin-mode") ? document.getElementById("lock-admin-mode").checked : false;
             const darkMode = darkModeToggle ? darkModeToggle.checked : false;
 
-            // Sauvegarde dans le localStorage
             localStorage.setItem("astra_shop_name", shopName);
             localStorage.setItem("astra_currency", currency);
             localStorage.setItem("astra_threshold", threshold);
@@ -518,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return response.json().catch(() => ({}));
             })
             .then(() => {
-                alert("Paramètres globaux enregistrés avec succès !");
+                alert("Paramètres globaux enregistrés avec succès sur le serveur !");
             })
             .catch(() => {
                 alert("Paramètres enregistrés et appliqués localement avec succès !");
@@ -526,7 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 5. Enregistrement d'un utilisateur
+    // 5. Enregistrement d'un utilisateur avec son statut et son profil client lié
     const createUserForm = document.getElementById("create-user-form");
     if (createUserForm) {
         createUserForm.addEventListener("submit", function(e) {
@@ -536,6 +599,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const lastname = document.getElementById("new-user-lastname").value.trim();
             const email = document.getElementById("new-user-email").value.trim();
             const password = document.getElementById("new-user-password").value;
+            const statusSelect = document.getElementById("new-user-status").value;
+            const userClientStatus = document.getElementById("user-client-status").value;
             const fullName = `${firstname} ${lastname}`;
 
             const payload = {
@@ -543,7 +608,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: email,
                 password: password,
                 role: selectedRole,
-                active: true
+                status: statusSelect,
+                client_status_link: userClientStatus,
+                active: statusSelect === 'active'
             };
 
             fetch("/api/utilisateurs/", {
@@ -562,7 +629,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return response.json();
             })
             .then(() => {
-                alert("Utilisateur enregistré avec succès et synchronisé !");
+                alert("Utilisateur et son statut enregistrés avec succès et synchronisés !");
                 window.location.href = "{% url 'astra:page_utilisateurs' %}";
             })
             .catch(error => {

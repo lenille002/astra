@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASTRA TECH - Journal d'Activités</title>
-    
+
     <!-- Script d’initialisation immédiate du mode nuit global (exécuté avant le rendu de la page) -->
     <script>
-        (function() {
+        (function () {
             const savedDarkMode = localStorage.getItem('astra_dark_mode');
             if (savedDarkMode === 'true') {
                 document.documentElement.classList.add('dark');
@@ -25,7 +26,7 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         :root {
             --tech-blue: #0078D7;
@@ -44,7 +45,7 @@
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--tech-light-gray);
@@ -61,22 +62,33 @@
             background-color: #0f172a !important;
             color: #f1f5f9 !important;
         }
+
         html.dark .card {
             background-color: #1e293b !important;
             border-color: #334155 !important;
             color: #f1f5f9 !important;
         }
-        html.dark h1, html.dark h2, html.dark h3, html.dark label, html.dark span, html.dark div {
+
+        html.dark h1,
+        html.dark h2,
+        html.dark h3,
+        html.dark label,
+        html.dark span,
+        html.dark div {
             color: inherit;
         }
-        html.dark input, html.dark select {
+
+        html.dark input,
+        html.dark select {
             background-color: #0f172a !important;
             border-color: #334155 !important;
             color: #ffffff !important;
         }
+
         html.dark input::placeholder {
             color: #94a3b8 !important;
         }
+
         html.dark #constellation-container {
             background-color: #020617 !important;
             border-color: #1e293b !important;
@@ -278,7 +290,7 @@
             opacity: 1;
             z-index: 50;
         }
-        
+
         .node-icon {
             font-size: 2rem;
             color: rgba(255, 255, 255, 0.9);
@@ -309,13 +321,28 @@
         }
 
         /* Couleurs pour les actions */
-        .bg-create { background-color: #10b981; }
-        .bg-update { background-color: #3b82f6; }
-        .bg-delete { background-color: #ef4444; }
-        .bg-login { background-color: #f59e0b; }
-        .bg-view { background-color: #6b7280; }
+        .bg-create {
+            background-color: #10b981;
+        }
+
+        .bg-update {
+            background-color: #3b82f6;
+        }
+
+        .bg-delete {
+            background-color: #ef4444;
+        }
+
+        .bg-login {
+            background-color: #f59e0b;
+        }
+
+        .bg-view {
+            background-color: #6b7280;
+        }
     </style>
 </head>
+
 <body>
 
     <!-- SIDEBAR -->
@@ -330,227 +357,196 @@
         <ul class="nav-menu">
             <li><a href="{% url 'astra:token_accueil' %}"><i class="fas fa-key"></i> Gestion des Tokens</a></li>
             <li><a href="{% url 'astra:page_utilisateurs' %}"><i class="fas fa-users"></i> Utilisateurs</a></li>
-            <li><a href="{% url 'astra:permissions_page' %}"><i class="fas fa-shield-alt"></i> Permissions</a></li>
-            <li><a href="{% url 'astra:historiques_page' %}" class="active"><i class="fas fa-history"></i> Historique</a></li>
+            <li><a href="{% url 'astra:permissions_page' %}" class="active"><i class="fas fa-shield-alt"></i>
+                    Permissions</a></li>
+            <li><a href="{% url 'astra:historiques_page' %}"><i class="fas fa-history"></i> Historique</a></li>
             <li><a href="{% url 'astra:parametres_page' %}"><i class="fas fa-cog"></i> Paramètres</a></li>
-
             <a href="#" onclick="history.back(); return false;" class="back-link">
                 <i class="fas fa-arrow-left text-white text-lg"></i>
                 <span>Retour</span>
             </a>
         </ul>
-
-        <div class="sidebar-footer">
-            <a href="{% url 'astra:logout' %}" class="btn-logout" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i> Déconnexion
-            </a>
-        </div>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="main-content">
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-6">Journal d'Activités</h1>
-        
-        <!-- Filtres et Recherche -->
-        <div class="card p-6 mb-6">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="relative w-full md:w-auto flex-grow">
-                    <input type="text" id="search-input" placeholder="Rechercher une action, un utilisateur ou une adresse IP..." class="w-full rounded-full bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white border border-gray-300 dark:border-slate-700 shadow-sm p-3 pl-10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
-                    </div>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <button data-filter="all" class="filter-btn bg-blue-600 text-white font-semibold py-2 px-5 rounded-full hover:bg-blue-700 transition-colors shadow-sm cursor-pointer">
-                        Tout
-                    </button>
-                    <button data-filter="Création" class="filter-btn bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold py-2 px-5 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                        Création
-                    </button>
-                    <button data-filter="Modification" class="filter-btn bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold py-2 px-5 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                        Modification
-                    </button>
-                    <button data-filter="Suppression" class="filter-btn bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold py-2 px-5 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                        Suppression
-                    </button>
-                </div>
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Gestion des Permissions & Rôles</h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Configurez finement les droits d'accès par profil et
+                    par module.</p>
             </div>
+            <button id="btn-save" onclick="savePermissions()"
+                class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-6 rounded-lg transition-all shadow-md flex items-center gap-2">
+                <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
         </div>
-        
-        <!-- Constellation Container -->
-        <div id="constellation-container">
-            <canvas id="constellation-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
-            <div id="nodes-container" class="absolute inset-0 w-full h-full"></div>
-        </div>
+
+        <!-- ZONE DE NOTIFICATION DYNAMIQUE -->
+        <div id="alert-box" class="hidden mb-6 p-4 rounded-lg text-sm font-medium transition-all"></div>
+
+        <div class="card shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-slate-700">
+                            <th class="py-4 px-4 text-gray-700 dark:text-gray-200 font-semibold">Module / Fonctionnalité
+                            </th>
+                            <th class="py-4 px-4 text-gray-700 dark:text-gray-200 font-semibold text-center">
+                                Administrateur</th>
+                            <th class="py-4 px-4 text-gray-700 dark:text-gray-200 font-semibold text-center">Manager /
+                                Superviseur</th>
+                            <th class="py-4 px-4 text-gray-700 dark:text-gray-200 font-semibold text-center">Opérateur /
+                                Vendeur</th>
+                            <th class="py-4 px-4 text-gray-700 dark:text-gray-200 font-semibold text-center">Lecteur /
+                                Invité</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
+                        <!-- Module Tokens -->
+                        <tr>
+                            <td class="py-4 px-4 font-medium text-gray-800 dark:text-gray-200"><i
+                                    class="fas fa-key text-blue-500 mr-2"></i> Gestion des Tokens</td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="admin" data-module="tokens" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="manager" data-module="tokens" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="operator" data-module="tokens"></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="guest" data-module="tokens"></td>
+                        </tr>
+                        <!-- Module Utilisateurs -->
+                        <tr>
+                            <td class="py-4 px-4 font-medium text-gray-800 dark:text-gray-200"><i
+                                    class="fas fa-users text-blue-500 mr-2"></i> Gestion des Utilisateurs</td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="admin" data-module="users" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="manager" data-module="users"></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="operator" data-module="users"></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="guest" data-module="users"></td>
+                        </tr>
+                        <!-- Module Permissions -->
+                        <tr>
+                            <td class="py-4 px-4 font-medium text-gray-800 dark:text-gray-200"><i
+                                    class="fas fa-shield-alt text-blue-500 mr-2"></i> Modification des Permissions</td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="admin" data-module="permissions" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="manager" data-module="permissions"></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="operator" data-module="permissions"></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="guest" data-module="permissions"></td>
+                        </tr>
+                        <!-- Module Historique -->
+                        <tr>
+                            <td class="py-4 px-4 font-medium text-gray-800 dark:text-gray-200"><i
+                                    class="fas fa-history text-blue-500 mr-2"></i> Consultation des Journaux (Logs)</td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="admin" data-module="historiques" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="manager" data-module="historiques" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="operator" data-module="historiques" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="guest" data-module="historiques"></td>
+                        </tr>
+                        <!-- Module Paramètres -->
+                        <tr>
+                            <td class="py-4 px-4 font-medium text-gray-800 dark:text-gray-200"><i
+                                    class="fas fa-cog text-blue-500 mr-2"></i> Configuration & Paramètres Système</td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="admin" data-module="parametres" checked></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="manager" data-module="parametres"></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="operator" data-module="parametres"></td>
+                            <td class="text-center py-4"><input type="checkbox" class="permission-checkbox"
+                                    data-role="guest" data-module="parametres"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
     </main>
 
-    <!-- SCRIPT DE LA CONSTELLATION -->
+    <!-- SCRIPT DE COMMUNICATION AVEC L'API DJANGO -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const historyData = [
-                { date: '2026-07-23 16:00', user: 'Jeanne Dupont', action: 'Création', details: 'Création du token d\'accès "Accès Invité"', ip: '192.168.1.1' },
-                { date: '2026-07-23 15:35', user: 'Pierre Martin', action: 'Modification', details: 'Modification des permissions du rôle "Support"', ip: '203.0.113.5' },
-                { date: '2026-07-23 15:30', user: 'Pierre Martin', action: 'Connexion', details: 'Connexion réussie', ip: '203.0.113.5' },
-                { date: '2026-07-23 15:00', user: 'Jeanne Dupont', action: 'Consultation', details: 'Consultation du journal des activités', ip: '192.168.1.1' },
-                { date: '2026-07-23 14:25', user: 'Jeanne Dupont', action: 'Suppression', details: 'Suppression du token "Stagiaire-été"', ip: '192.168.1.1' },
-                { date: '2026-07-23 13:45', user: 'Pierre Martin', action: 'Création', details: 'Ajout d\'un nouvel utilisateur "Lucie D."', ip: '203.0.113.5' },
-            ];
-            
-            const actionMap = {
-                'Création': { icon: 'fas fa-plus', color: 'bg-create' },
-                'Modification': { icon: 'fas fa-pen', color: 'bg-update' },
-                'Suppression': { icon: 'fas fa-trash-alt', color: 'bg-delete' },
-                'Connexion': { icon: 'fas fa-sign-in-alt', color: 'bg-login' },
-                'Consultation': { icon: 'fas fa-eye', color: 'bg-view' },
-            };
+        function showNotification(message, isSuccess = true) {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.className = `mb-6 p-4 rounded-lg text-sm font-medium transition-all ${isSuccess ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'}`;
+            alertBox.innerHTML = `<i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`;
+            alertBox.classList.remove('hidden');
 
-            const container = document.getElementById('constellation-container');
-            const nodesContainer = document.getElementById('nodes-container');
-            const canvas = document.getElementById('constellation-canvas');
-            const ctx = canvas.getContext('2d');
-            const searchInput = document.getElementById('search-input');
-            const filterButtons = document.querySelectorAll('.filter-btn');
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 4000);
+        }
 
-            let activeFilter = 'all';
-            let nodePositions = [];
-            let filteredData = [];
+        function savePermissions() {
+            const btn = document.getElementById('btn-save');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Enregistrement...`;
 
-            function resizeCanvas() {
-                if (container) {
-                    canvas.width = container.clientWidth;
-                    canvas.height = container.clientHeight;
-                }
-            }
+            // Collecter l'état de toutes les cases à cocher
+            const permissionsData = [];
+            document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+                permissionsData.push({
+                    role: checkbox.getAttribute('data-role'),
+                    module: checkbox.getAttribute('data-module'),
+                    allowed: checkbox.checked
+                });
+            });
 
-            function drawLines() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = 'rgba(100, 149, 237, 0.4)';
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = 'rgba(100, 149, 237, 0.8)';
-                
-                if (nodePositions.length > 1) {
-                    ctx.beginPath();
-                    ctx.moveTo(nodePositions[0].x, nodePositions[0].y);
-                    for (let i = 1; i < nodePositions.length; i++) {
-                        ctx.lineTo(nodePositions[i].x, nodePositions[i].y);
+            // Envoi de la requête POST vers l'API Django
+            fetch("{% url 'astra:api_save_permissions' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ permissions: permissionsData })
+            })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(res => {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fas fa-save"></i> Enregistrer les modifications`;
+
+                    if (res.status === 200 && res.body.status === 'success') {
+                        showNotification(res.body.message || "Permissions enregistrées avec succès.", true);
+                    } else {
+                        showNotification(res.body.message || "Erreur lors de la mise à jour des permissions.", false);
                     }
-                    ctx.stroke();
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fas fa-save"></i> Enregistrer les modifications`;
+                    showNotification("Erreur de connexion avec le serveur.", false);
+                    console.error("Erreur:", error);
+                });
+        }
+
+        // Fonction utilitaire pour récupérer le jeton CSRF de Django dans les cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
-
-            function renderConstellation() {
-                nodesContainer.innerHTML = '';
-                nodePositions = [];
-                
-                const searchTerm = searchInput.value.toLowerCase();
-                
-                filteredData = historyData.filter(item => {
-                    const matchesFilter = activeFilter === 'all' || item.action === activeFilter;
-                    const matchesSearch = searchTerm === '' || 
-                                          item.details.toLowerCase().includes(searchTerm) ||
-                                          item.user.toLowerCase().includes(searchTerm) ||
-                                          item.ip.toLowerCase().includes(searchTerm);
-                    return matchesFilter && matchesSearch;
-                });
-
-                if (filteredData.length === 0) {
-                    nodesContainer.innerHTML = '<p class="text-center text-gray-400 mt-20">Aucun résultat ne correspond à votre recherche.</p>';
-                    drawLines();
-                    return;
-                }
-
-                filteredData.forEach((item) => {
-                    const nodeDiv = document.createElement('div');
-                    const actionInfo = actionMap[item.action] || { icon: 'fas fa-info-circle', color: 'bg-view' };
-                    const nodeSize = 75;
-                    
-                    nodeDiv.classList.add('constellation-node', actionInfo.color);
-                    nodeDiv.style.width = `${nodeSize}px`;
-                    nodeDiv.style.height = `${nodeSize}px`;
-
-                    const nodeIcon = document.createElement('div');
-                    nodeIcon.classList.add('node-icon');
-                    nodeIcon.innerHTML = `<i class="${actionInfo.icon}"></i>`;
-                    
-                    const nodeDetails = document.createElement('div');
-                    nodeDetails.classList.add('node-details');
-                    nodeDetails.innerHTML = `
-                        <p class="text-xs text-gray-400 mb-1">${item.date}</p>
-                        <h4 class="font-semibold text-sm text-white">${item.user}</h4>
-                        <p class="text-xs text-gray-300 mt-1">${item.details}</p>
-                    `;
-                    
-                    nodeDiv.appendChild(nodeIcon);
-                    nodeDiv.appendChild(nodeDetails);
-                    nodesContainer.appendChild(nodeDiv);
-                });
-
-                positionNodes();
-            }
-
-            function positionNodes() {
-                const containerRect = container.getBoundingClientRect();
-                nodePositions = [];
-                const padding = 70;
-
-                filteredData.forEach((item, index) => {
-                    const node = nodesContainer.children[index];
-                    if (!node) return;
-                    let x, y;
-                    let isColliding;
-                    let attempts = 0;
-
-                    do {
-                        x = Math.random() * (containerRect.width - padding * 2) + padding / 2;
-                        y = Math.random() * (containerRect.height - padding * 2) + padding / 2;
-                        isColliding = false;
-                        attempts++;
-
-                        for (let i = 0; i < nodePositions.length; i++) {
-                            const prevNode = nodePositions[i];
-                            const distance = Math.hypot(x - prevNode.x, y - prevNode.y);
-                            if (distance < 110) {
-                                isColliding = true;
-                                break;
-                            }
-                        }
-                    } while (isColliding && attempts < 50);
-                    
-                    node.style.left = `${x}px`;
-                    node.style.top = `${y}px`;
-                    
-                    nodePositions.push({
-                        x: x + 37.5,
-                        y: y + 37.5
-                    });
-                });
-                drawLines();
-            }
-
-            filterButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    activeFilter = button.getAttribute('data-filter');
-                    filterButtons.forEach(btn => {
-                        btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-                        btn.classList.add('bg-gray-200', 'dark:bg-slate-800', 'text-gray-700', 'dark:text-gray-300');
-                    });
-                    button.classList.remove('bg-gray-200', 'dark:bg-slate-800', 'text-gray-700', 'dark:text-gray-300');
-                    button.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-                    renderConstellation();
-                });
-            });
-
-            searchInput.addEventListener('input', renderConstellation);
-
-            window.addEventListener('resize', () => {
-                resizeCanvas();
-                positionNodes();
-            });
-
-            resizeCanvas();
-            renderConstellation();
-        });
+            return cookieValue;
+        }
     </script>
 </body>
+
 </html>
