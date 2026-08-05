@@ -411,7 +411,7 @@
         <td>{{ client.email|default:"N/A" }}</td>
         <td>{{ client.telephone }}</td>
         <td>{{ client.date_inscription|date:"d/m/Y"|default:"N/A" }}</td>
-        <td style="font-weight: 700; color: {% if client.total_depenses_calcule > 100000 %}#16a34a{% else %}#334155{% endif %};">{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>
+        <td style="font-weight: 700; color: {% if client.total_depenses_calcule > 100000 %}#16a34a{% else %}#334155{% endif %};">{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>
         <td style="text-align: center;">
             <a href="{% url 'astra:detail_client_activites' client.id %}" style="display: inline-flex; align-items: center; gap: 5px; background-color: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none;" title="Voir le cahier d'activités">
                 <i class="fa-solid fa-book-open"></i> Cahier ({{ client.nombre_achats|default:0 }})
