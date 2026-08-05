@@ -506,9 +506,9 @@
         </ul>
 
         <div class="sidebar-footer">
-            <form action="{% url 'astra:logout' %}" method="post" style="width: 100%;">
+            <form action="{% url 'astra:login' %}" method="post" style="width: 100%;">
                 {% csrf_token %}
-                <button type="submit" class="btn-logout" id="sidebarLogout">
+                <button type="submit" class="btn-logout" id="sidebarLogin">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </button>
             </form>

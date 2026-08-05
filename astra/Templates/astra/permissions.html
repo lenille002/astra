@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASTRA TECH - Gestion des Permissions</title>
-
-    <!-- Script anti-flash Dark Mode -->
+    <title>ASTRA TECH - Paramètres & Administration Globale</title>
+    
+    <!-- Script d’initialisation immédiate du mode nuit global -->
     <script>
-        (function () {
+        (function() {
             const savedDarkMode = localStorage.getItem('astra_dark_mode');
             if (savedDarkMode === 'true') {
                 document.documentElement.classList.add('dark');
@@ -18,49 +17,76 @@
         })();
     </script>
 
+    <!-- CSS Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = {
+            darkMode: 'class',
+        }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <style>
         :root {
+            --tech-blue: #0078D7;
             --tech-dark-blue: #004E8C;
             --tech-sidebar-bg: #003366;
-            --tech-orange: #FF8C00;
+            --tech-orange: #f97316;
+            --tech-orange-hover: #ea580c;
             --tech-white: #FFFFFF;
-            --tech-light-gray: #F4F6F9;
+            --tech-light-gray: #f8fafc;
             --tech-card-bg: #ffffff;
             --tech-dark-gray: #333333;
             --tech-border: #E0E0E0;
             --sidebar-width: 280px;
+            --radius-lg: 16px;
+            --radius-md: 10px;
         }
 
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--tech-light-gray);
             color: var(--tech-dark-gray);
             display: flex;
             min-height: 100vh;
-            margin: 0;
+            overflow-x: hidden;
+            gap: 0;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        /* --- MODE NUIT GLOBAL --- */
         html.dark body {
             background-color: #0f172a !important;
             color: #f1f5f9 !important;
         }
-
         html.dark .card {
             background-color: #1e293b !important;
             border-color: #334155 !important;
             color: #f1f5f9 !important;
         }
+        html.dark h1, html.dark h2, html.dark h3, html.dark label, html.dark span, html.dark div {
+            color: inherit;
+        }
+        html.dark input, html.dark select {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #ffffff !important;
+        }
+        html.dark .role-card {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        html.dark .role-card.border-orange-500 {
+            border-color: #f97316 !important;
+            background-color: rgba(249, 115, 22, 0.1) !important;
+        }
 
+        /* --- SIDEBAR --- */
         .sidebar {
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--tech-dark-blue) 0%, var(--tech-sidebar-bg) 100%);
+            background: linear-gradient(180deg, var(--tech-dark-blue) 0%, #003366 100%);
             color: var(--tech-white);
             display: flex;
             flex-direction: column;
@@ -69,6 +95,8 @@
             bottom: 0;
             left: 0;
             z-index: 100;
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .sidebar-brand {
@@ -76,11 +104,37 @@
             display: flex;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            font-weight: bold;
-            font-size: 20px;
         }
 
-        .sidebar-brand span {
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--tech-white);
+            border-radius: 8px;
+            transform: rotate(45deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-logo-inner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--tech-orange);
+            border-radius: 5px;
+            transform: rotate(-45deg);
+        }
+
+        .sidebar-title {
+            font-weight: bold;
+            font-size: 20px;
+            letter-spacing: 1px;
+            color: #ffffff !important;
+        }
+
+        .sidebar-title span {
             color: var(--tech-orange);
         }
 
@@ -92,23 +146,35 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            overflow-y: auto;
         }
 
-        .nav-menu li a {
+        .nav-menu li a,
+        .nav-menu a.back-link {
             display: flex;
             align-items: center;
             padding: 14px 18px;
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             font-weight: 500;
-            border-radius: 10px;
+            font-size: 14px;
+            border-radius: var(--radius-md);
             transition: all 0.25s ease;
         }
 
-        .nav-menu li a i {
+        .nav-menu li a i,
+        .nav-menu a.back-link i {
             margin-right: 14px;
+            font-size: 16px;
             width: 22px;
             text-align: center;
+            transition: transform 0.25s;
+        }
+
+        .nav-menu li a:hover,
+        .nav-menu a.back-link:hover {
+            color: var(--tech-white);
+            background-color: rgba(255, 255, 255, 0.08);
         }
 
         .nav-menu li a.active {
@@ -118,27 +184,70 @@
             font-weight: 600;
         }
 
+        .nav-menu a.back-link {
+           
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-footer {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-logout {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--tech-white);
+            border: none;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background-color: #ff4d4d;
+            box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
+        }
+
         .main-content {
             margin-left: var(--sidebar-width);
             flex: 1;
             padding: 40px;
+            max-width: calc(100% - var(--sidebar-width));
+            box-sizing: border-box;
         }
 
         .card {
             background-color: var(--tech-card-bg);
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             border: 1px solid var(--tech-border);
-            padding: 32px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .role-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
     </style>
 </head>
-
 <body>
+
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            ASTRA <span>TECH</span>
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-inner"></div>
+            </div>
+            <div class="sidebar-title">ASTRA <span>TECH</span></div>
         </div>
 
         <ul class="nav-menu">
@@ -147,8 +256,22 @@
             <li><a href="{% url 'astra:permissions_page' %}" class="active"><i class="fas fa-shield-alt"></i> Permissions</a></li>
             <li><a href="{% url 'astra:historiques_page' %}"><i class="fas fa-history"></i> Historique</a></li>
             <li><a href="{% url 'astra:parametres_page' %}"><i class="fas fa-cog"></i> Paramètres</a></li>
+
+            <li>
+                <a href="#" onclick="history.back(); return false;" class="back-link">
+                    <i class="fas fa-arrow-left text-white text-lg"></i>
+                    <span>Retour</span>
+                </a>
+            </li>
         </ul>
+
+        <div class="sidebar-footer">
+            <a href="{% url 'astra:login' %}" class="btn-logout" id="loginBtn">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
+        </div>
     </aside>
+
 
     <!-- MAIN CONTENT -->
     <main class="main-content">
