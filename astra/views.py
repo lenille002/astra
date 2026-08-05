@@ -691,14 +691,16 @@ def liste_stocks(request):
         'produits': produits,
     }
     return render(request, 'astra/liste_stocks.html', context)
+ 
+import uuid
 
+import uuid
 
 @csrf_exempt
 @verifier_acces_strict
 def ajouter_produit(request):
     if request.method == 'POST':
         try:
-            reference = request.POST.get('reference')
             nom = request.POST.get('nom')
             categorie_id = request.POST.get('categorie_id')
             prix_achat = request.POST.get('prix_achat', 0)
@@ -706,6 +708,11 @@ def ajouter_produit(request):
             stock = request.POST.get('stock', 0)
 
             categorie = Categorie.objects.filter(id=categorie_id).first() if categorie_id else None
+
+            # --- Génération automatique de la référence unique par la base / le serveur ---
+            prefixe = categorie.nom[:3].upper() if categorie else "AST"
+            unique_id = str(uuid.uuid4())[:4].upper()
+            reference = f"{prefixe}-{unique_id}"
 
             Produit.objects.create(
                 reference=reference,
@@ -716,12 +723,10 @@ def ajouter_produit(request):
                 stock=stock,
                 is_active=True
             )
-            return JsonResponse({'status': 'success', 'message': 'Produit ajouté avec succès !'})
+            return JsonResponse({'status': 'success', 'message': f'Produit enregistré avec succès (Réf: {reference}) !'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
-
-
 @csrf_exempt
 @verifier_acces_strict
 def modifier_produit(request, product_id):
@@ -739,14 +744,13 @@ def modifier_produit(request, product_id):
                 
             produit.prix_achat = request.POST.get('prix_achat', produit.prix_achat)
             produit.prix_vente = request.POST.get('prix_vente', produit.prix_vente)
-            produit.stock = request.POST.get('stock', produit.stock)
+            produit.stock = request.POST.get('stock', produit.stock) # Remplacé quantite par stock
             produit.save()
 
             return JsonResponse({'status': 'success', 'message': 'Produit modifié avec succès !'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
-
 
 @csrf_exempt
 @verifier_acces_strict
@@ -760,8 +764,6 @@ def supprimer_produit(request, product_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
-
-
 # ==========================
 # FOURNISSEURS
 # ==========================
@@ -942,6 +944,7 @@ def modifier_approvisionnement(request, pk):
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
             
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
+
 def supprimer_approvisionnement(request, pk):
     appro = get_object_or_404(Approvisionnement, pk=pk)
     if request.method == 'POST':
@@ -1008,63 +1011,59 @@ def rapports(request):
     
     return render(request, 'rapports.html', context)
 
-@verifier_acces_strict
-def parametres_page_view(request):
-    if request.method == 'POST':
-        try:
-            # Traitement direct si le formulaire est soumis en POST classique
-            data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
-            request.session['shop_name'] = data.get('nom_boutique', 'ASTRA TECH')
-            request.session['shop_currency'] = data.get('devise', 'FCFA')
-            request.session['stock_threshold'] = data.get('seuil_alerte_stock', 5)
-            
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json':
-                return JsonResponse({'success': True, 'message': 'Paramètres enregistrés avec succès.'})
-        except Exception as e:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json':
-                return JsonResponse({'success': False, 'error': str(e)}, status=400)
-
-    # Récupération de tous les clients pour alimenter le tableau de la page des paramètres
-    clients_list = Client.objects.all().annotate(
-        total_depenses=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False)),
-        nombre_commandes=Count('ventes', filter=Q(ventes__est_archive=False))
-    ).order_by('-id')
-
-    context = {
-        'clients_list': clients_list,
-    }
-    return render(request, 'astra/parametres.html', context)
-
-@csrf_exempt
-@verifier_acces_strict
-def api_parametres_globaux(request):
-    """
-    API pour enregistrer dynamiquement les paramètres globaux (via JavaScript/Fetch).
-    """
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            # Vous pouvez sauvegarder ces configurations en session ou dans un modèle de configuration dédié
-            request.session['shop_name'] = data.get('nom_boutique', 'ASTRA TECH')
-            request.session['shop_currency'] = data.get('devise', 'FCFA')
-            request.session['stock_threshold'] = data.get('seuil_alerte_stock', 5)
-            
-            return JsonResponse({'success': True, 'message': 'Paramètres enregistrés avec succès.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
 # ==========================
-# PERMISSIONS, HISTORIQUES, PARAMÈTRES & À PROPOS
+# DÉCORATEUR DE SÉCURITÉ
 # ==========================
+def verifier_acces_strict(view_func):
+    """
+    Décorateur pour vérifier si le module administration est verrouillé.
+    """
+    def wrapper(request, *args, **kwargs):
+        if request.session.get('lock_admin', False):
+            # Autoriser uniquement la page des paramètres pour pouvoir le déverrouiller
+            if request.resolver_match and request.resolver_match.url_name == 'parametres_page':
+                return view_func(request, *args, **kwargs)
+            return JsonResponse({'error': 'Le module d\'administration est verrouillé.'}, status=403)
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+# ==========================
+# VUES DES PAGES HTML
+# ==========================
+
 @verifier_acces_strict
 def permissions_page_view(request):
     """
-    Vue pour la page de gestion des permissions.
+    Vue dédiée pour la page de gestion des permissions.
     """
-    # Print de debug pour vérifier dans la console du serveur Django quelle vue est appelée
-    print("--> Chargement de la vue PERMISSIONS")
     return render(request, 'astra/permissions.html')
 
+@verifier_acces_strict
+def historiques_page_view(request):
+    """
+    Vue dédiée pour afficher l'historique des actions / logs.
+    """
+    return render(request, 'astra/historiques.html')
+
+@verifier_acces_strict
+def parametres_page_view(request):
+    """
+    Vue dédiée pour la page des paramètres de l'application.
+    """
+    return render(request, 'astra/parametres.html')
+
+@verifier_acces_strict
+def propos(request):
+    """
+    Vue pour la page 'À propos'.
+    """
+    return render(request, 'astra/propos.html')
+
+
+# ==========================
+# APIS / TRAITEMENTS POST
+# ==========================
 
 @csrf_exempt
 @verifier_acces_strict
@@ -1075,33 +1074,32 @@ def api_save_permissions(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            # Logique de sauvegarde
+            # Traitement des permissions ici si besoin
             return JsonResponse({'status': 'success', 'message': 'Permissions enregistrées avec succès.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
-
+@csrf_exempt
 @verifier_acces_strict
-def historiques_page_view(request):
+def api_save_parametres(request):
     """
-    Vue pour afficher l'historique des actions / logs de l'application.
+    API pour enregistrer les paramètres globaux et les états de verrouillage.
     """
-    print("--> Chargement de la vue HISTORIQUES")
-    return render(request, 'astra/historiques.html')
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            request.session['shop_name'] = data.get('nom_boutique', 'ASTRA TECH')
+            request.session['shop_currency'] = data.get('devise', 'FCFA')
+            request.session['stock_threshold'] = data.get('seuil_alerte_stock', 5)
+            request.session['lock_commercial'] = data.get('verrouillage_commercial', False)
+            request.session['lock_admin'] = data.get('verrouillage_admin', False)
+            
+            request.session.modified = True
+            
+            return JsonResponse({'success': True, 'message': 'Paramètres enregistrés avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
 
-
-@verifier_acces_strict
-def parametres_page_view(request):
-    """
-    Vue pour la page des paramètres de l'application.
-    """
-    return render(request, 'astra/parametres.html')
-
-
-@verifier_acces_strict
-def propos(request):
-    """
-    Vue pour la page 'À propos' de l'application ASTRA TECH.
-    """
-    return render(request, 'astra/propos.html')

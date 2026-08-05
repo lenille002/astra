@@ -33,7 +33,6 @@ urlpatterns = [
     path("approvisionnements/", views.approvisionnements, name="approvisionnements"),
     path("approvisionnements/ajouter/", views.ajouter_approvisionnement, name="ajouter_approvisionnement"),
     path('approvisionnements/<int:pk>/details/', views.details_approvisionnement, name='detail_approvisionnement'),
-    path('approvisionnements/<int:pk>/details/', views.details_approvisionnement, name='details_approvisionnement'),
     path('approvisionnements/<int:pk>/modifier/', views.modifier_approvisionnement, name='modifier_approvisionnement'),
     path('approvisionnements/<int:pk>/supprimer/', views.supprimer_approvisionnement, name='supprimer_approvisionnement'),
     
@@ -50,14 +49,15 @@ urlpatterns = [
     path("login-token/", views.LoginWithTokenView.as_view(), name="login_token"),
 
     # Gestion des utilisateurs, permissions & paramètres
-   path("utilisateurs/", views.users_page_view, name="page_utilisateurs"),
+    path("utilisateurs/", views.users_page_view, name="page_utilisateurs"),
     path("api/utilisateurs/", views.api_users_list_create, name="api_users_list_create"),
     path("api/utilisateurs/<int:pk>/", views.api_user_detail_update_delete, name="api_user_detail_update_delete"),
     
+    # Rôles distincts pour charger les bons fichiers HTML
     path("permissions/", views.permissions_page_view, name="permissions_page"),
     path("api/permissions/", views.api_save_permissions, name="api_save_permissions"),
     
     path("historiques/", views.historiques_page_view, name="historiques_page"),
     path("parametres/", views.parametres_page_view, name="parametres_page"),
-    path("propos/", views.propos, name="propos"),
+    path("api/parametres/", views.api_save_parametres, name="api_save_parametres"),
 ]

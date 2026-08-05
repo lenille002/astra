@@ -1,12 +1,14 @@
 {% load static %}
 
-<header class="app-header">
+<header class="app-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 24px; width: 100%; box-sizing: border-box;">
 
-    <div class="logo-container">
-        <img src="{% static 'image/logoo.png' %}" alt="ASTRA TECH">
+    <!-- LOGO -->
+    <div class="logo-container" style="display: flex; align-items: center;">
+        <img src="{% static 'image/logoo.png' %}" alt="ASTRA TECH" style="height: 38px; width: auto;">
     </div>
 
-    <nav class="nav-menu">
+    <!-- NAVIGATION -->
+    <nav class="nav-menu" style="display: flex; align-items: center; gap: 24px;">
         <a href="{% url 'astra:ventes' %}" class="nav-item {% if request.resolver_match.url_name == 'ventes' %}active{% endif %}">Ventes</a>
         <a href="{% url 'astra:stock' %}" class="nav-item {% if request.resolver_match.url_name == 'stock' %}active{% endif %}">Stocks</a>
         <a href="{% url 'astra:approvisionnements' %}" class="nav-item {% if request.resolver_match.url_name == 'approvisionnement' or request.resolver_match.url_name == 'approvisionnements' %}active{% endif %}">Approvisionnement</a>
@@ -15,21 +17,63 @@
         <a href="{% url 'astra:rapports' %}" class="nav-item {% if request.resolver_match.url_name == 'rapports' %}active{% endif %}">Rapports</a>
     </nav>
 
-    <div class="user-menu">
-        <!-- 1. Cloche de notification -->
-        <div class="notification-icon" id="notificationIcon">
-            <i class="fas fa-bell"></i>
-            {% if notifications_non_lues or stock_bas %}
-                <span class="notification-badge">
-                    {{ notifications_non_lues|default:0|add:stock_bas|default:0 }}
-                </span>
+    <!-- USER MENU & NOTIFICATIONS -->
+    <div class="user-menu" style="display: flex; align-items: center; gap: 16px;">
+        
+        <div class="notification-container" style="position: relative; display: inline-block; cursor: pointer;">
+    <div class="notification-icon" id="notificationIcon" onclick="toggleNotificationDropdown()" style="font-size: 1.2rem; padding: 8px; color: white;">
+        <i class="fas fa-bell"></i>
+        {% if stock_bas and stock_bas > 0 %}
+            <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #ff4d4d; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 50%; font-weight: bold;">
+                {{ stock_bas }}
+            </span>
+        {% endif %}
+    </div>
+
+    <!-- Menu déroulant dynamique -->
+    <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 320px; background: white; color: black; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 10px; z-index: 9999; padding: 15px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+            <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem;">Notifications système</h6>
+            <span style="background: #ff7f00; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: bold;">En direct</span>
+        </div>
+        <div style="max-height: 220px; overflow-y: auto; font-size: 0.8rem;">
+            {% if stock_bas and stock_bas > 0 %}
+                <div style="padding: 10px; background: #fff3cd; border-radius: 6px; display: flex; gap: 8px; align-items: center; border-left: 4px solid #ff9900;">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff9900; font-size: 1.1rem;"></i>
+                    <div>
+                        <strong style="display: block; color: #b78103;">{{ titre_alerte }} :</strong> 
+                        {{ message_alerte }}
+                    </div>
+                </div>
+            {% else %}
+                <div style="text-align: center; color: #666; margin: 15px 0;">
+                    <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
+                    Aucune alerte critique pour le moment.
+                </div>
             {% endif %}
         </div>
+    </div>
+</div>
 
         <!-- 2. Bouton Retour -->
-        <a href="{% url 'astra:accueil' %}" class="btn btn-primary rounded-pill px-4">
+        <a href="{% url 'astra:accueil' %}" class="btn btn-primary rounded-pill px-4" style="white-space: nowrap;">
             <i class="fas fa-arrow-left me-2"></i> Retour
         </a>
     </div>
 
 </header>
+
+<script>
+    function toggleNotificationDropdown() {
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.style.display = (dropdown.style.display === 'none' || dropdown.style.display === '') ? 'block' : 'none';
+    }
+
+    window.addEventListener('click', function(e) {
+        const container = document.querySelector('.notification-container');
+        const dropdown = document.getElementById('notificationDropdown');
+        if (container && dropdown && !container.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+</script>

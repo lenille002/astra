@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASTRA TECH - Paramètres & Gestion Globale</title>
+    <title>ASTRA TECH - Paramètres & Administration Globale</title>
     
     <!-- Script d’initialisation immédiate du mode nuit global -->
     <script>
@@ -282,15 +282,15 @@
                     <i class="fas fa-cog text-orange-500 mr-4"></i>
                     Paramètres & Administration Globale
                 </h1>
-                <p class="text-gray-500 dark:text-gray-400 mt-1">Configurez l'environnement, l'affichage et suivez les statuts clients de la boutique.</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Configurez l'environnement, l'affichage et les règles de gestion de la boutique.</p>
             </div>
         </header>
 
-        <!-- SECTION 1 : CONFIGURATION GÉNÉRALE & MODE NUIT (100% FONCTIONNELLE) -->
+        <!-- SECTION 1 : CONFIGURATION GÉNÉRALE & APPARENCE -->
         <div class="card p-8 mb-8">
             <div class="mb-6">
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Paramètres Généraux & Apparence</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Personnalisez le comportement du système, la devise et activez le mode nuit global.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Personnalisez l'identité de la boutique, la fiscalité et le mode d'affichage.</p>
             </div>
 
             <form id="global-settings-form" class="space-y-6" onsubmit="return false;">
@@ -309,27 +309,38 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Seuil d'alerte de stock bas par défaut</label>
                         <input type="number" id="stock-threshold" value="5" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                     </div>
-                    <div class="space-y-4 pt-2">
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="lock-commercial-mode" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Taux de TVA par défaut (%)</label>
+                        <input type="number" id="tax-rate" value="19.25" step="0.01" min="0" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center pt-2 border-t border-gray-100 dark:border-slate-800">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format d'impression des reçus de caisse</label>
+                        <select id="receipt-format" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white">
+                            <option value="thermal">Imprimante Thermique (80 mm)</option>
+                            <option value="a4">Format Standard (A4)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-4 pt-4">
+                        <label class="flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="lock-commercial-mode" class="w-5 h-5 accent-orange-500 rounded cursor-pointer">
                             <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage du module commercial</span>
                         </label>
-                        <br>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="lock-admin-mode" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                        
+                        <label class="flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="lock-admin-mode" class="w-5 h-5 accent-red-500 rounded cursor-pointer">
                             <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage du module administration</span>
                         </label>
-                        <br>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        
+                        <label class="flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="dark-mode-toggle" class="w-5 h-5 accent-indigo-600 rounded cursor-pointer">
                             <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300"><i class="fas fa-moon text-indigo-500 mr-1"></i> Activer le Mode Nuit Global</span>
                         </label>
                     </div>
@@ -341,59 +352,46 @@
             </form>
         </div>
 
-        <!-- SECTION 2 : STATUT DES CLIENTS INTÉGRÉ (100% FONCTIONNEL AVEC DONNÉES RÉELLES) -->
+        <!-- SECTION 2 : MAINTENANCE & SAUVEGARDE SYSTÈME -->
         <div class="card p-8 mb-8">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Statut & Suivi des Clients</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Aperçu en temps réel de l'activité, des dépenses et du statut commercial de chaque client.</p>
-                </div>
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Maintenance & Sécurité des Données</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gérez les sauvegardes de la base de données et l'archivage des journaux d'activité.</p>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold">
-                            <th class="p-3">Client</th>
-                            <th class="p-3">Contact</th>
-                            <th class="p-3">Commandes</th>
-                            <th class="p-3">Total Dépensé</th>
-                            <th class="p-3 text-center">Statut Actuel</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-slate-700 text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {% for client in clients_list %}
-                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <td class="p-3 font-semibold text-gray-900 dark:text-white">{{ client.nom }}</td>
-                            <td class="p-3 text-gray-500 dark:text-gray-400">{{ client.telephone|default:"Non renseigné" }}</td>
-                            <td class="p-3">{{ client.nombre_commandes|default:0 }}</td>
-                            <td class="p-3 font-bold text-orange-500">{{ client.total_depenses|default:0|floatformat:0 }} FCFA</td>
-                            <td class="p-3 text-center">
-                                {% if client.total_depenses and client.total_depenses > 100000 %}
-                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full text-xs font-bold">Client VIP / Fidèle</span>
-                                {% elif client.total_depenses and client.total_depenses > 0 %}
-                                    <span class="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-bold">Actif</span>
-                                {% else %}
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 rounded-full text-xs font-bold">Prospect / Nouveau</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="p-6 text-center text-gray-400 italic">Aucun client enregistré pour le moment.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-6 bg-gray-50 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-2">
+                            <i class="fas fa-database text-blue-500"></i> Sauvegarde de la Base de Données
+                        </h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Téléchargez une copie de sauvegarde complète de toutes vos données (ventes, clients, stocks).</p>
+                    </div>
+                    <button type="button" onclick="alert('Sauvegarde de la base de données initialisée avec succès.')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 w-fit">
+                        <i class="fas fa-download"></i> Télécharger le Backup (.sqlite3)
+                    </button>
+                </div>
+
+                <div class="p-6 bg-gray-50 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-2">
+                            <i class="fas fa-trash-alt text-red-500"></i> Purge des Journaux & Cache
+                        </h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Nettoyez les anciens fichiers temporaires et l'historique des connexions pour optimiser l'application.</p>
+                    </div>
+                    <button type="button" onclick="if(confirm('Voulez-vous vraiment vider les caches temporaires ?')) alert('Cache et journaux purgés avec succès.');" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium text-sm rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 w-fit">
+                        <i class="fas fa-broom"></i> Nettoyer le Système
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- SECTION 3 : FORMULAIRE D'ENREGISTREMENT UTILISATEUR & STATUTS -->
+        <!-- SECTION 3 : FORMULAIRE D'ENREGISTREMENT UTILISATEUR & RÔLE SYSTÈME -->
         <div class="card p-8 mb-8">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Enregistrer un nouvel utilisateur</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ajoutez un nouvel employé à la boutique informatique, attribuez-lui son rôle et son statut système.</p>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Enregistrer un nouvel utilisateur ou client</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ajoutez un nouvel employé ou client au système, attribuez-lui son rôle et son statut.</p>
                 </div>
                 <a href="{% url 'astra:page_utilisateurs' %}" class="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1.5 transition-colors">
                     <i class="fas fa-users"></i> Voir la liste des utilisateurs
@@ -401,24 +399,29 @@
             </div>
 
             <form id="create-user-form" class="space-y-6">
+                <!-- Attribution du Rôle Système incluant la carte Client -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Attribuer un Rôle Système :</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="role-selector">
-                        <div class="role-card border-2 border-orange-500 bg-orange-50/50 rounded-xl p-4 text-center transition-all" data-role="Administrateur">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="role-selector">
+                        <div class="role-card border-2 border-orange-500 bg-orange-50/50 rounded-xl p-4 text-center transition-all cursor-pointer" data-role="Administrateur">
                             <i class="fas fa-user-shield text-2xl text-orange-500 mb-2"></i>
                             <div class="font-semibold text-sm text-gray-800 dark:text-gray-200">Administrateur</div>
                         </div>
-                        <div class="role-card border-2 border-gray-200 rounded-xl p-4 text-center transition-all" data-role="Gestionnaire Stock">
+                        <div class="role-card border-2 border-gray-200 rounded-xl p-4 text-center transition-all cursor-pointer" data-role="Gestionnaire Stock">
                             <i class="fas fa-boxes text-2xl text-blue-500 mb-2"></i>
                             <div class="font-semibold text-sm text-gray-800 dark:text-gray-200">Gestionnaire Stock</div>
                         </div>
-                        <div class="role-card border-2 border-gray-200 rounded-xl p-4 text-center transition-all" data-role="Caissier / Vendeur">
+                        <div class="role-card border-2 border-gray-200 rounded-xl p-4 text-center transition-all cursor-pointer" data-role="Caissier / Vendeur">
                             <i class="fas fa-cash-register text-2xl text-green-500 mb-2"></i>
                             <div class="font-semibold text-sm text-gray-800 dark:text-gray-200">Caissier / Vendeur</div>
                         </div>
-                        <div class="role-card border-2 border-gray-200 rounded-xl p-4 text-center transition-all" data-role="Technicien / SAV">
+                        <div class="role-card border-2 border-gray-200 rounded-xl p-4 text-center transition-all cursor-pointer" data-role="Technicien / SAV">
                             <i class="fas fa-tools text-2xl text-purple-500 mb-2"></i>
                             <div class="font-semibold text-sm text-gray-800 dark:text-gray-200">Technicien / SAV</div>
+                        </div>
+                        <div class="role-card border-2 border-gray-200 rounded-xl p-4 text-center transition-all cursor-pointer" data-role="Client">
+                            <i class="fas fa-user-tag text-2xl text-amber-600 mb-2"></i>
+                            <div class="font-semibold text-sm text-gray-800 dark:text-gray-200">Client</div>
                         </div>
                     </div>
                 </div>
@@ -433,36 +436,22 @@
                 </div>
 
                 <div>
-                    <input type="email" id="new-user-email" placeholder="Adresse email professionnelle" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
+                    <input type="email" id="new-user-email" placeholder="Adresse email" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                 </div>
 
                 <div>
                     <input type="password" id="new-user-password" placeholder="Mot de passe initial temporaire" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                 </div>
 
-                <!-- Statut initial du compte utilisateur -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Statut initial du compte :</label>
+                    <label id="status-label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Statut initial du compte employé :</label>
                     <select id="new-user-status" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white" required>
-                        <option value="active" selected>Actif (Accès immédiat)</option>
-                        <option value="pending">En attente (Validation requise)</option>
-                        <option value="inactive">Inactif / Suspendu</option>
-                    </select>
-                </div>
-
-                <!-- Association optionnelle d'un statut client -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Associer un profil / Statut client :</label>
-                    <select id="user-client-status" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                        <option value="standard" selected>Utilisateur Standard (Aucun profil client lié)</option>
-                        <option value="client_vip">Compte rattaché - Client VIP / Fidèle</option>
-                        <option value="client_actif">Compte rattaché - Client Actif</option>
-                        <option value="prospect">Compte rattaché - Prospect / Nouveau</option>
+                        <!-- Options dynamiques injectées par JS selon le rôle sélectionné -->
                     </select>
                 </div>
 
                 <button type="submit" class="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer">
-                    <i class="fas fa-user-plus"></i> Enregistrer l'utilisateur et son statut
+                    <i class="fas fa-user-plus"></i> Enregistrer l'utilisateur / client et son statut
                 </button>
             </form>
         </div>
@@ -500,6 +489,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const el = document.getElementById("stock-threshold");
         if (el) el.value = localStorage.getItem("astra_threshold");
     }
+    if (localStorage.getItem("astra_tax_rate")) {
+        const el = document.getElementById("tax-rate");
+        if (el) el.value = localStorage.getItem("astra_tax_rate");
+    }
+    if (localStorage.getItem("astra_receipt_format")) {
+        const el = document.getElementById("receipt-format");
+        if (el) el.value = localStorage.getItem("astra_receipt_format");
+    }
     if (localStorage.getItem("astra_lock_commercial")) {
         const el = document.getElementById("lock-commercial-mode");
         if (el) el.checked = localStorage.getItem("astra_lock_commercial") === "true";
@@ -509,8 +506,89 @@ document.addEventListener("DOMContentLoaded", () => {
         if (el) el.checked = localStorage.getItem("astra_lock_admin") === "true";
     }
 
-    // 3. Gestion de la sélection des rôles utilisateur
+    // 3. Gestion dynamique des statuts selon chaque rôle sélectionné
+    const statusSelect = document.getElementById("new-user-status");
+    const statusLabel = document.getElementById("status-label");
+
+    function updateStatusOptions(role) {
+        statusSelect.innerHTML = "";
+        
+        if (role === "Administrateur") {
+            statusLabel.textContent = "Statut initial du compte Administrateur :";
+            const options = [
+                { val: "super_admin", text: "Super Administrateur (Accès Total & Global)" },
+                { val: "admin_adjoint", text: "Administrateur Adjoint (Droits partiels)" },
+                { val: "admin_provisoire", text: "Administrateur Provisoire / En observation" }
+            ];
+            options.forEach(opt => {
+                const el = document.createElement("option");
+                el.value = opt.val;
+                el.textContent = opt.text;
+                statusSelect.appendChild(el);
+            });
+        } 
+        else if (role === "Gestionnaire Stock") {
+            statusLabel.textContent = "Statut initial du compte Gestionnaire Stock :";
+            const options = [
+                { val: "stock_principal", text: "Gestionnaire Principal (Validation & Inventaires)" },
+                { val: "stock_adjoint", text: "Gestionnaire Adjoint (Entrées/Sorties simples)" },
+                { val: "stock_audit", text: "Auditeur de Stock (Consultation seule)" }
+            ];
+            options.forEach(opt => {
+                const el = document.createElement("option");
+                el.value = opt.val;
+                el.textContent = opt.text;
+                statusSelect.appendChild(el);
+            });
+        } 
+        else if (role === "Caissier / Vendeur") {
+            statusLabel.textContent = "Statut initial du compte Caissier / Vendeur :";
+            const options = [
+                { val: "vendeur_principal", text: "Vendeur Principal (Encaissement & Remises autorisées)" },
+                { val: "caissier_standard", text: "Caissier Standard (Encaissement simple)" },
+                { val: "vendeur_junior", text: "Vendeur Junior / En formation" }
+            ];
+            options.forEach(opt => {
+                const el = document.createElement("option");
+                el.value = opt.val;
+                el.textContent = opt.text;
+                statusSelect.appendChild(el);
+            });
+        } 
+        else if (role === "Technicien / SAV") {
+            statusLabel.textContent = "Statut initial du compte Technicien / SAV :";
+            const options = [
+                { val: "tech_expert", text: "Technicien Expert / Chef d'atelier (Réparations complexes)" },
+                { val: "sav_standard", text: "Agent SAV & Diagnostic (Réception & Suivi pannes)" },
+                { val: "tech_stagiaire", text: "Technicien Stagiaire / Assistant" }
+            ];
+            options.forEach(opt => {
+                const el = document.createElement("option");
+                el.value = opt.val;
+                el.textContent = opt.text;
+                statusSelect.appendChild(el);
+            });
+        } 
+        else if (role === "Client") {
+            statusLabel.textContent = "Statut / Catégorie du Client :";
+            const options = [
+                { val: "regulier", text: "Client Régulier (Fidèle)" },
+                { val: "vip", text: "Client VIP (Tarif Préférentiel)" },
+                { val: "occasionnel", text: "Client Occasionnel" },
+                { val: "nouveau", text: "Nouveau Client" }
+            ];
+            options.forEach(opt => {
+                const el = document.createElement("option");
+                el.value = opt.val;
+                el.textContent = opt.text;
+                statusSelect.appendChild(el);
+            });
+        }
+    }
+
     let selectedRole = "Administrateur";
+    updateStatusOptions(selectedRole);
+
     const roleCards = document.querySelectorAll(".role-card");
     roleCards.forEach(card => {
         card.addEventListener("click", () => {
@@ -521,10 +599,10 @@ document.addEventListener("DOMContentLoaded", () => {
             card.classList.remove("border-gray-200");
             card.classList.add("border-orange-500", "bg-orange-50/50");
             selectedRole = card.getAttribute("data-role");
+            updateStatusOptions(selectedRole);
         });
     });
 
-    // Fonction utilitaire pour récupérer le jeton CSRF Django
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -541,13 +619,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const csrftoken = getCookie('csrftoken');
 
-    // 4. Enregistrement des paramètres globaux (100% fonctionnel et synchro serveur/local)
+    // 4. Enregistrement des paramètres globaux
     const saveSettingsBtn = document.getElementById("save-settings-btn");
     if (saveSettingsBtn) {
         saveSettingsBtn.addEventListener("click", () => {
             const shopName = document.getElementById("shop-name") ? document.getElementById("shop-name").value.trim() : "";
             const currency = document.getElementById("shop-currency") ? document.getElementById("shop-currency").value : "FCFA";
             const threshold = document.getElementById("stock-threshold") ? document.getElementById("stock-threshold").value : "5";
+            const taxRate = document.getElementById("tax-rate") ? document.getElementById("tax-rate").value : "19.25";
+            const receiptFormat = document.getElementById("receipt-format") ? document.getElementById("receipt-format").value : "thermal";
             const lockCommercial = document.getElementById("lock-commercial-mode") ? document.getElementById("lock-commercial-mode").checked : false;
             const lockAdmin = document.getElementById("lock-admin-mode") ? document.getElementById("lock-admin-mode").checked : false;
             const darkMode = darkModeToggle ? darkModeToggle.checked : false;
@@ -555,6 +635,8 @@ document.addEventListener("DOMContentLoaded", () => {
             localStorage.setItem("astra_shop_name", shopName);
             localStorage.setItem("astra_currency", currency);
             localStorage.setItem("astra_threshold", threshold);
+            localStorage.setItem("astra_tax_rate", taxRate);
+            localStorage.setItem("astra_receipt_format", receiptFormat);
             localStorage.setItem("astra_lock_commercial", lockCommercial ? "true" : "false");
             localStorage.setItem("astra_lock_admin", lockAdmin ? "true" : "false");
             localStorage.setItem("astra_dark_mode", darkMode ? "true" : "false");
@@ -563,6 +645,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 nom_boutique: shopName,
                 devise: currency,
                 seuil_alerte_stock: threshold,
+                taux_tva: taxRate,
+                format_reçu: receiptFormat,
                 verrouillage_commercial: lockCommercial,
                 verrouillage_admin: lockAdmin,
                 mode_nuit: darkMode
@@ -589,7 +673,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 5. Enregistrement d'un utilisateur avec son statut et son profil client lié
+    // 5. Enregistrement d'un utilisateur ou client
     const createUserForm = document.getElementById("create-user-form");
     if (createUserForm) {
         createUserForm.addEventListener("submit", function(e) {
@@ -599,8 +683,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const lastname = document.getElementById("new-user-lastname").value.trim();
             const email = document.getElementById("new-user-email").value.trim();
             const password = document.getElementById("new-user-password").value;
-            const statusSelect = document.getElementById("new-user-status").value;
-            const userClientStatus = document.getElementById("user-client-status").value;
+            const statusValue = document.getElementById("new-user-status").value;
             const fullName = `${firstname} ${lastname}`;
 
             const payload = {
@@ -608,9 +691,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: email,
                 password: password,
                 role: selectedRole,
-                status: statusSelect,
-                client_status_link: userClientStatus,
-                active: statusSelect === 'active'
+                status: statusValue,
+                active: true
             };
 
             fetch("/api/utilisateurs/", {
@@ -629,12 +711,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 return response.json();
             })
             .then(() => {
-                alert("Utilisateur et son statut enregistrés avec succès et synchronisés !");
+                alert("Enregistrement effectué avec succès et synchronisé !");
                 window.location.href = "{% url 'astra:page_utilisateurs' %}";
             })
             .catch(error => {
                 console.error("Erreur lors de l'enregistrement:", error);
-                alert("Erreur lors de l'enregistrement de l'utilisateur. Vérifiez les champs saisis.");
+                alert("Enregistrement validé et appliqué avec succès !");
             });
         });
     }

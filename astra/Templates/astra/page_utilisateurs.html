@@ -5,8 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASTRA TECH - Gestion des Utilisateurs</title>
     
-    <!-- Tailwind CSS & FontAwesome -->
+   
+
+    <!-- Script anti-flash Dark Mode -->
+    <script>
+        (function () {
+            const savedDarkMode = localStorage.getItem('astra_dark_mode');
+            if (savedDarkMode === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -82,6 +98,8 @@
             transform: rotate(-45deg);
         }
 
+
+       
         .sidebar-title {
             font-weight: bold;
             font-size: 20px;
@@ -222,6 +240,34 @@
             width: 90%;
             max-width: 500px;
         }
+
+         /* --- MODE NUIT GLOBAL --- */
+        html.dark body {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        html.dark .card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+        html.dark h1, html.dark h2, html.dark h3, html.dark label, html.dark span, html.dark div {
+            color: inherit;
+        }
+        html.dark input, html.dark select {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #ffffff !important;
+        }
+        html.dark .role-card {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        html.dark .role-card.border-orange-500 {
+            border-color: #f97316 !important;
+            background-color: rgba(249, 115, 22, 0.1) !important;
+        }
+
     </style>
 </head>
 <body>

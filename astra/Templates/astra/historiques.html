@@ -4,7 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASTRA TECH - Journal d'Activités</title>
-    
+     <!-- Script d’initialisation immédiate du mode nuit global -->
+    <script>
+        (function() {
+            const savedDarkMode = localStorage.getItem('astra_dark_mode');
+            if (savedDarkMode === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -38,6 +49,31 @@
             margin: 0;
         }
 
+        
+ 
+/* --- MODE NUIT GLOBAL POUR LES PAGES --- */
+html.dark body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+}
+
+html.dark .app-section,
+html.dark .card,
+html.dark .stat-card,
+html.dark .feature-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+html.dark h1, 
+html.dark h3, 
+html.dark p, 
+html.dark .user-name, 
+html.dark .stat-value, 
+html.dark .feature-desc {
+    color: #f1f5f9 !important;
+}
         /* --- SIDEBAR --- */
         .sidebar {
             width: var(--sidebar-width);

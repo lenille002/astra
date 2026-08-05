@@ -3,222 +3,226 @@
 <html lang="fr">
 
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ASTRA TECH</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRA TECH</title>
 
-<!-- Script d'initialisation immédiate du mode nuit -->
-<script>
-    if (localStorage.getItem('astra_dark_mode') === 'true') {
-        document.documentElement.classList.add('dark');
-    }
-</script>
+    <!-- Script d'initialisation immédiate du mode nuit -->
+    <script>
+        if (localStorage.getItem('astra_dark_mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- Styles indispensables pour activer le mode nuit avec votre structure -->
-<style>
-    html.dark body {
-        background-color: #0f172a;
-        color: #f1f5f9;
-    }
-    html.dark .app-section,
-    html.dark .card,
-    html.dark .stat-card,
-    html.dark .feature-card {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
-        color: #f1f5f9 !important;
-    }
-    html.dark h1, 
-    html.dark h3, 
-    html.dark p, 
-    html.dark .user-name, 
-    html.dark .stat-value, 
-    html.dark .feature-desc,
-    html.dark .card-title {
-        color: #f1f5f9 !important;
-    }
-    html.dark .welcome-subtitle {
-        color: #94a3b8 !important;
-    }
-</style>
+    <!-- Styles indispensables pour activer le mode nuit avec votre structure -->
+    <style>
+        html.dark body {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+
+        html.dark .app-section,
+        html.dark .card,
+        html.dark .stat-card,
+        html.dark .feature-card {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+
+        html.dark h1,
+        html.dark h3,
+        html.dark p,
+        html.dark .user-name,
+        html.dark .stat-value,
+        html.dark .feature-desc,
+        html.dark .card-title {
+            color: #f1f5f9 !important;
+        }
+
+        html.dark .welcome-subtitle {
+            color: #94a3b8 !important;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
-<div class="app-section">
+    <div class="container">
+        <div class="app-section">
 
-<!-- HEADER -->
-<div class="header">
-<div class="logo">
-<div class="logo-shape">
-<div class="logo-inner"></div>
-</div>
-<div class="logo-text">
-<div class="astra" style="color:#004E8C;">ASTRA</div>
-<div class="tech">TECH</div>
-</div>
-</div>
+            <!-- HEADER -->
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-shape">
+                        <div class="logo-inner"></div>
+                    </div>
+                    <div class="logo-text">
+                        <div class="astra" style="color:#004E8C;">ASTRA</div>
+                        <div class="tech">TECH</div>
+                    </div>
+                </div>
 
-<div class="user-info">
-<img src="{% static 'image/image3.jpg' %}" alt="Photo Admin" class="user-avatar">
-<div class="user-details">
-<div class="user-name">Admin ASTRA</div>
-<div class="user-role">Administrateur</div>
-</div>
-</div>
+                <div class="user-info">
+                    <img src="{% static 'image/image3.jpg' %}" alt="Photo Admin" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">Admin ASTRA</div>
+                        <div class="user-role">Administrateur</div>
+                    </div>
+                </div>
 
-<a href="http://127.0.0.1:8000/" class="logout-btn">
-<i class="fas fa-sign-out-alt"></i> Déconnexion
-</a>
-</div>
+                <a href="http://127.0.0.1:8000/" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
 
-<!-- MESSAGE ACCUEIL -->
-<div class="welcome-message">
-<h1 class="welcome-title">
-Bienvenue dans <span class="dynamic-shop-name">ASTRA TECH</span>
-</h1>
-<p class="welcome-subtitle">
-Plateforme sécurisée de gestion des ventes et des approvisionnements.
-</p>
-</div>
+            <!-- MESSAGE ACCUEIL -->
+            <div class="welcome-message">
+                <h1 class="welcome-title">
+                    Bienvenue dans <span class="dynamic-shop-name">ASTRA TECH</span>
+                </h1>
+                <p class="welcome-subtitle">
+                    Plateforme sécurisée de gestion des ventes et des approvisionnements.
+                </p>
+            </div>
 
-<!-- STATISTIQUES -->
-<div class="stats-container">
-<div class="stat-card">
-<div class="stat-label"><i class="fas fa-shopping-cart"></i> Ventes aujourd'hui</div>
-<div class="stat-value">25</div>
-<div class="stat-label">+12% vs hier</div>
-</div>
+            <!-- STATISTIQUES -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="fas fa-shopping-cart"></i> Ventes aujourd'hui</div>
+                    <div class="stat-value">25</div>
+                    <div class="stat-label">+12% vs hier</div>
+                </div>
 
-<div class="stat-card orange">
-<div class="stat-label"><i class="fas fa-chart-line"></i> Chiffre d'affaires</div>
-<div class="stat-value">500000 FCFA</div>
-<div class="stat-label">Objectif : 5M FCFA</div>
-</div>
+                <div class="stat-card orange">
+                    <div class="stat-label"><i class="fas fa-chart-line"></i> Chiffre d'affaires</div>
+                    <div class="stat-value">500000 FCFA</div>
+                    <div class="stat-label">Objectif : 5M FCFA</div>
+                </div>
 
-<div class="stat-card">
-<div class="stat-label"><i class="fas fa-users"></i> Nouveaux clients</div>
-<div class="stat-value">15</div>
-<div class="stat-label">Ce mois-ci</div>
-</div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="fas fa-users"></i> Nouveaux clients</div>
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">Ce mois-ci</div>
+                </div>
 
-<div class="stat-card">
-<div class="stat-label"><i class="fas fa-box"></i> Produits en stock</div>
-<div class="stat-value">120</div>
-<div class="stat-label">Dernière mise à jour aujourd'hui</div>
-</div>
-</div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="fas fa-box"></i> Produits en stock</div>
+                    <div class="stat-value">120</div>
+                    <div class="stat-label">Dernière mise à jour aujourd'hui</div>
+                </div>
+            </div>
 
-<!-- FONCTIONNALITÉS PRINCIPALES -->
-<div class="card">
-<div class="card-header">
-<div class="card-title">Fonctionnalités Principales</div>
-</div>
+            <!-- FONCTIONNALITÉS PRINCIPALES -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Fonctionnalités Principales</div>
+                </div>
 
-<div class="features">
+                <div class="features">
 
-<!-- VENTES -->
-<div class="feature-card">
-<div class="feature-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-<h3 class="feature-title">Gestion des Ventes</h3>
-<p class="feature-desc">Gérez vos factures et suivez les transactions en temps réel.</p>
-<ul>
-<li><a href="#">Accueil</a></li>
-<li><a href="http://127.0.0.1:8000/ventes/">En savoir plus</a></li>
-</ul>
-</div>
+                    <!-- VENTES -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <h3 class="feature-title">Gestion des Ventes</h3>
+                        <p class="feature-desc">Gérez vos factures et suivez les transactions en temps réel.</p>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><a href="http://127.0.0.1:8000/vente/">En savoir plus</a></li>
+                        </ul>
+                    </div>
 
-<!-- RAPPORTS -->
-<div class="feature-card orange">
-<div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
-<h3 class="feature-title">Rapports Avancés</h3>
-<p class="feature-desc">Analysez les ventes avec des rapports journaliers et mensuels.</p>
-<ul>
-<li><a href="#">Accueil</a></li>
-<li><a href="http://127.0.0.1:8000/rapports/#">En savoir plus</a></li>
-</ul>
-</div>
+                    <!-- RAPPORTS -->
+                    <div class="feature-card orange">
+                        <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
+                        <h3 class="feature-title">Rapports Avancés</h3>
+                        <p class="feature-desc">Analysez les ventes avec des rapports journaliers et mensuels.</p>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><a href="http://127.0.0.1:8000/rapports/#">En savoir plus</a></li>
+                        </ul>
+                    </div>
 
-<!-- APPROVISIONNEMENT -->
-<div class="feature-card">
-<div class="feature-icon"><i class="fas fa-boxes"></i></div>
-<h3 class="feature-title">Gestion des Approvisionnements</h3>
-<p class="feature-desc">Suivez les entrées de stock et les réapprovisionnements.</p>
-<ul>
-<li><a href="#">Accueil</a></li>
-<li><a href="http://127.0.0.1:8000/approvisionnement/">En savoir plus</a></li>
-</ul>
-</div>
+                    <!-- APPROVISIONNEMENT -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-boxes"></i></div>
+                        <h3 class="feature-title">Gestion des Approvisionnements</h3>
+                        <p class="feature-desc">Suivez les entrées de stock et les réapprovisionnements.</p>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><a href="http://127.0.0.1:8000/approvisionnement/">En savoir plus</a></li>
+                        </ul>
+                    </div>
 
-<!-- SECURITE -->
-<div class="feature-card">
-<div class="feature-icon"><i class="fas fa-user-shield"></i></div>
-<h3 class="feature-title">Sécurité Renforcée</h3>
-<p class="feature-desc">Protégez vos données grâce à un système sécurisé.</p>
-<ul>
-<li><a href="#">Accueil</a></li>
-<li><a href="http://127.0.0.1:8000/connexion/">En savoir plus</a></li>
-</ul>
-</div>
+                    <!-- SECURITE -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-user-shield"></i></div>
+                        <h3 class="feature-title">Sécurité Renforcée</h3>
+                        <p class="feature-desc">Protégez vos données grâce à un système sécurisé.</p>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><a href="http://127.0.0.1:8000/connexion/">En savoir plus</a></li>
+                        </ul>
+                    </div>
 
-<!-- FOURNISSEURS -->
-<div class="feature-card orange">
-<div class="feature-icon"><i class="fas fa-truck-moving"></i></div>
-<h3 class="feature-title">Gestion des Fournisseurs</h3>
-<p class="feature-desc">Gérez vos fournisseurs et vos commandes.</p>
-<ul>
-<li><a href="#">Accueil</a></li>
-<li><a href="http://127.0.0.1:8000/fournisseurs/">En savoir plus</a></li>
-</ul>
-</div>
+                    <!-- FOURNISSEURS -->
+                    <div class="feature-card orange">
+                        <div class="feature-icon"><i class="fas fa-truck-moving"></i></div>
+                        <h3 class="feature-title">Gestion des Fournisseurs</h3>
+                        <p class="feature-desc">Gérez vos fournisseurs et vos commandes.</p>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><a href="http://127.0.0.1:8000/fournisseurs/">En savoir plus</a></li>
+                        </ul>
+                    </div>
 
-<!-- A PROPOS -->
-<div class="feature-card">
-<div class="feature-icon"><i class="fas fa-info-circle"></i></div>
-<h3 class="feature-title">À propos de ASTRA TECH</h3>
-<p class="feature-desc">Découvrez notre plateforme de gestion informatique.</p>
-<ul>
-<li><a href="#">Accueil</a></li>
-<li><a href="http://127.0.0.1:8000/propos/#">En savoir plus</a></li>
-</ul>
-</div>
+                    <!-- A PROPOS -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-info-circle"></i></div>
+                        <h3 class="feature-title">À propos de ASTRA TECH</h3>
+                        <p class="feature-desc">Découvrez notre plateforme de gestion informatique.</p>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><a href="http://127.0.0.1:8000/propos/#">En savoir plus</a></li>
+                        </ul>
+                    </div>
 
-</div>
-</div>
+                </div>
+            </div>
 
-</div>
-</div>
+        </div>
+    </div>
 
-<!-- Script de synchronisation dynamique (Mode nuit & Nom de boutique) -->
-<script>
-    window.addEventListener('storage', (event) => {
-        if (event.key === 'astra_dark_mode') {
-            if (event.newValue === 'true') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
+    <!-- Script de synchronisation dynamique (Mode nuit & Nom de boutique) -->
+    <script>
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'astra_dark_mode') {
+                if (event.newValue === 'true') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
             }
-        }
-        if (event.key === 'astra_shop_name' && event.newValue) {
-            document.querySelectorAll('.dynamic-shop-name').forEach(el => {
-                el.textContent = event.newValue;
-            });
-        }
-    });
+            if (event.key === 'astra_shop_name' && event.newValue) {
+                document.querySelectorAll('.dynamic-shop-name').forEach(el => {
+                    el.textContent = event.newValue;
+                });
+            }
+        });
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const savedShopName = localStorage.getItem("astra_shop_name");
-        if (savedShopName) {
-            document.querySelectorAll('.dynamic-shop-name').forEach(el => {
-                el.textContent = savedShopName;
-            });
-        }
-    });
-</script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedShopName = localStorage.getItem("astra_shop_name");
+            if (savedShopName) {
+                document.querySelectorAll('.dynamic-shop-name').forEach(el => {
+                    el.textContent = savedShopName;
+                });
+            }
+        });
+    </script>
 
 </body>
+
 </html>

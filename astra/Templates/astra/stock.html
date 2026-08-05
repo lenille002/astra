@@ -6,6 +6,18 @@ Astra Tech - Gestion des Stocks
 {% endblock %}
 
 {% block css %}
+    <!-- Script d’initialisation immédiate du mode nuit global -->
+    <script>
+        (function() {
+            const savedDarkMode = localStorage.getItem('astra_dark_mode');
+            if (savedDarkMode === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
 <link rel="stylesheet" href="{% static 'css/stock.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
@@ -85,7 +97,7 @@ Astra Tech - Gestion des Stocks
                                 <th>Catégorie</th>
                                 <th>Prix Achat</th>
                                 <th>Prix Vente</th>
-                                <th>Quantité</th>
+                                <th>Stock</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
                             </tr>
@@ -94,56 +106,55 @@ Astra Tech - Gestion des Stocks
                         <tbody id="inventory-body">
                         {% for produit in produits %}
                           <tr data-id="{{ produit.id }}" data-stock="{{ produit.stock }}" {% if produit.stock == 0 %}style="display: none;"{% endif %}>
-    <td>{{ produit.reference }}</td>
-                                <td>{{ produit.nom }}</td>
-                                <td>{% if produit.categorie %}{{ produit.categorie.nom }}{% else %}Non catégorisé{% endif %}</td>
-                                <td>{{ produit.prix_achat }} FCFA</td>
-                                <td>{{ produit.prix_vente }} FCFA</td>
-                                <td>{{ produit.stock }}</td>
-                                <td>
-                                    {% if produit.stock == 0 %}
-                                    <span class="status-rupture">Rupture</span>
-                                    {% elif produit.stock <= produit.seuil_alerte %}
-                                    <span class="status-faible">Faible</span>
-                                    {% else %}
-                                    <span class="status-disponible">Disponible</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="action-btns">
-                                        <button class="view-btn" 
-                                                data-id="{{ produit.id }}"
-                                                data-ref="{{ produit.reference }}"
-                                                data-nom="{{ produit.nom }}"
-                                                data-cat="{% if produit.categorie %}{{ produit.categorie.nom }}{% else %}Non catégorisé{% endif %}"
-                                                data-achat="{{ produit.prix_achat }}"
-                                                data-vente="{{ produit.prix_vente }}"
-                                                data-stock="{{ produit.stock }}"
-                                                data-statut="{% if produit.stock == 0 %}Rupture{% elif produit.stock <= produit.seuil_alerte %}Faible{% else %}Disponible{% endif %}"
-                                                data-processeur="{{ produit.processeur|default:'N/A' }}"
-                                                data-ram="{{ produit.ram|default:'N/A' }}"
-                                                type="button" title="Voir les caractéristiques">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                            <td>{{ produit.reference }}</td>
+                            <td>{{ produit.nom }}</td>
+                            <td>{% if produit.categorie %}{{ produit.categorie.nom }}{% else %}Non catégorisé{% endif %}</td>
+                            <td>{{ produit.prix_achat }} FCFA</td>
+                            <td>{{ produit.prix_vente }} FCFA</td>
+                            <td>{{ produit.stock }}</td>
+                            <td>
+                                {% if produit.stock == 0 %}
+                                <span class="status-rupture">Rupture</span>
+                                {% elif produit.stock <= produit.seuil_alerte %}
+                                <span class="status-faible">Faible</span>
+                                {% else %}
+                                <span class="status-disponible">Disponible</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="view-btn" 
+                                            data-id="{{ produit.id }}"
+                                            data-ref="{{ produit.reference }}"
+                                            data-nom="{{ produit.nom }}"
+                                            data-cat="{% if produit.categorie %}{{ produit.categorie.nom }}{% else %}Non catégorisé{% endif %}"
+                                            data-achat="{{ produit.prix_achat }}"
+                                            data-vente="{{ produit.prix_vente }}"
+                                            data-stock="{{ produit.stock }}"
+                                            data-statut="{% if produit.stock == 0 %}Rupture{% elif produit.stock <= produit.seuil_alerte %}Faible{% else %}Disponible{% endif %}"
+                                            data-processeur="{{ produit.processeur|default:'N/A' }}"
+                                            data-ram="{{ produit.ram|default:'N/A' }}"
+                                            type="button" title="Voir les caractéristiques">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
 
-                                        <button class="edit-btn" 
-                                                data-id="{{ produit.id }}"
-                                                data-ref="{{ produit.reference }}"
-                                                data-nom="{{ produit.nom }}"
-                                                data-cat="{% if produit.categorie %}{{ produit.categorie.id }}{% endif %}"
-                                                data-achat="{{ produit.prix_achat }}"
-                                                data-vente="{{ produit.prix_vente }}"
-                                                data-stock="{{ produit.stock }}"
-                                                type="button" title="Modifier">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
+                                    <button class="edit-btn" 
+                                            data-id="{{ produit.id }}"
+                                            data-nom="{{ produit.nom }}"
+                                            data-cat="{% if produit.categorie %}{{ produit.categorie.id }}{% endif %}"
+                                            data-achat="{{ produit.prix_achat }}"
+                                            data-vente="{{ produit.prix_vente }}"
+                                            data-stock="{{ produit.stock }}"
+                                            type="button" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
 
-                                        <button class="delete-btn" data-id="{{ produit.id }}" type="button" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                    <button class="delete-btn" data-id="{{ produit.id }}" type="button" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                         {% empty %}
                             <tr id="empty-row">
                                 <td colspan="8" style="text-align:center; padding: 30px; color: #6b7280;">Aucun produit disponible en stock</td>
@@ -172,7 +183,7 @@ Astra Tech - Gestion des Stocks
                 <div><strong>RAM :</strong> <span id="view-ram" style="color: #555;"></span></div>
                 <div><strong>Prix d'achat :</strong> <span id="view-buy" style="color: #555;"></span> FCFA</div>
                 <div><strong>Prix de vente :</strong> <span id="view-sell" style="color: #555;"></span> FCFA</div>
-                <div><strong>Quantité en stock :</strong> <span id="view-stock" style="color: #555;"></span></div>
+                <div><strong>Stock :</strong> <span id="view-stock" style="color: #555;"></span></div>
                 <div><strong>Statut :</strong> <span id="view-status" style="font-weight: bold;"></span></div>
             </div>
 
@@ -190,11 +201,6 @@ Astra Tech - Gestion des Stocks
             <form id="product-form" method="POST">
                 {% csrf_token %}
                 <input type="hidden" id="product-id" name="product_id">
-                
-                <div style="margin-bottom: 12px;">
-                    <label for="ref-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Référence :</label>
-                    <input type="text" id="ref-input" name="reference" required style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background: #fff;">
-                </div>
 
                 <div style="margin-bottom: 12px;">
                     <label for="name-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Nom du produit :</label>
@@ -222,7 +228,7 @@ Astra Tech - Gestion des Stocks
                 </div>
 
                 <div style="margin-bottom: 12px;">
-                    <label for="stock-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Quantité en stock :</label>
+                    <label for="stock-input" style="display:block; margin-bottom:4px; font-weight: 600; font-size: 0.9rem; color: #333;">Stock :</label>
                     <input type="number" id="stock-input" name="stock" required style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; color: #333; background: #fff;">
                 </div>
 
@@ -246,12 +252,10 @@ Astra Tech - Gestion des Stocks
 
     <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // URLs Django sécurisées pour l'utilisation JS
         const urlAjouter = "{% url 'astra:ajouter_produit' %}";
         const urlModifierTemplate = "{% url 'astra:modifier_produit' 0 %}";
         const urlSupprimerTemplate = "{% url 'astra:supprimer_produit' 0 %}";
 
-        // Fonction pour recalculer dynamiquement le nombre de produits disponibles et masquer ceux en rupture
         function updateStockDisplay() {
             const rows = document.querySelectorAll("#inventory-body tr[data-stock]");
             let availableCount = 0;
@@ -398,7 +402,6 @@ Astra Tech - Gestion des Stocks
             btn.addEventListener("click", function() {
                 modalTitle.innerText = "Modifier le produit";
                 document.getElementById("product-id").value = btn.getAttribute("data-id");
-                document.getElementById("ref-input").value = btn.getAttribute("data-ref");
                 document.getElementById("name-input").value = btn.getAttribute("data-nom");
                 document.getElementById("category-input").value = btn.getAttribute("data-cat");
                 document.getElementById("buy-input").value = btn.getAttribute("data-achat");

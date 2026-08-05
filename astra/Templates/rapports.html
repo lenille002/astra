@@ -6,6 +6,18 @@ Astra Tech - Rapports & Analyses Globaux
 {% endblock %}
 
 {% block css %}
+ <!-- Script d’initialisation immédiate du mode nuit global -->
+    <script>
+        (function() {
+            const savedDarkMode = localStorage.getItem('astra_dark_mode');
+            if (savedDarkMode === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
 <link rel="stylesheet" href="{% static 'css/rapports.css' %}">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -328,7 +340,6 @@ Astra Tech - Rapports & Analyses Globaux
         </div>
     </div>
 </div>
-
 <script>
     let sales = [];
     let products = [];
@@ -476,6 +487,33 @@ Astra Tech - Rapports & Analyses Globaux
     function closeClientCahier() {
         const modal = document.getElementById('clientCahierModal');
         modal.classList.add('hidden');
+    }
+
+    // --- SCRIPT DE MODIFICATION AJOUTÉ ---
+    function modifierElement(url, dataForm, onSuccess) {
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: dataForm
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (typeof onSuccess === 'function') {
+                    onSuccess(data);
+                } else {
+                    location.reload();
+                }
+            } else {
+                alert('Erreur : ' + (data.message || 'Action impossible'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur réseau :', error);
+            alert('Une erreur est survenue lors de la modification.');
+        });
     }
 
     window.addEventListener('click', (e) => {

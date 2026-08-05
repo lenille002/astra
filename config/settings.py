@@ -55,9 +55,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Note : Si votre middleware personnalisé 'astra.middleware.LoginRequiredMiddleware' 
-    # bloque vos pages de connexion, retirez-le ou gérez les exceptions d'URL, 
-    # car vos vues utilisent déjà le décorateur @verifier_acces_strict.
+    
+    # Votre middleware de verrouillage global
+    'astra.middleware.VerrouillageGlobalMiddleware',
 ]
 
 # ==================================================
@@ -65,26 +65,24 @@ MIDDLEWARE = [
 # ==================================================
 
 ROOT_URLCONF = 'config.urls'
-LOGIN_URL = '/connexion/'
-LOGIN_REDIRECT_URL = '/accueil/'
 
 # ==================================================
-# TEMPLATES
+# TEMPLATES (AVEC AJOUT DU CONTEXT PROCESSOR DE NOTIFICATIONS)
 # ==================================================
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            BASE_DIR / 'templates',
-        ],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.static',
+                
+                # --- AJOUTEZ CETTE LIGNE (remplacez 'astra' par le nom exact de votre application si besoin) ---
+                'astra.context_processors.notifications_globales', 
             ],
         },
     },
@@ -184,19 +182,3 @@ LOGOUT_REDIRECT_URL = "astra:connexion"
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2 semaines
 SESSION_SAVE_EVERY_REQUEST = True
-# ==================================================
-# MIDDLEWARE
-# ==================================================
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    # Ton middleware de verrouillage global
-    'astra.middleware.VerrouillageGlobalMiddleware',
-]

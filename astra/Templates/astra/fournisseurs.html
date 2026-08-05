@@ -6,6 +6,18 @@ Astra Tech - Gestion des Fournisseurs
 {% endblock %}
 
 {% block css %}
+ <!-- Script d’initialisation immédiate du mode nuit global -->
+    <script>
+        (function() {
+            const savedDarkMode = localStorage.getItem('astra_dark_mode');
+            if (savedDarkMode === 'true') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
 <link rel="stylesheet" href="{% static 'css/fournisseurs.css' %}">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
