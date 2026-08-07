@@ -291,7 +291,7 @@
         font-size: 1rem !important;
     }
 
-    .details-btn:hover, .edit-btn:hover {
+    .details-btn:hover {
         text-decoration: underline !important;
     }
     
@@ -425,14 +425,7 @@
                     data-dernier="{{ client.dernier_achat|date:'d/m/Y'|default:'Aucun' }}" 
                     data-total="{{ client.total_depenses_calcule|default:0|floatformat:0 }}" 
                     data-inscription="{{ client.date_inscription|date:'d/m/Y'|default:'N/A' }}"
-                    style="background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer; margin-right: 8px;">Détails</button>
-            
-            <button type="button" class="edit-btn" data-id="{{ client.id }}" 
-                    data-nom="{{ client.nom }}" 
-                    data-email="{{ client.email|default:'' }}" 
-                    data-telephone="{{ client.telephone }}" 
-                    data-adresse="{{ client.adresse|default:'' }}"
-                    style="background: none; border: none; color: #d97706; font-weight: 600; cursor: pointer; margin-right: 8px;">Modifier</button>
+                    style="background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer; margin-right: 12px;">Détails</button>
 
             <a href="{% url 'astra:supprimer_client' client.id %}" class="delete-link" onclick="return confirm('Voulez-vous archiver / désactiver le client {{ client.nom }} ? Son historique financier sera conservé.');" style="background: none; border: none; color: #dc2626; font-weight: 600; cursor: pointer; text-decoration: none;">Archiver</a>
         </td>
@@ -452,76 +445,8 @@
 
 </div>
 
-<!-- MODALE : AJOUTER CLIENT -->
-<div id="add-client-modal" class="astra-modal hidden">
-    <div class="astra-modal-card">
-        <button id="close-add-modal-btn" type="button" class="close-modal-x">&times;</button>
-        <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #1e1b4b;">Ajouter un client</h2>
-        
-        <form id="add-client-form" method="POST" action="{% url 'astra:ajouter_client' %}">
-            {% csrf_token %}
-            <div class="astra-form-group">
-                <label>Nom complet</label>
-                <input type="text" name="nom" required>
-            </div>
-            <div class="astra-form-group">
-                <label>Email</label>
-                <input type="email" name="email">
-            </div>
-            <div class="astra-form-group">
-                <label>Téléphone</label>
-                <input type="tel" name="telephone" required>
-            </div>
-            <div class="astra-form-group">
-                <label>Adresse</label>
-                <input type="text" name="adresse">
-            </div>
-            <button type="submit" class="btn-astra-orange" style="width: 100%; justify-content: center; margin-top: 10px;">Enregistrer</button>
-        </form>
-    </div>
-</div>
 
-<!-- MODALE : MODIFIER CLIENT -->
-<div id="edit-client-modal" class="astra-modal hidden">
-    <div class="astra-modal-card">
-        <button id="close-edit-modal-btn" type="button" class="close-modal-x">&times;</button>
-        <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #1e1b4b;">Modifier le client</h2>
-        
-        <form id="edit-client-form" method="POST">
-            {% csrf_token %}
-            <input type="hidden" id="edit-client-id" name="client_id">
-            <div class="astra-form-group">
-                <label>Nom complet</label>
-                <input type="text" id="edit-nom" name="nom" required>
-            </div>
-            <div class="astra-form-group">
-                <label>Email</label>
-                <input type="email" id="edit-email" name="email">
-            </div>
-            <div class="astra-form-group">
-                <label>Téléphone</label>
-                <input type="tel" id="edit-telephone" name="telephone" required>
-            </div>
-            <div class="astra-form-group">
-                <label>Adresse</label>
-                <input type="text" id="edit-adresse" name="adresse">
-            </div>
-            <button type="submit" class="btn-astra-orange" style="width: 100%; justify-content: center; margin-top: 10px;">Mettre à jour</button>
-        </form>
-    </div>
-</div>
 
-<!-- MODALE : DÉTAILS -->
-<div id="details-client-modal" class="astra-modal hidden">
-    <div class="astra-modal-card">
-        <button id="close-details-modal-btn" type="button" class="close-modal-x">&times;</button>
-        <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #1e1b4b;">Détails du client</h2>
-        <div id="client-details-content" style="line-height: 1.8; color: #334155;"></div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Modal Ajout
@@ -533,11 +458,6 @@
         const detailsClientModal = document.getElementById('details-client-modal');
         const closeDetailsModalBtn = document.getElementById('close-details-modal-btn');
         const clientDetailsContent = document.getElementById('client-details-content');
-
-        // Modal Modification
-        const editClientModal = document.getElementById('edit-client-modal');
-        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
-        const ajaxEditForm = document.getElementById('edit-client-form');
 
         // Gestion Ajout
         if(addClientBtn) {
@@ -576,94 +496,10 @@
             closeDetailsModalBtn.addEventListener('click', () => detailsClientModal.classList.add('hidden'));
         }
 
-        // Gestion Ouverture de la Modification
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const btn = e.currentTarget;
-                const id = btn.getAttribute('data-id');
-                
-                document.getElementById('edit-client-id').value = id;
-                document.getElementById('edit-nom').value = btn.getAttribute('data-nom');
-                document.getElementById('edit-email').value = btn.getAttribute('data-email');
-                document.getElementById('edit-telephone').value = btn.getAttribute('data-telephone');
-                document.getElementById('edit-adresse').value = btn.getAttribute('data-adresse') || '';
-
-                editClientModal.classList.remove('hidden');
-            });
-        });
-
-        if(closeEditModalBtn) {
-            closeEditModalBtn.addEventListener('click', () => editClientModal.classList.add('hidden'));
-        }
-
-        // Interception robuste de la modification
-        if(ajaxEditForm) {
-            ajaxEditForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const clientId = document.getElementById('edit-client-id').value;
-                const formData = new FormData(ajaxEditForm);
-
-                fetch(`/clients/modifier/${clientId}/`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        return response.json();
-                    } else {
-                        window.location.reload();
-                        return null;
-                    }
-                })
-                .then(data => {
-                    if (data && data.success) {
-                        const editButton = document.querySelector(`.edit-btn[data-id="${data.id}"]`);
-                        if (editButton) {
-                            const row = editButton.closest('tr');
-                            if (row) {
-                                row.cells[1].innerText = data.nom;
-                                row.cells[2].innerText = data.email || 'N/A';
-                                row.cells[3].innerText = data.telephone;
-
-                                const detailsBtn = row.querySelector('.details-btn');
-                                if(detailsBtn) {
-                                    detailsBtn.setAttribute('data-nom', data.nom);
-                                    detailsBtn.setAttribute('data-email', data.email === 'N/A' ? '' : data.email);
-                                    detailsBtn.setAttribute('data-telephone', data.telephone);
-                                    if(data.adresse !== undefined) {
-                                        editButton.setAttribute('data-adresse', data.adresse);
-                                    }
-                                }
-                                editButton.setAttribute('data-nom', data.nom);
-                                editButton.setAttribute('data-email', data.email === 'N/A' ? '' : data.email);
-                                editButton.setAttribute('data-telephone', data.telephone);
-                                if(data.adresse !== undefined) {
-                                    editButton.setAttribute('data-adresse', data.adresse);
-                                }
-                            }
-                        }
-                        editClientModal.classList.add('hidden');
-                    } else if (data && !data.success) {
-                        alert('Erreur lors de la modification.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    window.location.reload();
-                });
-            });
-        }
-
         // Fermeture des modales en cliquant à l'extérieur
         window.addEventListener('click', (e) => {
             if (e.target === addClientModal) addClientModal.classList.add('hidden');
             if (e.target === detailsClientModal) detailsClientModal.classList.add('hidden');
-            if (e.target === editClientModal) editClientModal.classList.add('hidden');
         });
 
         // Barre de recherche en temps réel

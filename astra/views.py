@@ -1,3 +1,4 @@
+from django.core.serializers.json import DjangoJSONEncoder
 from datetime import timedelta
 import json
 import secrets
@@ -17,6 +18,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.db.models import F, Q, Sum, Count
 from django.db import transaction
+from django.db.models import Sum, Count, Max, Q, F
+from django.contrib.auth.decorators import login_required
 
 # pyrefly: ignore [missing-import]
 from rest_framework import status
@@ -336,11 +339,8 @@ def ventes(request):
     total_ventes_count = ventes_list.count()
     montant_total_global = ventes_list.aggregate(total=Sum('montant_total'))['total'] or 0
     
-    # Solution radicale : on cherche d'abord dans LigneVente, sinon on somme via les mouvements de stock, sinon on prend le nombre de ventes
     produits_vendus_count = 0
-    
     try:
-        # Essai 1 : Somme via LigneVente
         for ligne in LigneVente.objects.all():
             v = getattr(ligne, 'vente', None)
             if v and not getattr(v, 'est_archive', False):
@@ -351,17 +351,15 @@ def ventes(request):
 
     if produits_vendus_count == 0:
         try:
-            # Essai 2 : Somme via les mouvements de stock de type "sortie"
             mouvements = MouvementStock.objects.filter(type_mouvement="sortie")
             produits_vendus_count = sum(m.quantite for m in mouvements if m.quantite)
         except Exception:
             pass
 
-    # Essai 3 de secours absolu pour ne plus jamais voir 0 s'il y a des ventes
     if produits_vendus_count == 0 and total_ventes_count > 0:
-        produits_vendus_count = total_ventes_count * 1 # Ajustez si chaque vente contient plusieurs articles
+        produits_vendus_count = total_ventes_count * 1
 
-    produits_dispo_count = Produit.objects.filter(is_active=True).count() if 'Produil' else Produit.objects.filter(is_active=True).count()
+    produits_dispo_count = Produit.objects.filter(is_active=True).count()
 
     context = {
         'produits': produits,
@@ -372,6 +370,8 @@ def ventes(request):
         'produits_dispo_count': produits_dispo_count,
     }
     return render(request, 'astra/vente.html', context)
+
+
 @csrf_exempt
 @verifier_acces_strict
 @transaction.atomic
@@ -401,7 +401,6 @@ def enregistrer_vente(request):
 
             nom_final = client_nom if client_nom else 'Client comptoir'
 
-            # --- GESTION INTELLIGENTE DU CLIENT SANS ERREUR UNIQUE ---
             client = None
             if client_telephone:
                 client = Client.objects.filter(telephone=client_telephone).first()
@@ -483,7 +482,6 @@ def enregistrer_vente(request):
                     prix_unitaire=float(produit.prix_vente)
                 )
 
-            # DÈS QU'UNE NOUVELLE VENTE EST FAite, ON RÉACTIVE L'AFFICHAGE DANS LES RAPPORTS
             request.session['rapports_reset_actif'] = False
 
             return JsonResponse({
@@ -499,21 +497,21 @@ def enregistrer_vente(request):
 
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
 
+
 @verifier_acces_strict
 def details_vente(request, vente_id):
     vente = get_object_or_404(Vente.objects.select_related('client'), id=vente_id)
-    
     lignes = LigneVente.objects.filter(vente=vente).select_related('produit')
 
     data = {
         'reference': vente.reference,
         'client': vente.client.nom if vente.client else 'Client comptoir',
-        'client_telephone': getattr(vente.client, 'telephone', ''),
-        'client_email': getattr(vente.client, 'email', ''),
-        'date': vente.date_vente.strftime("%d/%m/%Y à %H:%M"),
+        'client_telephone': vente.client.telephone if vente.client and vente.client.telephone else '',
+        'client_email': vente.client.email if vente.client and vente.client.email else '',
+        'date': vente.date_vente.strftime("%d/%m/%Y à %H:%M") if vente.date_vente else '',
         'montant_total': float(vente.montant_total or 0),
         'mode_paiement': getattr(vente, 'mode_paiement', 'Espèces'),
-        'statut': vente.statut,
+        'statut': getattr(vente, 'statut', 'Confirmée'),
         'lignes': [
             {
                 'produit': l.produit.nom if l.produit else "Produit",
@@ -533,7 +531,7 @@ def supprimer_vente(request, vente_id):
     if request.method in ['POST', 'DELETE']:
         try:
             vente = get_object_or_404(Vente, id=vente_id)
-            vente.est_archive = True  # Soft delete pour les ventes
+            vente.est_archive = True  
             vente.save()
 
             return JsonResponse({'success': True, 'message': 'Vente placée dans la corbeille avec succès.'})
@@ -543,13 +541,45 @@ def supprimer_vente(request, vente_id):
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
 
 
+@csrf_exempt
+@transaction.atomic
 @verifier_acces_strict
 def modifier_vente(request, vente_id):
     vente = get_object_or_404(Vente, id=vente_id)
-    return JsonResponse({
-        'success': True,
-        'message': f'Modification de la vente {vente.reference} prête à être configurée.'
-    })
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            nouveau_nom = data.get('client_nom', '').strip()
+            nouvel_email = data.get('client_email', '').strip()
+            nouveau_telephone = data.get('client_telephone', '').strip()
+            nouveau_mode = data.get('mode_paiement', 'especes')
+
+            vente.mode_paiement = nouveau_mode
+            vente.save()
+
+            if vente.client:
+                client = vente.client
+                if nouveau_nom: client.nom = nouveau_nom
+                if nouvel_email: client.email = nouvel_email
+                if nouveau_telephone: client.telephone = nouveau_telephone
+                client.save()
+            elif nouveau_nom:
+                client, _ = Client.objects.get_or_create(
+                    nom=nouveau_nom,
+                    defaults={'email': nouvel_email, 'telephone': nouveau_telephone, 'is_active': True}
+                )
+                vente.client = client
+                vente.save()
+
+            return JsonResponse({
+                'success': True, 
+                'message': 'Vente modifiée avec succès !'
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
 
 
 
@@ -596,42 +626,38 @@ def gestion_clients(request):
     }
     
     return render(request, 'astra/clients.html', context)
-
-
-@verifier_acces_strict
+@login_required
 def detail_client_activites(request, client_id):
-    client = get_object_or_404(Client, pk=client_id)
-    ventes_client = Vente.objects.filter(client=client, est_archive=False).order_by('-date_vente')
+    """Cahier d'activités pour un client spécifique"""
+    client = get_object_or_404(Client, id=client_id)
+    historique_achats = Vente.objects.filter(client=client).order_by('-date_vente')
     
-    total_depense = ventes_client.aggregate(total=Sum('montant_total'))['total'] or 0
-    nombre_commandes = ventes_client.count()
+    # Calcul des statistiques du client
+    nombre_achats = historique_achats.count()
+    total_depenses = historique_achats.aggregate(total=Sum('montant_total'))['total'] or 0
 
     context = {
         'client': client,
-        'ventes_client': ventes_client,
-        'total_depense': total_depense,
-        'nombre_commandes': nombre_commandes,
+        'historique_achats': historique_achats,
+        'nombre_achats': nombre_achats,
+        'total_depenses': total_depenses,
     }
     return render(request, 'astra/detail_client_activites.html', context)
 
+@login_required
+def espace_client(request, client_id):
+    """Affiche strictement l'espace du client correspondant à l'ID fourni dans l'URL"""
+    # Récupère le client spécifique via son ID (génère une 404 s'il n'existe pas)
+    client = get_object_or_404(Client, id=client_id)
+    
+    # Récupère uniquement les achats de ce client précis
+    historique_achats = Vente.objects.filter(client=client).order_by('-date_vente')
 
-@verifier_acces_strict
-def ajouter_client(request):
-    if request.method == 'POST':
-        nom = request.POST.get('nom')
-        email = request.POST.get('email')
-        telephone = request.POST.get('telephone')
-        adresse = request.POST.get('adresse', '')
-
-        if nom:
-            Client.objects.create(
-                nom=nom,
-                email=email,
-                telephone=telephone,
-                adresse=adresse,
-                is_active=True,
-            )
-    return redirect('astra:gestion_clients')
+    context = {
+        'client_user': client,
+        'historique_achats': historique_achats
+    }
+    return render(request, 'astra/espace_client.html', context)
 
 @verifier_acces_strict
 def supprimer_client(request, client_id):
@@ -957,15 +983,12 @@ def supprimer_approvisionnement(request, pk):
 
 @verifier_acces_strict
 def rapports(request):
-    # On récupère l'état du reset (True si le bouton reset a été cliqué, False par défaut)
     reset_actif = request.session.get('rapports_reset_actif', False)
     
-    # 1. Le stock total et la répartition du stock ne changent JAMAIS (comme demandé)
     total_stock_qty = Produit.objects.aggregate(total=Sum('stock'))['total'] or 0
-    produits_data = list(Produit.objects.all().values('nom', 'stock'))
-    produits_json = json.dumps(produits_data, default=str)
+    produits_data = list(Produit.objects.filter(is_active=True).values('nom', 'stock'))
+    produits_json = json.dumps(produits_data, cls=DjangoJSONEncoder)
 
-    # 2. Si le reset est actif, on simule un affichage totalement vide pour les rapports
     if reset_actif:
         total_sales = 0
         total_appros = 0
@@ -974,27 +997,66 @@ def rapports(request):
         clients_resume = []
         dernieres_ventes = []
         derniers_appros = []
-        ventes_json = json.dumps([], default=str)
+        appros_json = json.dumps([], cls=DjangoJSONEncoder)
+        ventes_json = json.dumps([], cls=DjangoJSONEncoder)
     else:
-        # Comportement normal : on récupère tout
-        ventes_qs = Vente.objects.filter(est_archive=False)
-        appros_qs = Approvisionnement.objects.filter(is_active=True)
+        ventes_qs = Vente.objects.filter(est_archive=False).order_by('-date_vente', '-id')
+        appros_qs = Approvisionnement.objects.filter(is_active=True).order_by('-id')
 
         total_sales = ventes_qs.aggregate(total=Sum('montant_total'))['total'] or 0
         total_appros = appros_qs.aggregate(total=Sum('montant_total'))['total'] or 0
-        total_clients = Client.objects.count()
-        total_suppliers = Fournisseur.objects.count()
+        total_clients = Client.objects.filter(is_active=True).count()
+        total_suppliers = Fournisseur.objects.filter(is_active=True).count()
 
-        clients_resume = Client.objects.annotate(
-            nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False)),                         
+        clients_resume = Client.objects.filter(is_active=True).annotate(
+            nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False)),                                 
             montant_total_achats=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False)) 
-        ).filter(montant_total_achats__gt=0)
+        ).filter(montant_total_achats__gt=0).order_by('-nombre_achats', '-montant_total_achats')
 
-        dernieres_ventes = ventes_qs.order_by('-id')[:5]
-        derniers_appros = appros_qs.order_by('-id')[:5]
+        dernieres_ventes = ventes_qs[:5]
 
-        ventes_data = list(ventes_qs.values('reference', 'montant_total'))
-        ventes_json = json.dumps(ventes_data, default=str)
+        # Regroupement par fournisseur unique pour éviter les doublons
+        appros_par_fournisseur = appros_qs.values('fournisseur').annotate(
+            total_montant=Sum('montant_total'),
+            dernier_id=Max('id'),
+            nombre_appros=Count('id')
+        ).order_by('-dernier_id')
+
+        derniers_appros = []
+        appros_list = []
+
+        for group in appros_par_fournisseur:
+            f_id = group.get('fournisseur')
+            if f_id:
+                fournisseur_obj = Fournisseur.objects.filter(id=f_id).first()
+                f_nom = fournisseur_obj.nom if fournisseur_obj else 'Fournisseur externe'
+            else:
+                f_nom = 'Fournisseur externe'
+
+            subs = appros_qs.filter(fournisseur_id=f_id) if f_id else appros_qs.filter(fournisseur__isnull=True)
+            sub_data = list(subs.values('id', 'reference', 'montant_total', 'statut'))
+            
+            dernier_app = subs.first()
+            app_id = group.get('dernier_id') or 1
+            ref_affichage = dernier_app.reference if (dernier_app and dernier_app.reference) else f"APP-{app_id}"
+
+            derniers_appros.append({
+                'id': app_id,
+                'reference': ref_affichage,
+                'fournisseur_nom': f_nom,
+                'montant_total': float(group.get('total_montant') or 0),
+                'nombre_appros': group.get('nombre_appros') or 1
+            })
+
+            appros_list.append({
+                'fournisseur': f_nom,
+                'total': float(group.get('total_montant') or 0),
+                'operations': sub_data
+            })
+
+        ventes_list = [{'reference': v.reference, 'montant_total': float(v.montant_total or 0), 'client_nom': v.client.nom if v.client else 'Client comptoir'} for v in ventes_qs]
+        ventes_json = json.dumps(ventes_list, cls=DjangoJSONEncoder)
+        appros_json = json.dumps(appros_list, cls=DjangoJSONEncoder)
 
     context = {
         'total_sales': total_sales,
@@ -1006,11 +1068,11 @@ def rapports(request):
         'dernieres_ventes': dernieres_ventes,  
         'derniers_appros': derniers_appros,    
         'ventes_json': ventes_json,
+        'appros_json': appros_json,
         'produits_json': produits_json,       
     }
     
     return render(request, 'rapports.html', context)
-
 # ==========================
 # DÉCORATEUR DE SÉCURITÉ
 # ==========================
@@ -1102,4 +1164,5 @@ def api_save_parametres(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
+
 

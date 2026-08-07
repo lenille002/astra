@@ -62,13 +62,41 @@
     </div>
 
 </header>
-
 <script>
     function toggleNotificationDropdown() {
         const dropdown = document.getElementById('notificationDropdown');
-        dropdown.style.display = (dropdown.style.display === 'none' || dropdown.style.display === '') ? 'block' : 'none';
+        const badge = document.querySelector('.notification-badge');
+        
+        // Alterne l'affichage du menu
+        const isOpen = (dropdown.style.display === 'block');
+        dropdown.style.display = isOpen ? 'none' : 'block';
+
+        // Si on ouvre le menu et qu'il y a un badge, on le masque pour cette session
+        if (!isOpen && badge) {
+            const alertSignature = "{{ stock_bas|default:0 }}";
+            // sessionStorage s'efface si on ferme l'onglet/navigateur, mais persiste lors de la navigation
+            sessionStorage.setItem('astra_last_read_alert', alertSignature);
+            
+            // Masquer visuellement le badge
+            badge.style.display = 'none';
+        }
     }
 
+    // Vérifier au chargement de la page si l'alerte a déjà été lue durant cette session
+    document.addEventListener('DOMContentLoaded', function() {
+        const badge = document.querySelector('.notification-badge');
+        if (badge) {
+            const currentAlertSignature = "{{ stock_bas|default:0 }}";
+            const lastReadAlert = sessionStorage.getItem('astra_last_read_alert');
+
+            // Si c'est la même alerte dans la session en cours, on masque le badge
+            if (lastReadAlert === currentAlertSignature) {
+                badge.style.display = 'none';
+            }
+        }
+    });
+
+    // Fermer le menu si on clique en dehors
     window.addEventListener('click', function(e) {
         const container = document.querySelector('.notification-container');
         const dropdown = document.getElementById('notificationDropdown');

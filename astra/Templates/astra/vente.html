@@ -1,24 +1,24 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
- <!-- Script d’initialisation immédiate du mode nuit global -->
-    <script>
-        (function() {
-            const savedDarkMode = localStorage.getItem('astra_dark_mode');
-            if (savedDarkMode === 'true') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        })();
-    </script>
+<!-- Script d’initialisation immédiate du mode nuit global -->
+<script>
+    (function() {
+        const savedDarkMode = localStorage.getItem('astra_dark_mode');
+        if (savedDarkMode === 'true') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    })();
+</script>
 
 <link rel="stylesheet" href="{% static 'css/vente.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-    .table-responsive td.actions-cell {
+    .cellule td.actions-réactif à la table {
         white-space: nowrap;
         width: 1%;
     }
@@ -93,7 +93,6 @@
         color: #64748b;
     }
 
-    /* Style du conteneur des deux reçus pour l'aperçu */
     .recu-container {
         display: flex;
         flex-direction: column;
@@ -108,95 +107,90 @@
     .recu-item:last-child {
         border-bottom: none;
     }
-@media print {
-    /* 1. Configuration de la page */
-    @page {
-        size: portrait;
-        margin: 5mm;
-    }
 
-    /* 2. Masquer tout le corps de la page par défaut */
-    body * {
-        visibility: hidden !important;
-    }
+    @media print {
+        @page {
+            size: portrait;
+            margin: 5mm;
+        }
 
-    /* 3. Rendre visible uniquement la zone d'impression et tout son contenu */
-    #printArea, #printArea * {
-        visibility: visible !important;
-    }
+        body * {
+            visibility: hidden !important;
+        }
 
-    /* 4. Forcer l'affichage de la modale et de son conteneur en plein écran d'impression */
-    #modalDetails, .modal-content {
-        visibility: visible !important;
-        display: block !important;
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        background: white !important;
-        box-shadow: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
+        #printArea, #printArea * {
+            visibility: visible !important;
+        }
 
-    /* 5. Cacher les éléments superflus de la modale (boutons de fermeture, etc.) */
-    .modal-header,
-    .modal-actions,
-    .modal-footer,
-    #btnFermerDetails,
-    #btnImprimerRecu {
-        display: none !important;
-    }
+        #modalDetails, .modal-content {
+            visibility: visible !important;
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
 
-    /* 6. Mise en forme compacte du reçu pour tenir sur une seule page */
-    .recu-container {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 4px !important;
-        width: 100% !important;
-    }
+        .modal-header,
+        .modal-actions,
+        .modal-footer,
+        #btnFermerDetails,
+        #btnImprimerRecu {
+            display: none !important;
+        }
 
-    .recu-item {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        font-size: 9px !important;
-        padding-bottom: 4px !important;
-        margin-bottom: 4px !important;
-        border-bottom: 1px dashed #000 !important;
-    }
+        .recu-container {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+            width: 100% !important;
+        }
 
-    .recu-item:last-child {
-        border-bottom: none !important;
-        margin-bottom: 0 !important;
+        .recu-item {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            font-size: 9px !important;
+            padding-bottom: 4px !important;
+            margin-bottom: 4px !important;
+            border-bottom: 1px dashed #000 !important;
+        }
+
+        .recu-item:last-child {
+            border-bottom: none !important;
+            margin-bottom: 0 !important;
+        }
     }
-}
 
     /* --- MODE NUIT GLOBAL --- */
-        html.dark body {
-            background-color: #0f172a !important;
-            color: #f1f5f9 !important;
-        }
-        html.dark .card {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
-            color: #f1f5f9 !important;
-        }
-        html.dark h1, html.dark h2, html.dark h3, html.dark label, html.dark span, html.dark div {
-            color: inherit;
-        }
-        html.dark input, html.dark select {
-            background-color: #0f172a !important;
-            border-color: #334155 !important;
-            color: #ffffff !important;
-        }
-        html.dark .role-card {
-            background-color: #1e293b;
-            border-color: #334155;
-        }
-        html.dark .role-card.border-orange-500 {
-            border-color: #f97316 !important;
-            background-color: rgba(249, 115, 22, 0.1) !important;
-        }
+    html.dark body {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+    }
+    html.dark .card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+    html.dark h1, html.dark h2, html.dark h3, html.dark label, html.dark span, html.dark div {
+        color: inherit;
+    }
+    html.dark input, html.dark select {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #ffffff !important;
+    }
+    html.dark .role-card {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    html.dark .role-card.border-orange-500 {
+        border-color: #f97316 !important;
+        background-color: rgba(249, 115, 22, 0.1) !important;
+    }
 </style>
 
 <main class="page-vente">
@@ -220,8 +214,7 @@
     </section>
 
     <!-- BOUTONS ACTION & RECHERCHE -->
-    <section class="actions"
-        style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;">
+    <section class="actions" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button id="btnNouvelleVente" class="btn-primary" type="button">
                 <i class="fas fa-plus"></i> Nouvelle vente
@@ -251,6 +244,8 @@
                     <tr>
                         <th>Référence</th>
                         <th>Client</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
                         <th>Date</th>
                         <th>Montant Net</th>
                         <th>Actions</th>
@@ -262,22 +257,24 @@
                     <tr data-montant="{{ v.montant_total }}">
                         <td>{{ v.reference }}</td>
                         <td>{% if v.client %}{{ v.client.nom }}{% else %}Client comptoir{% endif %}</td>
+                        <td>{% if v.client and v.client.email %}{{ v.client.email }}{% else %}N/A{% endif %}</td>
+                        <td>{% if v.client and v.client.telephone %}{{ v.client.telephone }}{% else %}N/A{% endif %}</td>
                         <td>{{ v.date_vente|date:"d/m/Y H:i" }}</td>
                         <td class="money">{{ v.montant_total }} FCFA</td>
                         <td class="actions-cell">
-                            <button class="btn-view btnVoir" data-id="{{ v.id }}" type="button"
-                                title="Voir les détails & Imprimer">
+                            <button class="btn-view btnVoir" data-url="{% url 'astra:details_vente' v.id %}" type="button" title="Voir les détails & Imprimer">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <button class="btn-edit btnModifier" data-id="{{ v.id }}"
-                                data-client="{% if v.client %}{{ v.client.nom }}{% else %}{{ v.client_nom }}{% endif %}"
+                                data-client="{% if v.client %}{{ v.client.nom }}{% else %}Client comptoir{% endif %}"
+                                data-email="{% if v.client and v.client.email %}{{ v.client.email }}{% endif %}"
+                                data-telephone="{% if v.client and v.client.telephone %}{{ v.client.telephone }}{% endif %}"
                                 data-date="{{ v.date_vente|date:'Y-m-d' }}T{{ v.date_vente|time:'H:i' }}"
                                 data-montant="{{ v.montant_total }}" data-paiement="{{ v.mode_paiement }}" type="button"
                                 title="Modifier">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-delete btnSupprimer" data-id="{{ v.id }}" type="button"
-                                title="Mettre dans la corbeille">
+                            <button class="btn-delete btnSupprimer" data-url="{% url 'astra:supprimer_vente' v.id %}" type="button" title="Mettre dans la corbeille">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
@@ -285,7 +282,7 @@
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="5" class="empty">
+                        <td colspan="7" class="empty">
                             <i class="fas fa-shopping-cart"></i>
                             <p>Aucune vente enregistrée.</p>
                         </td>
@@ -316,8 +313,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="inputFiltreProduit"><i class="fas fa-laptop"></i> Matériel informatique
-                        disponible</label>
+                    <label for="clientEmail">Email du Client</label>
+                    <input type="email" name="client_email" id="clientEmail" placeholder="Ex: jean.dupont@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="clientTelephone">Téléphone du Client</label>
+                    <input type="tel" name="client_telephone" id="clientTelephone" placeholder="Ex: +237600000000">
+                </div>
+
+                <div class="form-group">
+                    <label for="inputFiltreProduit"><i class="fas fa-laptop"></i> Matériel informatique disponible</label>
                     <div class="search-box">
                         <input type="text" id="inputFiltreProduit" placeholder="Filtrer par nom...">
                         <i class="fas fa-search"></i>
@@ -326,13 +332,13 @@
 
                 <div class="form-group">
                     <label for="selectProduit">Sélection du matériel :</label>
-                     <select id="selectProduit" size="5" class="form-select-list">
+                    <select id="selectProduit" size="5" class="form-select-list">
                         {% for p in produits %}
-                     <option value="{{ p.id }}" data-prix="{{ p.prix_vente }}" data-stock="{{ p.stock }}" data-nom="{{ p.nom }}" {% if p.stock <= 0 %}style="color: #94a3b8; background-color: #f1f5f9;"{% endif %}>
-                       {{ p.nom }} — {{ p.prix_vente }} FCFA {% if p.stock <= 0 %}(Rupture de stock){% else %}(Stock : {{ p.stock }}){% endif %}
-    </option>
-    {% endfor %}
-</select>
+                        <option value="{{ p.id }}" data-prix="{{ p.prix_vente }}" data-stock="{{ p.stock }}" data-nom="{{ p.nom }}" {% if p.stock <= 0 %}style="color: #94a3b8; background-color: #f1f5f9;"{% endif %}>
+                            {{ p.nom }} — {{ p.prix_vente }} FCFA {% if p.stock <= 0 %}(Rupture de stock){% else %}(Stock : {{ p.stock }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <div class="form-row-inline">
@@ -354,16 +360,13 @@
 
                     <div class="form-group" style="margin-top: 15px;">
                         <label for="remisePourcentage"><i class="fas fa-percent"></i> Rabais appliqué (%) :</label>
-                        <input type="number" id="remisePourcentage" value="0" min="0" max="100" step="0.5"
-                            class="form-control" placeholder="0">
-                        <small class="text-muted" id="infoRegleRabais"
-                            style="display: block; margin-top: 4px; color: #0284c7;"></small>
+                        <input type="number" id="remisePourcentage" value="0" min="0" max="100" step="0.5" class="form-control" placeholder="0">
+                        <small class="text-muted" id="infoRegleRabais" style="display: block; margin-top: 4px; color: #0284c7;"></small>
                     </div>
 
                     <div class="total-box">
                         <div>Sous-total : <span id="sousTotalPanier">0</span> FCFA</div>
-                        <div>Montant de la réduction (<span id="txtPourcentageRemise">0</span>%) : - <span
-                                id="montantRemise">0</span> FCFA</div>
+                        <div>Montant de la réduction (<span id="txtPourcentageRemise">0</span>%) : - <span id="montantRemise">0</span> FCFA</div>
                         <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ddd;">
                         Total net à payer : <strong><span id="totalPanier">0</span> FCFA</strong>
                     </div>
@@ -427,26 +430,34 @@
         </div>
     </div>
 
-    <!-- MODAL MODIFICATION VENTE -->
+    <!-- Modale Modifier -->
     <div id="modalModifier" class="modal-overlay" style="display: none;">
         <div class="modal-content modal-sm">
             <div class="modal-header">
                 <h2><i class="fas fa-edit"></i> Modifier la vente</h2>
                 <button id="btnFermerModifier" class="btn-secondary" type="button"><i class="fas fa-times"></i></button>
             </div>
-            <form id="formModifierVente">
+            <form id="formModifierVente" data-url-template="{% url 'astra:modifier_vente' 0 %}">
                 <input type="hidden" id="modifierVenteId">
                 <div class="form-group">
                     <label for="modifierClient">Nom du client</label>
                     <input type="text" id="modifierClient" class="form-control" required>
                 </div>
                 <div class="form-group">
+                    <label for="modifierEmail">Email du client</label>
+                    <input type="email" id="modifierEmail" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="modifierTelephone">Téléphone du client</label>
+                    <input type="tel" id="modifierTelephone" class="form-control">
+                </div>
+                <div class="form-group">
                     <label for="modifierDate">Date et heure de la vente</label>
-                    <input type="datetime-local" id="modifierDate" class="form-control" required>
+                    <input type="datetime-local" id="modifierDate" class="form-control" readonly>
                 </div>
                 <div class="form-group">
                     <label for="modifierMontant">Montant total net (FCFA)</label>
-                    <input type="number" step="any" id="modifierMontant" class="form-control" required>
+                    <input type="number" step="any" id="modifierMontant" class="form-control" readonly>
                 </div>
                 <div class="form-group">
                     <label for="modifierModePaiement">Mode de paiement</label>
@@ -467,8 +478,28 @@
 
     <div id="toast" class="toast" style="display:none;"></div>
 </main>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // --- UTILITAIRE CSRF ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+        // Calcul du total global
         let totalMontant = 0;
         document.querySelectorAll('#tableBody tr[data-montant]').forEach(row => {
             totalMontant += parseFloat(row.getAttribute('data-montant')) || 0;
@@ -478,6 +509,7 @@
             statMontantEl.textContent = totalMontant.toLocaleString() + ' FCFA';
         }
 
+        // Barre de recherche
         const inputRechercheVente = document.getElementById('inputRechercheVente');
         if (inputRechercheVente) {
             inputRechercheVente.addEventListener('input', function (e) {
@@ -492,6 +524,7 @@
             });
         }
 
+        // Gestion des modales
         const modalVente = document.getElementById('modalVente');
         const modalDetails = document.getElementById('modalDetails');
         const modalModifier = document.getElementById('modalModifier');
@@ -513,6 +546,14 @@
 
         const btnAnnulerModifier = document.getElementById('btnAnnulerModifier');
         if (btnAnnulerModifier) btnAnnulerModifier.addEventListener('click', () => { if (modalModifier) modalModifier.style.display = 'none'; });
+
+        // Impression du reçu
+        const btnImprimerRecu = document.getElementById('btnImprimerRecu');
+        if (btnImprimerRecu) {
+            btnImprimerRecu.addEventListener('click', () => {
+                window.print();
+            });
+        }
 
         let panier = [];
 
@@ -718,11 +759,14 @@
                 const montantVerse = montantVerseInput ? parseFloat(montantVerseInput.value) || 0 : 0;
 
                 const clientNomInput = document.getElementById('clientNom');
+                const clientEmailInput = document.getElementById('clientEmail');
+                const clientTelephoneInput = document.getElementById('clientTelephone');
                 const modePaiementInput = document.getElementById('modePaiement');
-                const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
 
                 const data = {
                     client_nom: clientNomInput ? clientNomInput.value : 'Client comptoir',
+                    client_email: clientEmailInput ? clientEmailInput.value : '',
+                    client_telephone: clientTelephoneInput ? clientTelephoneInput.value : '',
                     montant_total: parseFloat(totalText) || 0,
                     montant_verse: montantVerse,
                     sous_total: parseFloat(sousTotalText) || 0,
@@ -736,7 +780,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfTokenEl ? csrfTokenEl.value : ''
+                        'X-CSRFToken': csrftoken
                     },
                     body: JSON.stringify(data)
                 })
@@ -756,117 +800,136 @@
             });
         }
 
+        // ==========================================
+        // 1. BOUTON VOIR (DÉTAILS)
+        // ==========================================
         document.querySelectorAll('.btnVoir').forEach(btn => {
             btn.addEventListener('click', function () {
-                const venteId = this.getAttribute('data-id');
+                const urlDetails = this.getAttribute('data-url');
                 modalDetails.style.display = 'flex';
                 const detailsContent = document.getElementById('detailsContent');
-                if (detailsContent) detailsContent.innerHTML = '<p>Chargement...</p>';
-
-                const detailsUrlTemplate = "{% url 'astra:details_vente' 0 %}".replace('/0/', '/' + venteId + '/');
-
-                fetch(detailsUrlTemplate)
+                if (detailsContent) detailsContent.innerHTML = '<p>Chargement en cours...</p>';
+                
+                fetch(urlDetails)
                     .then(res => {
-                        if (!res.ok) throw new Error("Erreur réseau");
+                        if (!res.ok) throw new Error("Erreur HTTP " + res.status);
                         return res.json();
                     })
                     .then(data => {
-                        let htmlTemplate = `
-                    <div class="details-summary" style="text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 8px; margin-bottom: 8px;">
-                        <h3 style="margin: 0 0 5px 0; font-size: 16px;">FACTURE / REÇU DE VENTE</h3>
-                        <p style="margin: 2px 0;"><strong>Réf :</strong> ${data.reference}</p>
-                        <p style="margin: 2px 0;"><strong>Client :</strong> ${data.client}</p>
-                        <p style="margin: 2px 0;"><strong>Date :</strong> ${data.date}</p>
-                        <p style="margin: 2px 0;"><strong>Paiement :</strong> ${data.mode_paiement}</p>
-                    </div>
-                    <h4 class="details-subtitle" style="margin: 5px 0; font-size: 14px;">Détails des articles :</h4>
-                    <ul class="details-list" style="list-style: none; padding: 0; margin: 0 0 8px 0;">
-                `;
-                        data.lignes.forEach(l => {
-                            htmlTemplate += `<li style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 13px;"><span>${l.produit} (x${l.quantite})</span> <strong>${l.sous_total} FCFA</strong></li>`;
-                        });
-                        htmlTemplate += `</ul><hr style="border: 0; border-top: 1px dashed #ccc; margin: 5px 0;">`;
-
-                        if (data.sous_total) {
-                            htmlTemplate += `<div style="display: flex; justify-content: space-between; margin: 2px 0; font-size: 13px;"><span>Sous-total articles :</span> <span>${data.sous_total} FCFA</span></div>`;
+                        if (detailsContent) {
+                            detailsContent.innerHTML = `
+                                <div class="recu-container">
+                                    <div class="recu-item">
+                                        <p><strong>Référence :</strong> ${data.reference}</p>
+                                        <p><strong>Client :</strong> ${data.client}</p>
+                                        <p><strong>Téléphone :</strong> ${data.client_telephone || 'N/A'}</p>
+                                        <p><strong>Email :</strong> ${data.client_email || 'N/A'}</p>
+                                        <p><strong>Date :</strong> ${data.date}</p>
+                                        <p><strong>Mode de paiement :</strong> ${data.mode_paiement}</p>
+                                        <p><strong>Statut :</strong> ${data.statut}</p>
+                                        <hr style="margin: 8px 0; border: 0; border-top: 1px dashed #ccc;">
+                                        <p><strong>Articles achetés :</strong></p>
+                                        <ul style="padding-left: 15px; margin: 5px 0;">
+                                            ${data.lignes.map(l => `<li>${l.produit} (x${l.quantite}) — ${l.sous_total.toLocaleString()} FCFA</li>`).join('')}
+                                        </ul>
+                                        <hr style="margin: 8px 0; border: 0; border-top: 1px dashed #ccc;">
+                                        <p style="font-size: 1.1em;"><strong>Montant Net Global :</strong> ${data.montant_total.toLocaleString()} FCFA</p>
+                                    </div>
+                                </div>
+                            `;
                         }
-
-                        if (data.remise_pourcentage && data.remise_pourcentage > 0) {
-                            htmlTemplate += `<div style="display: flex; justify-content: space-between; margin: 2px 0; color: #16a34a; font-size: 13px;"><span>Rabais appliqué (${data.remise_pourcentage}%) :</span> <span>- ${data.montant_remise || 0} FCFA</span></div>`;
-                        } else {
-                            htmlTemplate += `<div style="display: flex; justify-content: space-between; margin: 2px 0; color: #64748b; font-size: 13px;"><span>Rabais appliqué (0%) :</span> <span>0 FCFA</span></div>`;
-                        }
-
-                        htmlTemplate += `<h3 class="details-total" style="text-align: right; margin-top: 5px; border-top: 1px solid #333; padding-top: 4px; font-size: 14px;">Total Net : ${data.montant_total} FCFA</h3>`;
-
-                        let htmlComplet = `
-                    <div class="recu-container">
-                        <div class="recu-item">${htmlTemplate}</div>
-                        <div class="recu-item">${htmlTemplate}</div>
-                    </div>
-                `;
-
-                        if (detailsContent) detailsContent.innerHTML = htmlComplet;
                     })
-                    .catch(() => {
-                        if (detailsContent) detailsContent.innerHTML = '<p style="color:red;">Erreur lors du chargement des détails de la vente.</p>';
+                    .catch(err => {
+                        console.error(err);
+                        if (detailsContent) detailsContent.innerHTML = '<p style="color: red;">Erreur lors du chargement des détails de la vente.</p>';
                     });
             });
         });
 
-        const btnImprimerRecu = document.getElementById('btnImprimerRecu');
-        if (btnImprimerRecu) {
-            btnImprimerRecu.addEventListener('click', function () {
-                window.print();
-            });
-        }
-
+        // ==========================================
+        // 2. BOUTON MODIFIER
+        // ==========================================
         document.querySelectorAll('.btnModifier').forEach(btn => {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                const venteId = this.getAttribute('data-id');
-                const clientNom = this.getAttribute('data-client');
-                const dateVente = this.getAttribute('data-date');
-                const montantTotal = this.getAttribute('data-montant');
+            btn.addEventListener('click', function () {
+                document.getElementById('modifierVenteId').value = this.getAttribute('data-id');
+                document.getElementById('modifierClient').value = this.getAttribute('data-client') || '';
+                document.getElementById('modifierEmail').value = this.getAttribute('data-email') || '';
+                document.getElementById('modifierTelephone').value = this.getAttribute('data-telephone') || '';
+                document.getElementById('modifierDate').value = this.getAttribute('data-date') || '';
+                document.getElementById('modifierMontant').value = this.getAttribute('data-montant') || '';
+                
                 const modePaiement = this.getAttribute('data-paiement');
+                if(modePaiement) {
+                    document.getElementById('modifierModePaiement').value = modePaiement;
+                }
 
-                const modifierVenteId = document.getElementById('modifierVenteId');
-                const modifierClient = document.getElementById('modifierClient');
-                const modifierDate = document.getElementById('modifierDate');
-                const modifierMontant = document.getElementById('modifierMontant');
-                const modifierModePaiement = document.getElementById('modifierModePaiement');
-
-                if (modifierVenteId) modifierVenteId.value = venteId;
-                if (modifierClient) modifierClient.value = clientNom;
-                if (modifierDate) modifierDate.value = dateVente;
-                if (modifierMontant) modifierMontant.value = montantTotal;
-                if (modifierModePaiement) modifierModePaiement.value = modePaiement;
-
-                if (modalModifier) modalModifier.style.display = 'flex';
+                modalModifier.style.display = 'flex';
             });
         });
 
-        // --- GESTION DE LA SUPPRESSION (MISE À LA CORBEILLE) ---
-        document.querySelectorAll('.btnSupprimer').forEach(btn => {
-            btn.addEventListener('click', function (e) {
+        const formModifierVente = document.getElementById('formModifierVente');
+        if (formModifierVente) {
+            formModifierVente.addEventListener('submit', function (e) {
                 e.preventDefault();
-                const venteId = this.getAttribute('data-id');
-                const csrfTokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
+                const venteId = document.getElementById('modifierVenteId').value;
+                const clientNom = document.getElementById('modifierClient').value;
+                const clientEmail = document.getElementById('modifierEmail').value;
+                const clientTelephone = document.getElementById('modifierTelephone').value;
+                const modePaiement = document.getElementById('modifierModePaiement').value;
 
+                // Construction dynamique de l'URL via le modèle de l'attribut
+                const urlTemplate = formModifierVente.getAttribute('data-url-template');
+                const updateUrl = urlTemplate.replace('/0/', '/' + venteId + '/');
+
+                const data = {
+                    client_nom: clientNom,
+                    client_email: clientEmail,
+                    client_telephone: clientTelephone,
+                    mode_paiement: modePaiement
+                };
+
+                fetch(updateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert("Erreur : " + (response.error || "Impossible de modifier cette vente."));
+                    }
+                })
+                .catch(err => {
+                    console.error('Erreur:', err);
+                    alert("Erreur de communication avec le serveur.");
+                });
+            });
+        }
+
+        // ==========================================
+        // 3. BOUTON SUPPRIMER (ARCHIVER)
+        // ==========================================
+        document.querySelectorAll('.btnSupprimer').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const deleteUrl = this.getAttribute('data-url');
                 if (confirm("Voulez-vous vraiment placer cette vente dans la corbeille ?")) {
-                    const deleteUrlTemplate = "{% url 'astra:supprimer_vente' 0 %}".replace('/0/', '/' + venteId + '/');
-
-                    fetch(deleteUrlTemplate, {
+                    fetch(deleteUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfTokenEl ? csrfTokenEl.value : ''
+                            'X-CSRFToken': csrftoken
                         }
                     })
                     .then(res => res.json())
                     .then(response => {
                         if (response.success) {
-                            alert(response.message || "Vente placée dans la corbeille avec succès.");
+                            alert(response.message);
                             location.reload();
                         } else {
                             alert("Erreur : " + (response.error || "Impossible de supprimer cette vente."));

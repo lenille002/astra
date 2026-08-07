@@ -67,12 +67,12 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'config.urls'
 
 # ==================================================
-# TEMPLATES (AVEC AJOUT DU CONTEXT PROCESSOR DE NOTIFICATIONS)
+# TEMPLATES
 # ==================================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,9 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                
-                # --- AJOUTEZ CETTE LIGNE (remplacez 'astra' par le nom exact de votre application si besoin) ---
-                'astra.context_processors.notifications_globales', 
+                'astra.context_processors.notifications_header',
             ],
         },
     },

@@ -1,64 +1,205 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Astra Tech - Cahier d'activités : {{ client.nom }}{% endblock %}
+{% block title %}Cahier d'activités - Astra Tech{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4 px-4">
-    <!-- En-tête de la page -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Cahier d'activités du client : <span class="text-primary">{{ client.nom }}</span></h2>
-        <a href="{% url 'astra:gestion_clients' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour à la liste des clients
-        </a>
-    </div>
-    <hr>
+<style>
+    body, .app-layout, .app-main, .astra-clients-wrapper {
+        background-color: #f1f5f9 !important;
+        background: #f1f5f9 !important;
+    }
 
-    <div class="row">
-        <!-- Colonne de gauche : Résumé du client -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h4 class="card-title text-dark mb-3">Résumé</h4>
-                    <hr>
-                    <p class="mb-2"><strong>Nom :</strong> {{ client.nom }}</p>
-                    <p class="mb-2"><strong>Téléphone :</strong> {{ client.telephone|default:"Non renseigné" }}</p>
-                    <p class="mb-2"><strong>Nombre de commandes :</strong> <span class="badge bg-info text-dark">{{ nombre_commandes }}</span></p>
-                    <p class="mb-2"><strong>Total dépensé :</strong> <span class="text-success fw-bold">{{ total_depense|floatformat:0 }} FCFA</span></p>
-                </div>
+    .astra-dashboard { 
+        padding: 2.5rem 1.5rem; 
+        max-width: 1200px; 
+        margin: 0 auto; 
+    }
+    
+    .btn-retour {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #3730a3;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(55, 48, 163, 0.2);
+        transition: all 0.2s ease;
+    }
+    .btn-retour:hover {
+        background-color: #312e81;
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .btn-espace-client {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #059669;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+        transition: all 0.2s ease;
+    }
+    .btn-espace-client:hover {
+        background-color: #047857;
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .layout-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 25px;
+        align-items: start;
+    }
+    @media (max-width: 900px) {
+        .layout-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        border-left: 5px solid #3730a3;
+    }
+    .card.orange-accent { border-left-color: #f97316; }
+
+    .card-title { 
+        font-size: 1.1rem; 
+        font-weight: 700; 
+        color: #1e1b4b; 
+        margin-bottom: 1.2rem; 
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .summary-item {
+        margin-bottom: 15px;
+    }
+    .summary-item label {
+        display: block;
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+    .summary-item span {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .astra-table { width: 100%; border-collapse: collapse; }
+    .astra-table th { 
+        text-align: left; 
+        padding: 14px 16px; 
+        background-color: #3730a3; 
+        color: white; 
+        font-size: 0.85rem; 
+        text-transform: uppercase;
+    }
+    .astra-table th:first-child { border-top-left-radius: 8px; }
+    .astra-table th:last-child { border-top-right-radius: 8px; }
+    
+    .astra-table td { 
+        padding: 16px; 
+        border-bottom: 1px solid #f1f5f9; 
+        color: #334155; 
+        font-size: 0.95rem;
+    }
+    .astra-table tbody tr:hover { background-color: #f8fafc; }
+</style>
+
+<div class="astra-dashboard">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <a href="{% url 'astra:gestion_clients' %}" class="btn-retour">
+            <i class="fa-solid fa-arrow-left"></i> Retour à la liste des clients
+        </a>
+       <a href="{% url 'astra:espace_client' client.id %}" class="btn-espace-client">
+    <i class="fa-solid fa-user-gear"></i> Voir l'Espace Client
+</a>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <h1 style="color: #1e1b4b; font-size: 2rem; font-weight: 800; margin-bottom: 5px;">
+            Cahier d'activités du client : <span style="color: #4338ca;">{{ client.nom }}</span>
+        </h1>
+        <p style="color: #64748b;">Suivi complet des transactions et des ventes de ce client.</p>
+    </div>
+
+    <div class="layout-grid">
+        <div class="card">
+            <h2 class="card-title"><i class="fa-solid fa-address-card" style="color: #3730a3;"></i> Résumé du client</h2>
+            <div class="summary-item">
+                <label>Nom complet</label>
+                <span>{{ client.nom }}</span>
+            </div>
+            <div class="summary-item">
+                <label>Téléphone</label>
+                <span>{{ client.telephone|default:"N/A" }}</span>
+            </div>
+            <div class="summary-item">
+                <label>Email</label>
+                <span>{{ client.email|default:"N/A" }}</span>
+            </div>
+            <div class="summary-item">
+                <label>Commandes totales</label>
+                <span style="background: #e0e7ff; color: #3730a3; padding: 3px 10px; border-radius: 12px; display: inline-block;">
+                    {{ nombre_achats }}
+                </span>
+            </div>
+            <div class="summary-item" style="margin-bottom: 0;">
+                <label>Total dépensé</label>
+                <span style="color: #059669; font-size: 1.1rem; font-weight: 700;">
+                    {{ total_depenses|floatformat:0 }} FCFA
+                </span>
             </div>
         </div>
 
-        <!-- Colonne de droite : Historique des ventes -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h4 class="card-title text-dark mb-3">Historique des ventes</h4>
-                    <hr>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Référence Vente</th>
-                                    <th>Date</th>
-                                    <th>Montant</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for vente in ventes_client %}
-                                <tr>
-                                    <td class="fw-bold text-primary">{{ vente.reference }}</td>
-                                    <td>{{ vente.date_vente|date:"d/m/Y H:i" }}</td>
-                                    <td><span class="badge bg-success">{{ vente.montant_total|floatformat:0 }} FCFA</span></td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center py-4 text-muted">Aucune activité enregistrée pour ce client.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="card orange-accent">
+            <h2 class="card-title" style="color: #c2410c;"><i class="fa-solid fa-receipt" style="color: #f97316;"></i> Ventes enregistrées</h2>
+            
+            <div style="overflow-x: auto;">
+                <table class="astra-table">
+                    <thead>
+                        <tr>
+                            <th>Référence Vente</th>
+                            <th>Date</th>
+                            <th>Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vente in historique_achats %}
+                        <tr>
+                            <td style="font-weight: 700; color: #3730a3;">{{ vente.reference }}</td>
+                            <td>{{ vente.date_vente|date:"d/m/Y H:i" }}</td>
+                            <td style="font-weight: 700; color: #059669;">{{ vente.montant_total|floatformat:0 }} FCFA</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 2.5rem; color: #94a3b8; font-style: italic;">
+                                Aucun achat enregistré dans le cahier de ce client.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
