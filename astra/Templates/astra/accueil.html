@@ -74,7 +74,7 @@
                     </div>
                 </div>
 
-                <a href="http://127.0.0.1:8000/" class="logout-btn">
+                <a href="{% url 'astra:logout' %}" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
             </div>
@@ -130,8 +130,8 @@
                         <h3 class="feature-title">Gestion des Ventes</h3>
                         <p class="feature-desc">Gérez vos factures et suivez les transactions en temps réel.</p>
                         <ul>
-                            <li><a href="#">Accueil</a></li>
-                            <li><a href="http://127.0.0.1:8000/vente/">En savoir plus</a></li>
+                            <li><a href="{% url 'astra:accueil' %}">Accueil</a></li>
+                            <li><a href="{% url 'astra:ventes' %}">En savoir plus</a></li>
                         </ul>
                     </div>
 
@@ -141,8 +141,8 @@
                         <h3 class="feature-title">Rapports Avancés</h3>
                         <p class="feature-desc">Analysez les ventes avec des rapports journaliers et mensuels.</p>
                         <ul>
-                            <li><a href="#">Accueil</a></li>
-                            <li><a href="http://127.0.0.1:8000/rapports/#">En savoir plus</a></li>
+                            <li><a href="{% url 'astra:accueil' %}">Accueil</a></li>
+                            <li><a href="{% url 'astra:rapports' %}">En savoir plus</a></li>
                         </ul>
                     </div>
 
@@ -152,8 +152,8 @@
                         <h3 class="feature-title">Gestion des Approvisionnements</h3>
                         <p class="feature-desc">Suivez les entrées de stock et les réapprovisionnements.</p>
                         <ul>
-                            <li><a href="#">Accueil</a></li>
-                            <li><a href="http://127.0.0.1:8000/approvisionnement/">En savoir plus</a></li>
+                            <li><a href="{% url 'astra:accueil' %}">Accueil</a></li>
+                            <li><a href="{% url 'astra:approvisionnements' %}">En savoir plus</a></li>
                         </ul>
                     </div>
 
@@ -163,8 +163,8 @@
                         <h3 class="feature-title">Sécurité Renforcée</h3>
                         <p class="feature-desc">Protégez vos données grâce à un système sécurisé.</p>
                         <ul>
-                            <li><a href="#">Accueil</a></li>
-                            <li><a href="http://127.0.0.1:8000/connexion/">En savoir plus</a></li>
+                            <li><a href="{% url 'astra:accueil' %}">Accueil</a></li>
+                            <li><a href="{% url 'astra:connexion' %}">En savoir plus</a></li>
                         </ul>
                     </div>
 
@@ -174,8 +174,8 @@
                         <h3 class="feature-title">Gestion des Fournisseurs</h3>
                         <p class="feature-desc">Gérez vos fournisseurs et vos commandes.</p>
                         <ul>
-                            <li><a href="#">Accueil</a></li>
-                            <li><a href="http://127.0.0.1:8000/fournisseurs/">En savoir plus</a></li>
+                            <li><a href="{% url 'astra:accueil' %}">Accueil</a></li>
+                            <li><a href="{% url 'astra:fournisseurs' %}">En savoir plus</a></li>
                         </ul>
                     </div>
 
@@ -185,8 +185,8 @@
                         <h3 class="feature-title">À propos de ASTRA TECH</h3>
                         <p class="feature-desc">Découvrez notre plateforme de gestion informatique.</p>
                         <ul>
-                            <li><a href="#">Accueil</a></li>
-                            <li><a href="http://127.0.0.1:8000/propos/#">En savoir plus</a></li>
+                            <li><a href="{% url 'astra:accueil' %}">Accueil</a></li>
+                            <li><a href="{% url 'astra:propos' %}">En savoir plus</a></li>
                         </ul>
                     </div>
 

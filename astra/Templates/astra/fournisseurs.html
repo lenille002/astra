@@ -215,7 +215,6 @@ Astra Tech - Gestion des Fournisseurs
         </div>
     </div>
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const suppliersTableBody = document.getElementById('suppliersTableBody');
@@ -242,75 +241,83 @@ Astra Tech - Gestion des Fournisseurs
         const closeModal = (modal) => modal.classList.add('hidden');
 
         // Gestion de l'ouverture de la modale d'ajout
-        addSupplierBtn.addEventListener('click', () => {
-            modalTitle.textContent = "Ajouter un fournisseur";
-            supplierForm.reset();
-            supplierIdInput.value = '';
-            openModal(supplierModal);
-        });
+        if (addSupplierBtn) {
+            addSupplierBtn.addEventListener('click', () => {
+                modalTitle.textContent = "Ajouter un fournisseur";
+                supplierForm.reset();
+                supplierIdInput.value = '';
+                openModal(supplierModal);
+            });
+        }
 
-        closeModalBtn.addEventListener('click', () => closeModal(supplierModal));
-        cancelModalBtn.addEventListener('click', () => closeModal(supplierModal));
-        confirmNoBtn.addEventListener('click', () => closeModal(confirmModal));
+        if (closeModalBtn) closeModalBtn.addEventListener('click', () => closeModal(supplierModal));
+        if (cancelModalBtn) cancelModalBtn.addEventListener('click', () => closeModal(supplierModal));
+        if (confirmNoBtn) confirmNoBtn.addEventListener('click', () => closeModal(confirmModal));
 
         // Soumission du formulaire (Ajout ou Modification)
-        supplierForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(supplierForm);
+        if (supplierForm) {
+            supplierForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(supplierForm);
 
-            fetch("", {
-                method: "POST",
-                body: formData,
-                headers: { "X-Requested-With": "XMLHttpRequest" }
-            })
-            .then(response => {
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    return response.json();
-                } else {
-                    window.location.reload();
-                    return { status: "success" };
-                }
-            })
-            .then(data => {
-                if (data && data.status === "success") {
-                    closeModal(supplierModal);
-                    window.location.reload();
-                } else if (data && data.status === "error") {
-                    alert("Erreur : " + (data.message || "Une erreur est survenue."));
-                }
-            })
-            .catch(error => {
-                console.error("Erreur:", error);
-                supplierForm.submit();
+                fetch("", {
+                    method: "POST",
+                    body: formData,
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                })
+                .then(response => {
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        return response.json();
+                    } else {
+                        window.location.reload();
+                        return { status: "success" };
+                    }
+                })
+                .then(data => {
+                    if (data && data.status === "success") {
+                        closeModal(supplierModal);
+                        window.location.reload();
+                    } else if (data && data.status === "error") {
+                        alert("Erreur : " + (data.message || "Une erreur est survenue."));
+                    }
+                })
+                .catch(error => {
+                    console.error("Erreur:", error);
+                    supplierForm.submit();
+                });
             });
-        });
+        }
 
         // Gestion des clics sur Modifier / Supprimer dans le tableau
-        suppliersTableBody.addEventListener('click', (e) => {
-            const editBtn = e.target.closest('.edit-btn');
-            const deleteBtn = e.target.closest('.delete-btn');
+        if (suppliersTableBody) {
+            suppliersTableBody.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-btn');
+                const deleteBtn = e.target.closest('.delete-btn');
 
-            if (editBtn) {
-                modalTitle.textContent = "Modifier le fournisseur";
-                supplierIdInput.value = editBtn.dataset.id;
-                supplierNameInput.value = editBtn.dataset.nom;
-                supplierContactInput.value = editBtn.dataset.contact;
-                supplierPhoneInput.value = editBtn.dataset.telephone;
-                supplierEmailInput.value = editBtn.dataset.email;
-                openModal(supplierModal);
-            } else if (deleteBtn) {
-                supplierToDeleteUrl = deleteBtn.dataset.url;
-                openModal(confirmModal);
-            }
-        });
+                if (editBtn) {
+                    modalTitle.textContent = "Modifier le fournisseur";
+                    supplierIdInput.value = editBtn.dataset.id;
+                    supplierNameInput.value = editBtn.dataset.nom;
+                    supplierContactInput.value = editBtn.dataset.contact;
+                    supplierPhoneInput.value = editBtn.dataset.telephone;
+                    supplierEmailInput.value = editBtn.dataset.email;
+                    openModal(supplierModal);
+                } else if (deleteBtn) {
+                    supplierToDeleteUrl = deleteBtn.dataset.url;
+                    openModal(confirmModal);
+                }
+            });
+        }
 
         // Confirmation de suppression
-        confirmYesBtn.addEventListener('click', () => {
-            if (supplierToDeleteUrl) {
-                window.location.href = supplierToDeleteUrl;
-            }
-        });
+        if (confirmYesBtn) {
+            confirmYesBtn.addEventListener('click', () => {
+                if (supplierToDeleteUrl) {
+                    window.location.href = supplierToDeleteUrl;
+                }
+            });
+        }
 
         // Fermer les modales en cliquant en dehors
         window.addEventListener('click', (e) => {
@@ -343,7 +350,7 @@ Astra Tech - Gestion des Fournisseurs
         const sujet = document.getElementById('sujetEmail').value;
         const message = document.getElementById('messageEmail').value;
 
-        // URL dynamique générée via Django pour éviter les erreurs 404 / 500
+        // URL dynamique générée via Django
         const url = `{% url 'astra:envoyer_email_fournisseur' 0 %}`.replace('0', id);
 
         fetch(url, {
@@ -358,9 +365,10 @@ Astra Tech - Gestion des Fournisseurs
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                alert(data.message);
+                alert(data.message); // Alerte de succès confirmant l'envoi et la notification
                 fermerModalEmail();
                 document.getElementById('formEnvoyerEmail').reset();
+                window.location.reload(); // Recharge la page pour actualiser l'interface et la cloche de notification
             } else {
                 alert("Erreur : " + (data.message || "Une erreur est survenue."));
             }

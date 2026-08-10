@@ -131,7 +131,11 @@
         <a href="{% url 'astra:gestion_clients' %}" class="btn-retour">
             <i class="fa-solid fa-arrow-left"></i> Retour à la liste des clients
         </a>
-       <a href="{% url 'astra:espace_client' client.id %}" class="btn-espace-client">
+      <!-- Remplacez ceci : -->
+<!-- <a href="{% url 'astra:espace_client' client.id %}" class="btn-espace-client"> -->
+
+<!-- Par ceci (si la vue de connexion/espace s'appelle client_login) : -->
+<a href="{% url 'astra:client_login' client.id %}" class="btn-espace-client">
     <i class="fa-solid fa-user-gear"></i> Voir l'Espace Client
 </a>
     </div>

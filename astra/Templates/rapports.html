@@ -87,7 +87,7 @@ Astra Tech - Rapports & Analyses Globaux
             </div>
             <div class="bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
                 <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Stock Total</span>
-                <p class="text-2xl font-black text-white mb-1">{{ total_stock_qty|default:0 }} un.</p>
+                <p id="stockTotalDisplay" class="text-2xl font-black text-white mb-1">{{ total_stock_qty|default:0 }}</p>
             </div>
             <div class="bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
                 <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Clients</span>
@@ -296,6 +296,17 @@ Astra Tech - Rapports & Analyses Globaux
         }
         return '';
     };
+
+    // Calcul réel et dynamique du Stock Total basé sur les produits chargés
+    const totalStockCalculated = products.reduce((acc, p) => {
+        const qty = parseInt(getProp(p, ['stock', 'quantite'])) || 0;
+        return acc + qty;
+    }, 0);
+
+    const stockTotalElem = document.getElementById('stockTotalDisplay');
+    if (stockTotalElem) {
+        stockTotalElem.textContent = totalStockCalculated;
+    }
 
     // Gestion de l'impression
     const mainPrintBtn = document.getElementById('mainPrintBtn');

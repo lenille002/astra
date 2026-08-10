@@ -14,6 +14,8 @@ admin.site.register(Categorie)
 admin.site.register(Vente)
 admin.site.register(Fournisseur)
 admin.site.register(Approvisionnement)
+admin.site.register(TokenVerification)
+admin.site.register(Token)
 
 
 @admin.register(Produit)
@@ -22,7 +24,7 @@ class ProduitAdmin(admin.ModelAdmin):
     search_fields = ('nom', 'reference')
     list_filter = ('categorie', 'is_active')
 
-    # C'est ici que la magie opère pour organiser le formulaire d'administration :
+    # Organisation du formulaire d'administration pour les ordinateurs
     fieldsets = (
         ('Informations Générales', {
             'fields': ('nom', 'categorie', 'reference', 'image', 'is_active')
@@ -31,7 +33,7 @@ class ProduitAdmin(admin.ModelAdmin):
             'fields': ('prix_achat', 'prix_vente', 'stock', 'seuil_alerte')
         }),
         ('Propriétés spécifiques (Ordinateurs & Composants)', {
-            'classes': ('collapse',),  # <--- Ceci rend la section repliable (cliquable)
+            'classes': ('collapse',),  # Rend la section repliable
             'fields': ('processeur', 'ram', 'stockage_disque', 'taille_ecran'),
         }),
     )
@@ -39,10 +41,6 @@ class ProduitAdmin(admin.ModelAdmin):
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nom', 'telephone', 'email', 'total_depense', 'is_active', 'date_inscription')
-    search_fields = ('nom', 'telephone', 'email')
+    list_display = ('id', 'reference', 'nom', 'telephone', 'email', 'total_depense', 'is_active', 'date_inscription')
+    search_fields = ('nom', 'telephone', 'email', 'reference')
     list_filter = ('is_active', 'date_inscription')
-
-
-admin.site.register(TokenVerification)
-admin.site.register(Token)

@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Max
 from datetime import timedelta
 from django.contrib import admin
@@ -87,7 +88,6 @@ class Produit(models.Model):
     date_creation = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        # Convertit une chaîne vide en None pour éviter les collisions d'unicité
         if not self.reference:
             self.reference = None
 
@@ -100,6 +100,8 @@ class Produit(models.Model):
 
     def __str__(self):
         return f"{self.nom} - {self.prix_vente} FCFA"
+
+
 # ==================================================
 # CLIENTS
 # ==================================================
@@ -112,6 +114,7 @@ class Client(models.Model):
     telephone = models.CharField(max_length=50, blank=True)
     email = models.EmailField(blank=True, null=True)
     adresse = models.TextField(blank=True)
+    mot_de_passe = models.CharField(max_length=255, blank=True, null=True)
     date_inscription = models.DateField(auto_now_add=True, null=True, blank=True)
     total_depense = models.DecimalField(
         max_digits=12, decimal_places=2, default=0
@@ -119,8 +122,11 @@ class Client(models.Model):
     is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
+        # Attribution d'un mot de passe par défaut si aucun n'est défini (ex: "1234")
+        if not self.mot_de_passe:
+            self.mot_de_passe = make_password("1234")
+
         if not self.reference:
-            # Utilisation de Max('id') pour éviter les collisions si des clients ont été supprimés
             max_id = Client.objects.all().aggregate(Max('id'))['id__max']
             numero = (max_id or 0) + 1
             self.reference = f'CLI-{numero:04d}'
@@ -130,6 +136,8 @@ class Client(models.Model):
     def __str__(self):
         statut = 'Actif' if self.is_active else 'Inactif'
         return f'{self.nom} ({self.reference}) - {statut}'
+
+
 # ==================================================
 # VENTES
 # ==================================================
@@ -218,6 +226,7 @@ class LigneVente(models.Model):
 
 DetailVente = LigneVente
 
+
 # ==================================================
 # FOURNISSEURS
 # ==================================================
@@ -248,6 +257,8 @@ class Fournisseur(models.Model):
     def __str__(self):
         statut = 'Actif' if self.is_active else 'Inactif'
         return f'{self.nom} - {statut}'
+
+
 # ==================================================
 # APPROVISIONNEMENTS
 # ==================================================
@@ -372,4 +383,17 @@ class Token(models.Model):
     def __str__(self):
         return f"{self.valeur_token} - {self.email}"
 
-        
+
+# ==================================================
+# NOTIFICATIONS PLATEFORME
+# ==================================================
+
+class NotificationPlateforme(models.Model):
+    titre = models.CharField(max_length=255)
+    message = models.TextField()
+    date_creation = models.DateTimeField(auto_now_add=True)
+    lu = models.BooleanField(default=False)
+
+    def __str__(self):
+        statut = "Lu" if self.lu else "Non lu"
+        return f"{self.titre} ({statut})"

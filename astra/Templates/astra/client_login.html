@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Astra Tech - Connexion Espace Client{% endblock %}
+
+{% block css %}
+<style>
+    body, .app-layout, .app-main {
+        background-color: #030712 !important;
+    }
+
+    @keyframes floatOrb1 {
+        0%, 100% { transform: translate(0px, 0px) scale(1); }
+        50% { transform: translate(35px, -45px) scale(1.1); }
+    }
+
+    @keyframes floatOrb2 {
+        0%, 100% { transform: translate(0px, 0px) scale(1); }
+        50% { transform: translate(-45px, 35px) scale(1.15); }
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.75; }
+    }
+
+    .orb-1 {
+        animation: floatOrb1 9s ease-in-out infinite, pulseGlow 4s ease-in-out infinite;
+    }
+
+    .orb-2 {
+        animation: floatOrb2 11s ease-in-out infinite, pulseGlow 5s ease-in-out infinite;
+    }
+
+    .tech-grid {
+        background-image: radial-gradient(rgba(249, 115, 22, 0.12) 1px, transparent 1px);
+        background-size: 32px 32px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="width: 100%; min-height: 85vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 25%, #1e1b4b 0%, #090d16 75%);">
+    
+    <!-- Grille technologique en surimpression -->
+    <div class="tech-grid" style="position: absolute; inset: 0; opacity: 0.7; pointer-events: none;"></div>
+
+    <!-- Orbes lumineux captivants animés -->
+    <div class="orb-1" style="position: absolute; top: 10%; left: 15%; width: 340px; height: 340px; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 50%; filter: blur(95px); opacity: 0.35; pointer-events: none;"></div>
+    <div class="orb-2" style="position: absolute; bottom: 5%; right: 15%; width: 400px; height: 400px; background: linear-gradient(135deg, #4338ca, #3b82f6); border-radius: 50%; filter: blur(110px); opacity: 0.4; pointer-events: none;"></div>
+
+    <!-- Carte principale style glassmorphisme élégant -->
+    <div style="width: 100%; max-width: 440px; background: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(16px); border-radius: 30px; box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.4) inset; padding: 40px; position: relative; z-index: 10;">
+        
+        <!-- Icône d'en-tête -->
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 70px; border-radius: 22px; background: linear-gradient(135deg, #f97316, #f59e0b); color: #ffffff; box-shadow: 0 15px 25px -5px rgba(249, 115, 22, 0.45); margin-bottom: 16px;">
+                <i class="fa-solid fa-lock" style="font-size: 26px; color: #ffffff !important;"></i>
+            </div>
+            <h2 style="font-size: 26px; font-weight: 900; color: #0f172a !important; margin: 0 0 8px 0; letter-spacing: -0.5px;">Espace Sécurisé</h2>
+            <p style="font-size: 13px; color: #475569 !important; margin: 0; line-height: 1.5;">
+                Entrez votre mot de passe pour accéder à l'espace de <strong style="color: #0f172a !important; font-weight: 700;">{{ client.nom }}</strong>.
+            </p>
+        </div>
+        
+        <!-- Messages d'erreur -->
+        {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                    <div style="padding: 12px 16px; background-color: #fef2f2 !important; color: #991b1b !important; font-size: 12px; font-weight: 700; border-radius: 12px; border: 1px solid #fecaca; display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-circle-exclamation" style="color: #dc2626 !important;"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+<!-- Formulaire -->
+    <!-- Formulaire -->
+        <form method="POST" action="{% url 'astra:client_login' client.id %}" style="margin: 0;">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #475569 !important; margin-bottom: 8px;">Mot de passe privé</label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b;">
+                        <i class="fa-solid fa-key"></i>
+                    </span>
+                    <input type="password" name="password" required placeholder="Votre mot de passe secret" style="width: 100%; padding: 14px 16px 14px 45px; background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-radius: 14px; font-size: 14px; font-weight: 600; color: #0f172a !important; outline: none; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #f97316, #ea580c) !important; color: #ffffff !important; font-weight: 800; border-radius: 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; box-shadow: 0 10px 20px -3px rgba(249, 115, 22, 0.4);">
+                Déverrouiller l'accès
+            </button>
+        </form>
+
+        <!-- Lien d'inscription -->
+        <div style="margin-top: 25px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            <p style="font-size: 13px; color: #475569 !important; margin: 0;">
+                Vous n'avez pas de compte ? 
+                <a href="{% url 'astra:client_register' %}" style="color: #f97316 !important; font-weight: 800; text-decoration: underline;">S'inscrire</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -345,13 +345,13 @@
 
         .token-value {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 20px;
+            font-size: 17px;
             font-weight: bold;
             color: var(--tech-bleu-fonce);
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             word-break: break-all;
-            margin: 10px 0;
-            padding: 8px;
+            margin: 6px 0;
+            padding: 6px;
             background: var(--tech-card-bg);
             border-radius: 6px;
             border: 1px solid var(--frontiere-technologique);
@@ -396,16 +396,16 @@
             table-layout: fixed;
         }
 
-        th:nth-child(1), td:nth-child(1) { width: 34%; }
-        th:nth-child(2), td:nth-child(2) { width: 36%; }
-        th:nth-child(3), td:nth-child(3) { width: 18%; }
-        th:nth-child(4), td:nth-child(4) { width: 12%; text-align: center; }
+        th:nth-child(1), td:nth-child(1) { width: 28%; }
+        th:nth-child(2), td:nth-child(2) { width: 28%; }
+        th:nth-child(3), td:nth-child(3) { width: 24%; }
+        th:nth-child(4), td:nth-child(4) { width: 20%; }
 
         th,
         td {
-            padding: 14px 16px;
+            padding: 14px 12px;
             border-bottom: 1px solid var(--frontiere-technologique);
-            font-size: 13px;
+            font-size: 12px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -416,7 +416,7 @@
             background-color: var(--tech-gris-clair);
             color: var(--tech-bleu-fonce);
             font-weight: 700;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             position: sticky;
@@ -434,9 +434,9 @@
         }
 
         .badge {
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             display: inline-block;
         }
@@ -526,7 +526,7 @@
             <!-- Formulaire de Génération -->
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-shield-alt" style="color: var(--tech-orange);"></i> Générer un Token
+                    <i class="fas fa-shield-alt" style="color: var(--tech-orange);"></i> Générer un Token d'Activation
                 </div>
 
                 <form id="tokenForm">
@@ -543,14 +543,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="userRole"><i class="fas fa-user-tag"></i> Rôle attribué</label>
+                        <label for="userRole"><i class="fas fa-user-tag"></i> Statut / Rôle attribué</label>
                         <select id="userRole">
+                            <option value="client">Client (Espace Client + Espace Caissier/Cahier)</option>
+                            <option value="fournisseur">Fournisseur (Espace Fournisseur)</option>
+                            <option value="admin">Administrateur</option>
                             <option value="caissier">Caissier / Vendeur</option>
                             <option value="gestionnaire_stock">Gestionnaire de Stock</option>
-                            <option value="admin">Administrateur</option>
-                            <option value="Client VIP / Fidèle">Client VIP / Fidèle</option>
-                            <option value="Client Actif">Client Actif</option>
-                            <option value="Prospect / Nouveau">Prospect / Nouveau</option>
                         </select>
                     </div>
 
@@ -564,16 +563,22 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary" id="btnGenerate">
-                        <i class="fas fa-paper-plane"></i> Générer et Envoyer par Email
+                        <i class="fas fa-paper-plane"></i> Activer le Statut et Générer les Mots de Passe
                     </button>
                 </form>
 
                 <div class="status-message" id="statusMessage"></div>
 
                 <div class="token-display" id="tokenDisplay">
-                    <div style="font-size: 13px;" class="page-subtitle">Token généré avec succès :</div>
+                    <div style="font-size: 13px;" class="page-subtitle">Mot de passe de Connexion (App) :</div>
                     <div class="token-value" id="generatedTokenVal">ASTRA-XXXX-XXXX</div>
-                    <p style="font-size: 12px; color: #888;">Un email contenant ce token a été envoyé au destinataire.</p>
+                    
+                    <div id="clientTokensExtra" style="display: none; margin-top: 10px;">
+                        <div style="font-size: 13px;" class="page-subtitle">Mot de passe Secondaire (Espace Caissier/Cahier) :</div>
+                        <div class="token-value" id="generatedSecondaryTokenVal">CAHIER-YYYY-YYYY</div>
+                    </div>
+
+                    <p style="font-size: 12px; color: #888; margin-top: 8px;">Les informations d'accès ont été générées et transmises.</p>
                 </div>
             </div>
 
@@ -588,9 +593,9 @@
                         <thead>
                             <tr>
                                 <th>Destinataire</th>
-                                <th>Token</th>
-                                <th>Rôle</th>
-                                <th style="text-align: center;">Statut</th>
+                                <th>Mdp App</th>
+                                <th>Mdp Cahier / Rôle</th>
+                                <th style="text-align: center;">État</th>
                             </tr>
                         </thead>
                         <tbody id="tokenTableBody">
@@ -599,7 +604,13 @@
                                 <tr>
                                     <td title="{{ t.email }}">{{ t.email }}</td>
                                     <td title="{{ t.token }}"><strong style="font-family: 'Courier New', monospace; color: var(--tech-bleu-fonce);">{{ t.token }}</strong></td>
-                                    <td title="{{ t.role }}">{{ t.role }}</td>
+                                    <td title="{{ t.secondary_token|default:t.role }}">
+                                        {% if t.secondary_token %}
+                                            <strong style="font-family: 'Courier New', monospace; color: var(--tech-orange);">{{ t.secondary_token }}</strong>
+                                        {% else %}
+                                            {{ t.role }}
+                                        {% endif %}
+                                    </td>
                                     <td style="text-align: center;"><span class="badge badge-active">Actif</span></td>
                                 </tr>
                                 {% endfor %}
@@ -615,7 +626,7 @@
         </div>
     </main>
 
-    <script>
+   <script>
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -632,7 +643,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            // --- SYNCHRONISATION AUTOMATIQUE DU MODE SOMBRE (CLÉ UNIFIÉE astra_dark_mode) ---
+            // --- SYNCHRONISATION AUTOMATIQUE DU MODE SOMBRE ---
             if (localStorage.getItem('astra_dark_mode') === 'true') {
                 document.body.classList.add('dark-mode');
             } else {
@@ -644,31 +655,46 @@
             const statusMessage = document.getElementById('statusMessage');
             const tokenDisplay = document.getElementById('tokenDisplay');
             const generatedTokenVal = document.getElementById('generatedTokenVal');
+            const generatedSecondaryTokenVal = document.getElementById('generatedSecondaryTokenVal');
+            const clientTokensExtra = document.getElementById('clientTokensExtra');
             const tokenTableBody = document.getElementById('tokenTableBody');
 
-            function handleSuccess(email, token, role) {
+            function handleSuccess(email, token, secondaryToken, role) {
                 statusMessage.className = "status-message status-success";
-                statusMessage.textContent = `Le token a été généré et envoyé avec succès à ${email} !`;
+                
+                // Adaptation du message selon le rôle (Client ou Fournisseur)
+                if (role === 'client' || role === 'fournisseur') {
+                    statusMessage.textContent = `Accès [${role.toUpperCase()}] activé : Mot de passe application et mot de passe d'espace dédié générés et envoyés à ${email} !`;
+                    generatedSecondaryTokenVal.textContent = secondaryToken;
+                    clientTokensExtra.style.display = "block";
+                } else {
+                    statusMessage.textContent = `Le statut [${role.toUpperCase()}] a été activé et le mot de passe a été envoyé à ${email} !`;
+                    clientTokensExtra.style.display = "none";
+                }
                 statusMessage.style.display = "block";
 
                 generatedTokenVal.textContent = token;
                 tokenDisplay.style.display = "block";
 
-                addTokenToHistory(email, token, role);
+                addTokenToHistory(email, token, secondaryToken, role);
                 tokenForm.reset();
             }
 
-            function addTokenToHistory(email, token, role) {
+            function addTokenToHistory(email, token, secondaryToken, role) {
                 const emptyRow = document.getElementById('emptyRow');
                 if (emptyRow) {
                     emptyRow.remove();
                 }
 
+                // Si un mot de passe secondaire existe (client/fournisseur), on l'affiche proprement en orange, sinon on affiche le rôle
+                let displaySec = (secondaryToken && secondaryToken !== 'N/A') ? secondaryToken : role.toUpperCase();
+                const secondaryDisplay = `<strong style="font-family: 'Courier New', monospace; color: var(--tech-orange);">${displaySec}</strong>`;
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td title="${email}">${email}</td>
                     <td title="${token}"><strong style="font-family: 'Courier New', monospace; color: var(--tech-bleu-fonce);">${token}</strong></td>
-                    <td title="${role}">${role}</td>
+                    <td title="${displaySec}">${secondaryDisplay}</td>
                     <td style="text-align: center;"><span class="badge badge-active">Actif</span></td>
                 `;
                 tokenTableBody.prepend(tr);
@@ -686,7 +712,7 @@
 
                 const btn = document.getElementById('btnGenerate');
                 btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération et envoi en cours...';
 
                 fetch("{% url 'astra:generer_token_api' %}", {
                     method: 'POST',
@@ -703,10 +729,11 @@
                 .then(response => response.json())
                 .then(data => {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Générer et Envoyer par Email';
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Activer le Statut et Générer les Mots de Passe';
 
                     if (data.status === 'success') {
-                        handleSuccess(email, data.token, role);
+                        // On passe bien le secondary_token renvoyé par le backend
+                        handleSuccess(email, data.token, data.secondary_token, role);
                     } else {
                         statusMessage.className = "status-message status-error";
                         statusMessage.textContent = "Erreur : " + (data.message || "Une erreur est survenue.");
@@ -715,7 +742,7 @@
                 })
                 .catch(error => {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Générer et Envoyer par Email';
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Activer le Statut et Générer les Mots de Passe';
                     statusMessage.className = "status-message status-error";
                     statusMessage.textContent = "Une erreur est survenue lors de la communication avec le serveur.";
                     statusMessage.style.display = "block";

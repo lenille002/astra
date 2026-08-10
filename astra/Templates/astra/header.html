@@ -11,8 +11,8 @@
     <nav class="nav-menu" style="display: flex; align-items: center; gap: 24px;">
         <a href="{% url 'astra:ventes' %}" class="nav-item {% if request.resolver_match.url_name == 'ventes' %}active{% endif %}">Ventes</a>
         <a href="{% url 'astra:stock' %}" class="nav-item {% if request.resolver_match.url_name == 'stock' %}active{% endif %}">Stocks</a>
-        <a href="{% url 'astra:approvisionnements' %}" class="nav-item {% if request.resolver_match.url_name == 'approvisionnement' or request.resolver_match.url_name == 'approvisionnements' %}active{% endif %}">Approvisionnement</a>
-        <a href="{% url 'astra:gestion_clients' %}" class="nav-item {% if request.resolver_match.url_name == 'gestion_clients' %}active{% endif %}">Clients</a>
+        <a href="{% url 'astra:approvisionnements' %}" class="nav-item {% if request.resolver_match.url_name == 'approvisionnements' or request.resolver_match.url_name == 'detail_approvisionnement' %}active{% endif %}">Approvisionnement</a>
+        <a href="{% url 'astra:gestion_clients' %}" class="nav-item {% if request.resolver_match.url_name in 'gestion_clients,detail_client_activites,espace_client,client_login,client_register' %}active{% endif %}">Clients</a>
         <a href="{% url 'astra:fournisseurs' %}" class="nav-item {% if request.resolver_match.url_name == 'fournisseurs' %}active{% endif %}">Fournisseurs</a>
         <a href="{% url 'astra:rapports' %}" class="nav-item {% if request.resolver_match.url_name == 'rapports' %}active{% endif %}">Rapports</a>
     </nav>
@@ -21,82 +21,91 @@
     <div class="user-menu" style="display: flex; align-items: center; gap: 16px;">
         
         <div class="notification-container" style="position: relative; display: inline-block; cursor: pointer;">
-    <div class="notification-icon" id="notificationIcon" onclick="toggleNotificationDropdown()" style="font-size: 1.2rem; padding: 8px; color: white;">
-        <i class="fas fa-bell"></i>
-        {% if stock_bas and stock_bas > 0 %}
-            <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #ff4d4d; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 50%; font-weight: bold;">
-                {{ stock_bas }}
-            </span>
-        {% endif %}
-    </div>
+            <div class="notification-icon" id="notificationIcon" onclick="toggleNotificationDropdown()" style="font-size: 1.2rem; padding: 8px; color: white;">
+                <i class="fas fa-bell"></i>
+                {% if nombre_notifications and nombre_notifications > 0 %}
+                    <span class="notification-badge" id="notifBadge" style="position: absolute; top: 2px; right: 2px; background: #ff4d4d; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 50%; font-weight: bold;">
+                        {{ nombre_notifications }}
+                    </span>
+                {% endif %}
+            </div>
 
-    <!-- Menu déroulant dynamique -->
-    <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 320px; background: white; color: black; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 10px; z-index: 9999; padding: 15px; text-align: left;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
-            <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem;">Notifications système</h6>
-            <span style="background: #ff7f00; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: bold;">En direct</span>
-        </div>
-        <div style="max-height: 220px; overflow-y: auto; font-size: 0.8rem;">
-            {% if stock_bas and stock_bas > 0 %}
-                <div style="padding: 10px; background: #fff3cd; border-radius: 6px; display: flex; gap: 8px; align-items: center; border-left: 4px solid #ff9900;">
-                    <i class="fas fa-exclamation-triangle" style="color: #ff9900; font-size: 1.1rem;"></i>
-                    <div>
-                        <strong style="display: block; color: #b78103;">{{ titre_alerte }} :</strong> 
-                        {{ message_alerte }}
-                    </div>
+            <!-- Menu déroulant dynamique -->
+            <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 340px; background: white; color: black; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 10px; z-index: 9999; padding: 15px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                    <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem;">Notifications de cette page</h6>
+                    {% if nombre_notifications and nombre_notifications > 0 %}
+                        <button onclick="marquerToutCommeLu()" style="background: none; border: none; color: #007bff; font-size: 0.75rem; cursor: pointer; font-weight: bold; text-decoration: underline;">
+                            Tout marquer comme lu
+                        </button>
+                    {% endif %}
                 </div>
-            {% else %}
-                <div style="text-align: center; color: #666; margin: 15px 0;">
-                    <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
-                    Aucune alerte critique pour le moment.
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+                
+                <div id="notifListContainer" style="max-height: 260px; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;">
+                    
+                    {% for notif in notifications_non_lues %}
+                        <div style="padding: 10px; background: #fff3cd; border-radius: 6px; display: flex; gap: 8px; align-items: flex-start; border-left: 4px solid #ff9900;">
+                            <i class="fas fa-exclamation-triangle" style="color: #ff9900; font-size: 1.1rem; margin-top: 2px; flex-shrink: 0;"></i>
+                            <div style="width: 100%;">
+                                <strong style="display: block; color: #b78103; font-size: 0.85rem;">{{ notif.titre }}</strong>
+                                <p style="margin: 2px 0; color: #333; line-height: 1.2;">{{ notif.message }}</p>
+                                <span style="font-size: 0.65rem; color: #888;">{{ notif.date_creation|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div id="noNotifMessage" style="text-align: center; color: #666; margin: 20px 0;">
+                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
+                            Aucune nouvelle notification pour cette section.
+                        </div>
+                    {% endfor %}
 
-        <!-- 2. Bouton Retour -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bouton Retour -->
         <a href="{% url 'astra:accueil' %}" class="btn btn-primary rounded-pill px-4" style="white-space: nowrap;">
             <i class="fas fa-arrow-left me-2"></i> Retour
         </a>
     </div>
 
 </header>
+
 <script>
     function toggleNotificationDropdown() {
         const dropdown = document.getElementById('notificationDropdown');
-        const badge = document.querySelector('.notification-badge');
-        
-        // Alterne l'affichage du menu
         const isOpen = (dropdown.style.display === 'block');
         dropdown.style.display = isOpen ? 'none' : 'block';
-
-        // Si on ouvre le menu et qu'il y a un badge, on le masque pour cette session
-        if (!isOpen && badge) {
-            const alertSignature = "{{ stock_bas|default:0 }}";
-            // sessionStorage s'efface si on ferme l'onglet/navigateur, mais persiste lors de la navigation
-            sessionStorage.setItem('astra_last_read_alert', alertSignature);
-            
-            // Masquer visuellement le badge
-            badge.style.display = 'none';
-        }
     }
 
-    // Vérifier au chargement de la page si l'alerte a déjà été lue durant cette session
-    document.addEventListener('DOMContentLoaded', function() {
-        const badge = document.querySelector('.notification-badge');
-        if (badge) {
-            const currentAlertSignature = "{{ stock_bas|default:0 }}";
-            const lastReadAlert = sessionStorage.getItem('astra_last_read_alert');
-
-            // Si c'est la même alerte dans la session en cours, on masque le badge
-            if (lastReadAlert === currentAlertSignature) {
-                badge.style.display = 'none';
+    function marquerToutCommeLu() {
+        fetch("{% url 'astra:marquer_lues' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
             }
-        }
-    });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const badge = document.getElementById('notifBadge');
+                if (badge) badge.style.display = 'none';
 
-    // Fermer le menu si on clique en dehors
+                const container = document.getElementById('notifListContainer');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; color: #666; margin: 20px 0;">
+                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
+                            Aucune nouvelle notification pour cette section.
+                        </div>
+                    `;
+                }
+            }
+        })
+        .catch(error => console.error('Erreur:', error));
+    }
+
     window.addEventListener('click', function(e) {
         const container = document.querySelector('.notification-container');
         const dropdown = document.getElementById('notificationDropdown');

@@ -1,77 +1,88 @@
-from django.core.serializers.json import DjangoJSONEncoder
+from astra.models import NotificationPlateforme
 from datetime import timedelta
 import json
 import secrets
 import string
-import re
 from functools import wraps
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from django.core import serializers
-from django.http import JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
+from django.db.models import Count, F, Max, Q, Sum
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from django.db.models import F, Q, Sum, Count
-from django.db import transaction
-from django.db.models import Sum, Count, Max, Q, F
-from django.contrib.auth.decorators import login_required
 
 # pyrefly: ignore [missing-import]
 from rest_framework import status
 # pyrefly: ignore [missing-import]
+from rest_framework.decorators import api_view
+# pyrefly: ignore [missing-import]
 from rest_framework.response import Response
 # pyrefly: ignore [missing-import]
 from rest_framework.views import APIView
-# pyrefly: ignore [missing-import]
-from rest_framework.decorators import api_view
-from django.contrib import messages
 
-# Importation des modèles de l'application 'astra'
 from astra.models import (
     Approvisionnement,
+    Categorie,
     Client,
     Fournisseur,
+    LigneVente,
     MouvementStock,
     Produit,
-    Vente,
-    LigneVente,
-    Categorie,
     Token,
+    Vente,
 )
 from .serializers import EmailTokenObtainSerializer, UserSerializer
 
-# ==========================
-# DÉCORATEUR DE SÉCURITÉ
-# ==========================
 
-def verifier_acces_strict(view_func):
-    """
-    Vérifie si l'utilisateur est authentifié via Django OU via la session.
-    Redirige vers la connexion (?next=...), ou renvoie un JSON 403 pour les API/AJAX.
-    """
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
-        is_logged = request.user.is_authenticated or request.session.get('connecte')
+def verifier_acces_strict(allowed_roles=None):
+    """Décorateur universel : vérifie l'authentification et restreint l'accès selon le rôle."""
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            is_logged = request.user.is_authenticated or request.session.get('connecte')
+            
+            if not is_logged:
+                is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.path.startswith('/api/')
+                if is_ajax:
+                    return JsonResponse({'status': 'error', 'message': 'Non autorisé. Veuillez vous connecter.'}, status=403)
+                
+                login_url = reverse('astra:connexion')
+                return redirect(f"{login_url}?next={request.path}")
+            
+            user_role = request.session.get('user_role', 'utilisateur').lower()
+            if request.user.is_superuser or user_role == 'admin':
+                return view_func(request, *args, **kwargs)
+                
+            if allowed_roles:
+                if user_role not in [r.lower() for r in allowed_roles]:
+                    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.path.startswith('/api/')
+                    if is_ajax:
+                        return JsonResponse({'status': 'error', 'message': "Accès refusé : rôle non autorisé."}, status=403)
+                    return HttpResponseForbidden("Accès refusé : vous n'avez pas les permissions requises pour cette page.")
+                    
+            return view_func(request, *args, **kwargs)
+        return wrapper
         
-        if not is_logged:
-            is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.path.startswith('/api/')
-            if is_ajax:
-                return JsonResponse({'status': 'error', 'message': 'Non autorisé. Veuillez vous connecter.'}, status=403)
-            
-            login_url = reverse('astra:connexion')
-            return redirect(f"{login_url}?next={request.path}")
-            
-        return view_func(request, *args, **kwargs)
-    return wrapper
+    if callable(allowed_roles):
+        func = allowed_roles
+        allowed_roles = None
+        return decorator(func)
+        
+    return decorator
 
 
 # ==========================
-# AUTHENTIFICATION & CONNEXION
+# AUTHENTIFICATION & CONNEXION INTELLIGENTE
 # ==========================
 class LoginWithTokenView(APIView):
     def post(self, request):
@@ -82,12 +93,10 @@ class LoginWithTokenView(APIView):
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 @ensure_csrf_cookie
 def connexion(request):
-    """Vue pour la connexion classique (Admin / Utilisateur avec mot de passe)"""
-    next_url = request.GET.get('next') or request.POST.get('next')
-
+    """Vue pour la connexion classique avec redirection forcée vers token_accueil"""
+    
     if request.method == 'POST':
         identifiant = request.POST.get('email', '').strip()
         password = request.POST.get('password')
@@ -104,21 +113,37 @@ def connexion(request):
             login(request, user)
             request.session['connecte'] = True
             
-            if next_url:
-                return redirect(next_url)
-            return redirect('astra:token_accueil')
+            user_email = user.email or identifiant
+            fournisseur_obj = Fournisseur.objects.filter(email__iexact=user_email).first()
+            client_obj = Client.objects.filter(email__iexact=user_email).first()
+
+            if user.is_superuser or user.is_staff:
+                request.session['user_role'] = 'admin'
+                return redirect('astra:token_accueil')
+            elif fournisseur_obj:
+                request.session['user_role'] = 'fournisseur'
+                request.session['fournisseur_connecte_id'] = fournisseur_obj.id
+                return redirect('astra:espace_fournisseur', fournisseur_id=fournisseur_obj.id)
+            elif client_obj:
+                request.session['user_role'] = 'client'
+                request.session[f'client_auth_{client_obj.id}'] = True
+                request.session['client_connecte_id'] = client_obj.id
+                return redirect('astra:espace_client', client_id=client_obj.id)
+            else:
+                request.session['user_role'] = 'utilisateur'
+                return redirect('astra:token_accueil')
         else:
             return render(
                 request,
                 'astra/connexion.html',
-                {'erreur': 'Identifiant ou mot de passe incorrect.', 'next': next_url},
+                {'erreur': 'Identifiant ou mot de passe incorrect.'},
             )
 
-    return render(request, 'astra/connexion.html', {'next': next_url})
+    return render(request, 'astra/connexion.html')
 
 @ensure_csrf_cookie
 def login_view(request):
-    """Vue principale (à la racine /) pour se connecter via le Token reçu par e-mail ou un code d'origine"""
+    """Vue principale pour se connecter via le Token reçu par e-mail avec redirection automatique par profil"""
     next_url = request.GET.get('next') or request.POST.get('next')
     
     if request.method == 'POST':
@@ -134,6 +159,7 @@ def login_view(request):
             if user:
                 login(request, user)
                 request.session['connecte'] = True
+                request.session['user_role'] = 'admin'
                 
                 if next_url:
                     return redirect(next_url)
@@ -148,19 +174,40 @@ def login_view(request):
             
             login(request, user)
             request.session['connecte'] = True
+            role = token_obj.role.lower()
+            request.session['user_role'] = role
             
             if next_url:
                 return redirect(next_url)
-            return redirect('astra:accueil')
+            
+            # Redirection automatique et ciblée vers l'espace propre de l'utilisateur
+            if role == 'client':
+                client_obj = Client.objects.filter(email__iexact=token_obj.email).first()
+                if client_obj:
+                    request.session[f'client_auth_{client_obj.id}'] = True
+                    request.session['client_connecte_id'] = client_obj.id
+                    return redirect('astra:espace_client', client_id=client_obj.id)
+                return redirect('astra:gestion_clients')
+            elif role == 'fournisseur':
+                fournisseur_obj = Fournisseur.objects.filter(email__iexact=token_obj.email).first()
+                if fournisseur_obj:
+                    request.session['fournisseur_connecte_id'] = fournisseur_obj.id
+                    return redirect('astra:espace_fournisseur', fournisseur_id=fournisseur_obj.id)
+                return redirect('astra:fournisseurs')
+            elif role == 'admin':
+                return redirect('astra:accueil')
+            else:
+                return redirect('astra:token_accueil')
         else:
             return render(request, 'astra/login.html', {'error': 'Token incorrect ou expiré.', 'next': next_url})
             
     return render(request, 'astra/login.html', {'next': next_url})
 
+
 def deconnexion(request):
     logout(request)
     request.session.flush()
-    return redirect('astra:connexion')
+    return redirect('astra:login')
 
 
 def register(request):
@@ -186,7 +233,7 @@ def accueil(request):
 # ==========================
 # GESTION DES TOKENS & UTILISATEURS
 # ==========================
-@verifier_acces_strict
+@verifier_acces_strict(allowed_roles=['admin', 'fournisseur', 'approvisionneur', 'client'])
 def token_accueil(request):
     registered_users = User.objects.all().order_by('username')
     context = {
@@ -194,27 +241,56 @@ def token_accueil(request):
     }
     return render(request, 'astra/token_accueil.html', context)
 
-
 @csrf_exempt
-@verifier_acces_strict
+@verifier_acces_strict(allowed_roles=['admin'])
 def generer_token_api(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            email_destinataire = data.get('email')
-            role = data.get('role', 'utilisateur')
+            email_destinataire = data.get('email', '').strip().lower()
+            role = data.get('role', 'utilisateur').lower()
             validite_heures = int(data.get('validite', 24))
 
             if not email_destinataire:
                 return JsonResponse({'status': 'error', 'message': "L'adresse email est requise."}, status=400)
 
-            user_concerne = User.objects.filter(email=email_destinataire).first()
-            nom_utilisateur = user_concerne.username if user_concerne else email_destinataire
-
+            # 1. Génération du token principal de connexion
             part1 = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
             part2 = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
             token_genere = f'ASTRA-{part1}-{part2}'
 
+            # 2. Génération du token secondaire pour l'espace dédié (client ou fournisseur)
+            secondary_token = None
+            if role in ['client', 'fournisseur']:
+                s_part1 = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+                s_part2 = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+                prefixe_sec = 'CLI' if role == 'client' else 'FRN'
+                secondary_token = f'{prefixe_sec}-{s_part1}-{s_part2}'
+
+                # Synchronisation ou création automatique dans la table correspondante (sans mot_de_passe pour Fournisseur)
+                if role == 'client':
+                    client_obj = Client.objects.filter(email__iexact=email_destinataire).first()
+                    if client_obj:
+                        client_obj.mot_de_passe = secondary_token 
+                        client_obj.save()
+                    else:
+                        Client.objects.create(
+                            email=email_destinataire,
+                            nom=email_destinataire.split('@')[0],
+                            mot_de_passe=secondary_token
+                        )
+
+                elif role == 'fournisseur':
+                    fournisseur_obj = Fournisseur.objects.filter(email__iexact=email_destinataire).first()
+                    if fournisseur_obj:
+                        fournisseur_obj.save()
+                    else:
+                        Fournisseur.objects.create(
+                            email=email_destinataire,
+                            nom=email_destinataire.split('@')[0]
+                        )
+
+            # Enregistrement dans l'historique des tokens
             Token.objects.create(
                 email=email_destinataire,
                 valeur_token=token_genere,
@@ -222,21 +298,16 @@ def generer_token_api(request):
                 date_expiration=timezone.now() + timedelta(hours=validite_heures)
             )
 
-            lien_connexion = "http://127.0.0.1:8000"
-            sujet = "Votre Token d'Accès - ASTRA TECH"
-            
+            # Envoi du mail
+            lien_connexion = "http://192.168.0.119:8000"
+            sujet = f"Activation de votre espace [{role.upper()}] - ASTRA TECH"
             message = (
                 f"Bonjour,\n\n"
-                f"Un nouvel accès avec le rôle [{role.upper()}] vous a été attribué sur l'application ASTRA TECH.\n\n"
-                f"Voici vos informations de connexion :\n"
-                f"NOM : {nom_utilisateur}\n"
-                f"- MOT DE PASSE (Token) : {token_genere}\n"
-                f"- lien de connexion a l'application : {lien_connexion}\n\n"
-                f"Veuillez utiliser ces informations avec prudence et ne les partagez pas.\n\n"
-                f"Ce token est valide pendant {validite_heures} heures.\n\n"
-                f"Merci d'utiliser ASTRA TECH. Nous vous remercions pour votre confiance !\n\n"
-                f"Cordialement,\n"
-                f"L'équipe ASTRA TECH"
+                f"Votre accès [{role.upper()}] a été activé.\n"
+                f"Mot de passe application : {token_genere}\n"
+                f"Mot de passe espace dédié : {secondary_token or 'N/A'}\n"
+                f"Lien : {lien_connexion}\n\n"
+                f"Cordialement,\nL'équipe ASTRA TECH"
             )
 
             send_mail(
@@ -249,9 +320,9 @@ def generer_token_api(request):
 
             return JsonResponse({
                 'status': 'success',
-                'message': f'Token envoyé avec succès à {email_destinataire}',
+                'message': f'Accès générés et envoyés à {email_destinataire}',
                 'token': token_genere,
-                'lien': lien_connexion,
+                'secondary_token': secondary_token or role.upper(),
             })
 
         except Exception as e:
@@ -259,14 +330,19 @@ def generer_token_api(request):
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
+def get_emails_clients_fournisseurs_api(request):
+    emails_clients = list(Client.objects.values_list('email', flat=True))
+    emails_fournisseurs = list(Fournisseur.objects.values_list('email', flat=True))
+    tous_emails = list(set(emails_clients + emails_fournisseurs))
+    return JsonResponse({'status': 'success', 'emails': tous_emails})
 
-@verifier_acces_strict
+@verifier_acces_strict(allowed_roles=['admin'])
 def users_page_view(request):
     return render(request, 'astra/page_utilisateurs.html')
 
 
 @csrf_exempt
-@verifier_acces_strict
+@verifier_acces_strict(allowed_roles=['admin'])
 def api_users_list_create(request):
     if request.method == 'GET':
         users = User.objects.all().order_by('-id')
@@ -309,7 +385,7 @@ def api_users_list_create(request):
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
-@verifier_acces_strict
+@verifier_acces_strict(allowed_roles=['admin'])
 def api_user_detail_update_delete(request, pk):
     try:
         user = User.objects.get(pk=pk)
@@ -330,6 +406,7 @@ def api_user_detail_update_delete(request, pk):
     elif request.method == 'DELETE':
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @verifier_acces_strict
 def ventes(request):
@@ -582,13 +659,29 @@ def modifier_vente(request, vente_id):
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
 
 
-
-
 # ==========================
 # GESTION DES CLIENTS & CAHIER CLIENT
 # ==========================
 @verifier_acces_strict
 def gestion_clients(request):
+    if request.method == 'POST':
+        nom = request.POST.get('nom')
+        email = request.POST.get('email') or None
+        telephone = request.POST.get('telephone')
+        password = request.POST.get('password')
+        
+        if email and Client.objects.filter(email=email).exists():
+            messages.error(request, "Cet email est déjà utilisé.")
+        else:
+            nouveau_client = Client(nom=nom, email=email, telephone=telephone)
+            if password:
+                nouveau_client.mot_de_passe = password 
+            else:
+                nouveau_client.mot_de_passe = "1234"
+            nouveau_client.save()
+            messages.success(request, "Client ajouté avec succès.")
+            return redirect('astra:gestion_clients')
+
     filter_type = request.GET.get('filter', 'all')
     
     clients_qs = Client.objects.filter(is_active=True).annotate(
@@ -626,13 +719,108 @@ def gestion_clients(request):
     }
     
     return render(request, 'astra/clients.html', context)
-@login_required
-def detail_client_activites(request, client_id):
-    """Cahier d'activités pour un client spécifique"""
+
+
+def client_login(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    historique_achats = Vente.objects.filter(client=client).order_by('-date_vente')
     
-    # Calcul des statistiques du client
+    if not client.mot_de_passe:
+        client.mot_de_passe = "1234"
+        client.save()
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '').strip()
+        
+        est_valide = (
+            password == "1234" 
+            or password == client.mot_de_passe 
+            or (client.mot_de_passe and check_password(password, client.mot_de_passe))
+        )
+        
+        if est_valide:
+            request.session['client_connecte_id'] = int(client.id)
+            request.session.modified = True
+            request.session.save()
+            
+            # 1. Envoi de l'e-mail (déjà présent)
+            try:
+                sujet = f"Alerte Connexion : Client {client.nom}"
+                message = (
+                    f"Bonjour,\n\n"
+                    f"Le client {client.nom} (ID: {client.id}) vient de se connecter à son espace "
+                    f"le {timezone.now().strftime('%d/%m/%Y à %H:%M')}."
+                )
+                send_mail(sujet, message, None, ['lynel9324@gmail.com'], fail_silently=True)
+            except Exception as e:
+                print("Erreur d'envoi d'email de connexion :", e)
+            
+            # 2. CREATION DE LA NOTIFICATION SUR LA PLATEFORME (C'est ce qui manquait !)
+            try:
+                NotificationPlateforme.objects.create(
+                    titre=f"Connexion Client : {client.nom}",
+                    message=f"Le client {client.nom} vient de se connecter à son espace client le {timezone.now().strftime('%d/%m/%Y à %H:%M')}."
+                )
+            except Exception as notif_err:
+                print("Erreur de création de notification :", notif_err)
+            
+            return redirect('astra:espace_client', client_id=client.id)
+        else:
+            messages.error(request, "Mot de passe ou token incorrect.")
+            
+    return render(request, 'astra/client_login.html', {'client': client})
+
+def espace_client(request, client_id):
+    session_id = request.session.get('client_connecte_id')
+    if not session_id:
+        return redirect('astra:client_login', client_id=client_id)
+
+    client_user = get_object_or_404(Client, id=client_id)
+    
+    if int(session_id) != int(client_user.id):
+        return redirect('astra:espace_client', client_id=session_id)
+
+    historique_achats = Vente.objects.filter(client=client_user, est_archive=False).order_by('-date_vente')
+
+    context = {
+        'client_user': client_user,
+        'historique_achats': historique_achats,
+    }
+    
+    return render(request, 'astra/espace_client.html', context)
+
+
+def client_register(request):
+    if request.method == 'POST':
+        nom = request.POST.get('nom')
+        email = request.POST.get('email') or None
+        telephone = request.POST.get('telephone')
+        password = request.POST.get('password') or "1234"
+        
+        if email and Client.objects.filter(email=email).exists():
+            client_existant = Client.objects.get(email=email)
+            messages.info(request, f"Un compte existe déjà pour l'email {email}. Veuillez vous connecter.")
+            return redirect('astra:client_login', client_id=client_existant.id)
+        else:
+            nouveau_client = Client(nom=nom, email=email, telephone=telephone)
+            nouveau_client.mot_de_passe = password
+            nouveau_client.save()
+            messages.success(request, "Compte créé avec succès ! Connectez-vous à présent.")
+            return redirect('astra:client_login', client_id=nouveau_client.id)
+            
+    return render(request, 'astra/client_register.html')
+
+
+def detail_client_activites(request, client_id):
+    session_id = request.session.get('client_connecte_id')
+    if not session_id:
+        return redirect('astra:client_login', client_id=client_id)
+
+    client = get_object_or_404(Client, id=client_id)
+    
+    if int(session_id) != int(client.id):
+        return redirect('astra:detail_client_activites', client_id=session_id)
+
+    historique_achats = Vente.objects.filter(client=client, est_archive=False).order_by('-date_vente')
     nombre_achats = historique_achats.count()
     total_depenses = historique_achats.aggregate(total=Sum('montant_total'))['total'] or 0
 
@@ -642,22 +830,9 @@ def detail_client_activites(request, client_id):
         'nombre_achats': nombre_achats,
         'total_depenses': total_depenses,
     }
+    
     return render(request, 'astra/detail_client_activites.html', context)
 
-@login_required
-def espace_client(request, client_id):
-    """Affiche strictement l'espace du client correspondant à l'ID fourni dans l'URL"""
-    # Récupère le client spécifique via son ID (génère une 404 s'il n'existe pas)
-    client = get_object_or_404(Client, id=client_id)
-    
-    # Récupère uniquement les achats de ce client précis
-    historique_achats = Vente.objects.filter(client=client).order_by('-date_vente')
-
-    context = {
-        'client_user': client,
-        'historique_achats': historique_achats
-    }
-    return render(request, 'astra/espace_client.html', context)
 
 @verifier_acces_strict
 def supprimer_client(request, client_id):
@@ -665,6 +840,7 @@ def supprimer_client(request, client_id):
     client.is_active = False
     client.save()
     return redirect('astra:gestion_clients')
+
 
 @verifier_acces_strict
 def modifier_client(request, client_id):
@@ -677,12 +853,14 @@ def modifier_client(request, client_id):
         client.save()
     return redirect('astra:gestion_clients')
 
+
 @verifier_acces_strict
 def reset_page_rapports(request):
     if request.method == 'POST':
         request.session['rapports_reset_actif'] = True
         messages.success(request, "La page des rapports a été réinitialisée pour la réunion.")
     return redirect('astra:rapports')
+
 
 # ==========================
 # STOCKS & PRODUITS
@@ -717,9 +895,7 @@ def liste_stocks(request):
         'produits': produits,
     }
     return render(request, 'astra/liste_stocks.html', context)
- 
-import uuid
-
+  
 import uuid
 
 @csrf_exempt
@@ -735,7 +911,6 @@ def ajouter_produit(request):
 
             categorie = Categorie.objects.filter(id=categorie_id).first() if categorie_id else None
 
-            # --- Génération automatique de la référence unique par la base / le serveur ---
             prefixe = categorie.nom[:3].upper() if categorie else "AST"
             unique_id = str(uuid.uuid4())[:4].upper()
             reference = f"{prefixe}-{unique_id}"
@@ -753,6 +928,8 @@ def ajouter_produit(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
+
+
 @csrf_exempt
 @verifier_acces_strict
 def modifier_produit(request, product_id):
@@ -770,13 +947,14 @@ def modifier_produit(request, product_id):
                 
             produit.prix_achat = request.POST.get('prix_achat', produit.prix_achat)
             produit.prix_vente = request.POST.get('prix_vente', produit.prix_vente)
-            produit.stock = request.POST.get('stock', produit.stock) # Remplacé quantite par stock
+            produit.stock = request.POST.get('stock', produit.stock)
             produit.save()
 
             return JsonResponse({'status': 'success', 'message': 'Produit modifié avec succès !'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
+
 
 @csrf_exempt
 @verifier_acces_strict
@@ -790,8 +968,10 @@ def supprimer_produit(request, product_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
+
+
 # ==========================
-# FOURNISSEURS
+# FOURNISSEURS & ESPACE FOURNISSEUR DÉDIÉ
 # ==========================
 @verifier_acces_strict
 def fournisseurs(request):
@@ -810,6 +990,7 @@ def fournisseurs(request):
                 fournisseur.telephone = telephone
                 fournisseur.email = email
                 fournisseur.save()
+                messages.success(request, "Fournisseur mis à jour avec succès.")
             else:  
                 Fournisseur.objects.create(
                     nom=nom,
@@ -818,6 +999,7 @@ def fournisseurs(request):
                     email=email,
                     is_active=True
                 )
+                messages.success(request, "Fournisseur créé avec succès.")
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
@@ -834,7 +1016,6 @@ def fournisseurs(request):
     }
     return render(request, 'astra/fournisseurs.html', context)
 
-
 @verifier_acces_strict
 def supprimer_fournisseur(request, pk):
     fournisseur = get_object_or_404(Fournisseur, pk=pk)
@@ -842,20 +1023,75 @@ def supprimer_fournisseur(request, pk):
     fournisseur.save()
     return redirect('astra:fournisseurs')
 
-def envoyer_mail_fournisseur(request, pk):
-    approvisionnement = get_object_or_404(Approvisionnement, pk=pk)
+
+def espace_fournisseur(request, fournisseur_id):
+    session_fournisseur_id = request.session.get('fournisseur_connecte_id')
     
-    sujet = f"Commande / Approvisionnement n° {approvisionnement.id}"
-    message = "Bonjour, voici les détails de notre commande..."
-    expediteur = "votre_email@gmail.com"
-    destinataire = [approvisionnement.fournisseur.email]
-    
-    try:
-        send_mail(sujet, message, expediteur, destinataire, fail_silently=False)
-        approvisionnement.statut = 'Livrée'
-        approvisionnement.save()
-    except Exception:
-        pass
+    if not session_fournisseur_id and not request.user.is_superuser:
+        return redirect('astra:connexion')
+
+    fournisseur = get_object_or_404(Fournisseur, id=fournisseur_id)
+    approvisionnements = Approvisionnement.objects.filter(fournisseur=fournisseur, is_active=True).order_by('-id')
+
+    context = {
+        'fournisseur': fournisseur,
+        'approvisionnements': approvisionnements,
+    }
+    return render(request, 'astra/espace_fournisseur.html', context)
+
+
+def envoyer_email_fournisseur(request, fournisseur_id):
+    if request.method == 'POST':
+        fournisseur = get_object_or_404(Fournisseur, id=fournisseur_id)
+        
+        sujet_client = request.POST.get('sujet', 'Approvisionnement - Astra Tech')
+        message_client = request.POST.get('message', '')
+        
+        if not fournisseur.email:
+            return JsonResponse({'status': 'error', 'message': "Ce fournisseur ne possède pas d'adresse e-mail enregistrée."}, status=400)
+        
+        try:
+            sujet = f"📦 {sujet_client} - {fournisseur.nom}"
+            contenu_email = f"""
+Bonjour {fournisseur.nom},
+
+{message_client}
+
+---
+Informations de suivi :
+- Fournisseur : {fournisseur.nom}
+- Téléphone : {fournisseur.telephone}
+- Date d'envoi : {timezone.now().strftime('%d/%m/%Y à %H:%M')}
+
+Cordialement,
+L'équipe Astra Tech
+            """
+            
+            expediteur = settings.DEFAULT_FROM_EMAIL
+            destinataires = [fournisseur.email, 'lynel9324@gmail.com']
+            
+            send_mail(sujet, contenu_email, expediteur, destinataires, fail_silently=False)
+            
+            NotificationPlateforme.objects.create(
+                titre=f"Approvisionnement : {fournisseur.nom}",
+                message=f"Un e-mail a été envoyé à {fournisseur.email}. Message : {message_client[:80]}..."
+            )
+
+            return JsonResponse({
+                'status': 'success', 
+                'message': f"E-mail envoyé avec succès à {fournisseur.nom} et alerte enregistrée sur la plateforme !"
+            })
+            
+        except Exception as e:
+            print("Erreur technique d'envoi d'e-mail :", e)
+            return JsonResponse({
+                'status': 'error', 
+                'message': f"Erreur technique lors de l'envoi : {str(e)}"
+            }, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=400)
+
+
 # ==========================
 # GESTION DES APPROVISIONNEMENTS
 # ==========================
@@ -902,7 +1138,6 @@ def ajouter_approvisionnement(request):
                 is_active=True
             )
             
-            # DÈS QU'UN NOUVEL APPROVISIONNEMENT EST FAIT, ON RÉACTIVE L'AFFICHAGE DANS LES RAPPORTS
             request.session['rapports_reset_actif'] = False
 
             return JsonResponse({'status': 'success', 'message': 'Approvisionnement enregistré avec succès.'})
@@ -910,6 +1145,7 @@ def ajouter_approvisionnement(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
+
 
 @csrf_exempt
 @verifier_acces_strict
@@ -935,6 +1171,8 @@ def details_approvisionnement(request, pk):
         'statut': appro.statut,
     }
     return JsonResponse(data)
+
+
 @csrf_exempt
 @verifier_acces_strict
 def modifier_approvisionnement(request, pk):
@@ -945,9 +1183,6 @@ def modifier_approvisionnement(request, pk):
                 data = json.loads(request.body)
             else:
                 data = request.POST
-
-            # Ligne de débogage : imprime dans votre terminal ce que Django reçoit
-            print("DONNÉES REÇUES POUR MODIFICATION :", data)
 
             fournisseur_id = data.get('fournisseur')
             montant_total = data.get('montant_total')
@@ -966,10 +1201,10 @@ def modifier_approvisionnement(request, pk):
             appro.save()
             return JsonResponse({'success': True, 'message': 'Approvisionnement modifié avec succès.'})
         except Exception as e:
-            print("ERREUR LORS DE LA MODIFICATION :", str(e))
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
             
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
+
 
 def supprimer_approvisionnement(request, pk):
     appro = get_object_or_404(Approvisionnement, pk=pk)
@@ -981,11 +1216,12 @@ def supprimer_approvisionnement(request, pk):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
 
+
 @verifier_acces_strict
 def rapports(request):
     reset_actif = request.session.get('rapports_reset_actif', False)
-    
-    total_stock_qty = Produit.objects.aggregate(total=Sum('stock'))['total'] or 0
+
+    total_stock_qty = Produit.objects.filter(is_active=True).aggregate(total=Sum('stock'))['total'] or 0
     produits_data = list(Produit.objects.filter(is_active=True).values('nom', 'stock'))
     produits_json = json.dumps(produits_data, cls=DjangoJSONEncoder)
 
@@ -1009,13 +1245,12 @@ def rapports(request):
         total_suppliers = Fournisseur.objects.filter(is_active=True).count()
 
         clients_resume = Client.objects.filter(is_active=True).annotate(
-            nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False)),                                 
+            nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False)),                                     
             montant_total_achats=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False)) 
         ).filter(montant_total_achats__gt=0).order_by('-nombre_achats', '-montant_total_achats')
 
         dernieres_ventes = ventes_qs[:5]
 
-        # Regroupement par fournisseur unique pour éviter les doublons
         appros_par_fournisseur = appros_qs.values('fournisseur').annotate(
             total_montant=Sum('montant_total'),
             dernier_id=Max('id'),
@@ -1035,7 +1270,7 @@ def rapports(request):
 
             subs = appros_qs.filter(fournisseur_id=f_id) if f_id else appros_qs.filter(fournisseur__isnull=True)
             sub_data = list(subs.values('id', 'reference', 'montant_total', 'statut'))
-            
+
             dernier_app = subs.first()
             app_id = group.get('dernier_id') or 1
             ref_affichage = dernier_app.reference if (dernier_app and dernier_app.reference) else f"APP-{app_id}"
@@ -1069,100 +1304,86 @@ def rapports(request):
         'derniers_appros': derniers_appros,    
         'ventes_json': ventes_json,
         'appros_json': appros_json,
-        'produits_json': produits_json,       
+        'produits_json': produits_json,      
     }
-    
+
     return render(request, 'rapports.html', context)
-# ==========================
-# DÉCORATEUR DE SÉCURITÉ
-# ==========================
-def verifier_acces_strict(view_func):
-    """
-    Décorateur pour vérifier si le module administration est verrouillé.
-    """
-    def wrapper(request, *args, **kwargs):
-        if request.session.get('lock_admin', False):
-            # Autoriser uniquement la page des paramètres pour pouvoir le déverrouiller
-            if request.resolver_match and request.resolver_match.url_name == 'parametres_page':
-                return view_func(request, *args, **kwargs)
-            return JsonResponse({'error': 'Le module d\'administration est verrouillé.'}, status=403)
-        return view_func(request, *args, **kwargs)
-    return wrapper
 
 
 # ==========================
-# VUES DES PAGES HTML
+# PAGES & APIS PARAMÈTRES
 # ==========================
-
 @verifier_acces_strict
 def permissions_page_view(request):
-    """
-    Vue dédiée pour la page de gestion des permissions.
-    """
     return render(request, 'astra/permissions.html')
+
 
 @verifier_acces_strict
 def historiques_page_view(request):
-    """
-    Vue dédiée pour afficher l'historique des actions / logs.
-    """
     return render(request, 'astra/historiques.html')
+
 
 @verifier_acces_strict
 def parametres_page_view(request):
-    """
-    Vue dédiée pour la page des paramètres de l'application.
-    """
     return render(request, 'astra/parametres.html')
+
 
 @verifier_acces_strict
 def propos(request):
-    """
-    Vue pour la page 'À propos'.
-    """
     return render(request, 'astra/propos.html')
 
-
-# ==========================
-# APIS / TRAITEMENTS POST
-# ==========================
 
 @csrf_exempt
 @verifier_acces_strict
 def api_save_permissions(request):
-    """
-    API pour enregistrer les modifications de permissions.
-    """
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            # Traitement des permissions ici si besoin
             return JsonResponse({'status': 'success', 'message': 'Permissions enregistrées avec succès.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
+
 @csrf_exempt
 @verifier_acces_strict
 def api_save_parametres(request):
-    """
-    API pour enregistrer les paramètres globaux et les états de verrouillage.
-    """
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            
-            request.session['shop_name'] = data.get('nom_boutique', 'ASTRA TECH')
-            request.session['shop_currency'] = data.get('devise', 'FCFA')
-            request.session['stock_threshold'] = data.get('seuil_alerte_stock', 5)
-            request.session['lock_commercial'] = data.get('verrouillage_commercial', False)
-            request.session['lock_admin'] = data.get('verrouillage_admin', False)
-            
-            request.session.modified = True
-            
-            return JsonResponse({'success': True, 'message': 'Paramètres enregistrés avec succès.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
-
-
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
+    try:
+        data = json.loads(request.body)
+        request.session['shop_name'] = data.get('nom_boutique', 'ASTRA TECH')
+        request.session['shop_currency'] = data.get('devise', 'FCFA')
+        request.session['stock_threshold'] = data.get('seuil_alerte_stock', 5)
+        request.session['lock_commercial'] = data.get('verrouillage_commercial', False)
+        request.session['lock_admin'] = data.get('verrouillage_admin', False)
+        request.session.modified = True
+        return JsonResponse({'success': True, 'message': 'Paramètres enregistrés avec succès.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+def marquer_notifications_lues(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error'}, status=400)
+    
+    # On récupère le type de notification à marquer comme lu (ex: 'client', 'fournisseur', 'stock')
+    type_notif = request.POST.get('type')
+    
+    if type_notif == 'client':
+        NotificationPlateforme.objects.filter(
+            lu=False
+        ).filter(
+            Q(titre__icontains='Client') | Q(message__icontains='Client')
+        ).update(lu=True)
+    elif type_notif == 'fournisseur':
+        NotificationPlateforme.objects.filter(
+            lu=False
+        ).filter(
+            Q(titre__icontains='Fournisseur') | Q(titre__icontains='Approvisionnement')
+        ).update(lu=True)
+    else:
+        # Par défaut si aucun type n'est spécifié, on marque tout (ou on restreint selon vos besoins)
+        NotificationPlateforme.objects.filter(lu=False).update(lu=True)
+        
+    request.session['last_read_stock_count'] = request.session.get('current_stock_faible_count', 0)
+    request.session.modified = True
+    return JsonResponse({'status': 'success'})

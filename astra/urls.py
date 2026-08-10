@@ -15,8 +15,8 @@ urlpatterns = [
     # Fournisseurs
     path("fournisseurs/", views.fournisseurs, name="fournisseurs"),
     path("fournisseurs/supprimer/<int:pk>/", views.supprimer_fournisseur, name="supprimer_fournisseur"),
-    path("fournisseurs/email/<int:fournisseur_id>/", views.envoyer_mail_fournisseur, name="envoyer_email_fournisseur"),
-    
+    path('fournisseurs/email/<int:fournisseur_id>/', views.envoyer_email_fournisseur, name='envoyer_email_fournisseur'),   
+   
     # Ventes & Stocks
     path("vente/", views.ventes, name="ventes"),
     path("vente/details/<int:vente_id>/", views.details_vente, name="details_vente"),
@@ -40,11 +40,14 @@ urlpatterns = [
     path("rapports/", views.rapports, name="rapports"),
     path('rapports/reset-page/', views.reset_page_rapports, name='reset_page_rapports'),
     path("propos/", views.propos, name="propos"),
-    path('clients/', views.gestion_clients, name='gestion_clients'),
-    path('clients/activites/<int:client_id>/', views.detail_client_activites, name='detail_client_activites'),
-    path('espace-client/<int:client_id>/', views.espace_client, name='espace_client'),
-    path("clients/supprimer/<int:client_id>/", views.supprimer_client, name="supprimer_client"),
-    path('clients/modifier/<int:client_id>/', views.modifier_client, name='modifier_client'),
+    
+    path("clients/", views.gestion_clients, name="gestion_clients"),
+    path("client/inscription/", views.client_register, name="client_register"),
+    path("client/<int:client_id>/connexion/", views.client_login, name="client_login"),
+    path("client/<int:client_id>/cahier/", views.detail_client_activites, name="detail_client_activites"),
+    path("client/<int:client_id>/supprimer/", views.supprimer_client, name="supprimer_client"),
+    path("client/<int:client_id>/modifier/", views.modifier_client, name="modifier_client"),
+    path("client/<int:client_id>/espace/", views.espace_client, name="espace_client"),
     path("api/generer-tokben/", views.generer_token_api, name="generer_token_api"),
     path("login-token/", views.LoginWithTokenView.as_view(), name="login_token"),
 
@@ -60,4 +63,6 @@ urlpatterns = [
     path("historiques/", views.historiques_page_view, name="historiques_page"),
     path("parametres/", views.parametres_page_view, name="parametres_page"),
     path("api/parametres/", views.api_save_parametres, name="api_save_parametres"),
+
+    path('notifications/marquer-lues/', views.marquer_notifications_lues, name='marquer_lues'),
 ]
