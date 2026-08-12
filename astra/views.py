@@ -1,3 +1,5 @@
+from django.db.models import FloatField
+from django.db.models.functions import Coalesce
 from astra.models import NotificationPlateforme
 from datetime import timedelta
 import json
@@ -225,11 +227,30 @@ def register(request):
 # ==========================
 # ACCUEIL & TABLEAU DE BORD
 # ==========================
-@verifier_acces_strict
+
 def accueil(request):
-    return render(request, 'astra/accueil.html')
+    aujourd_hui = timezone.now().date()
+    debut_mois = aujourd_hui.replace(day=1)
 
+    # 1. Nombre de ventes réalisées aujourd'hui 
+    ventes_aujourd_hui = Vente.objects.filter(date_vente__date=aujourd_hui).count()
 
+    # 2. Chiffre d'affaires total (somme des montants des ventes)
+    chiffre_affaires = Vente.objects.aggregate(total=Sum('montant_total'))['total'] or 0
+
+    # 3. Nouveaux clients ce mois-ci (filtrage direct sur DateField)
+    nouveaux_clients = Client.objects.filter(date_inscription__gte=debut_mois).count()
+
+    # 4. Total des produits en stock (somme des quantités disponibles)
+    produits_en_stock = Produit.objects.filter(is_active=True).aggregate(total=Sum('stock'))['total'] or 0
+
+    context = {
+        'ventes_aujourd_hui': ventes_aujourd_hui,
+        'chiffre_affaires': chiffre_affaires,
+        'nouveaux_clients': nouveaux_clients,
+        'produits_en_stock': produits_en_stock,
+    }
+    return render(request, 'astra/accueil.html', context)
 # ==========================
 # GESTION DES TOKENS & UTILISATEURS
 # ==========================
@@ -668,12 +689,18 @@ def gestion_clients(request):
         nom = request.POST.get('nom')
         email = request.POST.get('email') or None
         telephone = request.POST.get('telephone')
+        adresse = request.POST.get('adresse') or ''
         password = request.POST.get('password')
         
         if email and Client.objects.filter(email=email).exists():
             messages.error(request, "Cet email est déjà utilisé.")
         else:
-            nouveau_client = Client(nom=nom, email=email, telephone=telephone)
+            nouveau_client = Client(
+                nom=nom, 
+                email=email, 
+                telephone=telephone, 
+                adresse=adresse
+            )
             if password:
                 nouveau_client.mot_de_passe = password 
             else:
@@ -684,34 +711,44 @@ def gestion_clients(request):
 
     filter_type = request.GET.get('filter', 'all')
     
-    clients_qs = Client.objects.filter(is_active=True).annotate(
-        total_depenses_calcule=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False)),
-        nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False))
-    ).order_by('-id')
+    # Récupération de tous les clients actifs
+    clients_bruts = Client.objects.filter(is_active=True).order_by('-id')
     
-    clients_archives = Client.objects.filter(is_active=False).order_by('-id')
+    # Calcul direct et propre, identique au shell Python
+    clients_list = []
+    for client in clients_bruts:
+        ventes_actives = client.ventes.filter(est_archive=False)
+        client.total_depenses_calcule = sum(v.montant_total for v in ventes_actives)
+        client.nombre_achats = ventes_actives.count()
+        dernier = ventes_actives.order_by('-date_vente').first()
+        client.dernier_achat = dernier.date_vente if dernier else None
+        clients_list.append(client)
 
+    # Tri par date du dernier achat (du plus récent au plus ancien)
+    clients_list.sort(key=lambda c: (c.dernier_achat is None, c.dernier_achat), reverse=True)
+
+    # Définition sécurisée de la date du jour (conversion .date() pour éviter le conflit datetime / date)
+    debut_journee = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    date_du_jour = debut_journee.date()
+
+    # Filtrage selon les onglets de la page
     if filter_type == 'loyal':
-        clients_qs = clients_qs.filter(total_depenses_calcule__gt=100000)
-    elif filter_type == 'new' and hasattr(Client, 'date_inscription'):
-        debut_mois = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        clients_qs = clients_qs.filter(date_inscription__gte=debut_mois)
+        clients_qs = [c for c in clients_list if c.nombre_achats >= 2]
+    elif filter_type == 'new':
+        clients_qs = [
+            c for c in clients_list 
+            if hasattr(c, 'date_inscription') and c.date_inscription and c.date_inscription >= date_du_jour
+        ]
+    else:
+        clients_qs = clients_list
 
     total_clients = Client.objects.filter(is_active=True).count()
-    
-    if hasattr(Client, 'date_inscription'):
-        debut_mois = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        new_clients_count = Client.objects.filter(is_active=True, date_inscription__gte=debut_mois).count()
-    else:
-        new_clients_count = 0
-    
-    loyal_clients_count = Client.objects.filter(is_active=True).annotate(
-        total_depenses_calcule=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False))
-    ).filter(total_depenses_calcule__gt=100000).count()
+    new_clients_count = Client.objects.filter(is_active=True, date_inscription__gte=date_du_jour).count() if hasattr(Client, 'date_inscription') else 0
+    loyal_clients_count = sum(1 for c in clients_list if c.nombre_achats >= 2)
 
     context = {
         'clients': clients_qs,
-        'clients_archives': clients_archives,
+        'clients_archives': Client.objects.filter(is_active=False).order_by('-id'),
         'total_clients': total_clients,
         'new_clients_count': new_clients_count,
         'loyal_clients_count': loyal_clients_count,
@@ -719,7 +756,6 @@ def gestion_clients(request):
     }
     
     return render(request, 'astra/clients.html', context)
-
 
 def client_login(request, client_id):
     client = get_object_or_404(Client, id=client_id)
@@ -742,7 +778,6 @@ def client_login(request, client_id):
             request.session.modified = True
             request.session.save()
             
-            # 1. Envoi de l'e-mail (déjà présent)
             try:
                 sujet = f"Alerte Connexion : Client {client.nom}"
                 message = (
@@ -754,7 +789,6 @@ def client_login(request, client_id):
             except Exception as e:
                 print("Erreur d'envoi d'email de connexion :", e)
             
-            # 2. CREATION DE LA NOTIFICATION SUR LA PLATEFORME (C'est ce qui manquait !)
             try:
                 NotificationPlateforme.objects.create(
                     titre=f"Connexion Client : {client.nom}",
@@ -768,6 +802,7 @@ def client_login(request, client_id):
             messages.error(request, "Mot de passe ou token incorrect.")
             
     return render(request, 'astra/client_login.html', {'client': client})
+
 
 def espace_client(request, client_id):
     session_id = request.session.get('client_connecte_id')
@@ -833,14 +868,18 @@ def detail_client_activites(request, client_id):
     
     return render(request, 'astra/detail_client_activites.html', context)
 
-
 @verifier_acces_strict
 def supprimer_client(request, client_id):
-    client = get_object_or_404(Client, pk=client_id)
+    # Récupération du client ou erreur 404 s'il n'existe pas
+    client = get_object_or_404(Client, id=client_id)
+    
+    # Au lieu de le supprimer définitivement de la base de données, 
+    # on bascule son statut is_active à False (archivage logique)
     client.is_active = False
     client.save()
+    
+    messages.success(request, f"Le client {client.nom} a été archivé avec succès.")
     return redirect('astra:gestion_clients')
-
 
 @verifier_acces_strict
 def modifier_client(request, client_id):
@@ -860,7 +899,6 @@ def reset_page_rapports(request):
         request.session['rapports_reset_actif'] = True
         messages.success(request, "La page des rapports a été réinitialisée pour la réunion.")
     return redirect('astra:rapports')
-
 
 # ==========================
 # STOCKS & PRODUITS
@@ -1216,7 +1254,6 @@ def supprimer_approvisionnement(request, pk):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
 
-
 @verifier_acces_strict
 def rapports(request):
     reset_actif = request.session.get('rapports_reset_actif', False)
@@ -1244,10 +1281,12 @@ def rapports(request):
         total_clients = Client.objects.filter(is_active=True).count()
         total_suppliers = Fournisseur.objects.filter(is_active=True).count()
 
+        # Tri des clients par date d'achat la plus récente
         clients_resume = Client.objects.filter(is_active=True).annotate(
-            nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False)),                                     
-            montant_total_achats=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False)) 
-        ).filter(montant_total_achats__gt=0).order_by('-nombre_achats', '-montant_total_achats')
+            nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False)),
+            montant_total_achats=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False)),
+            dernier_achat=Max('ventes__date_vente', filter=Q(ventes__est_archive=False))
+        ).filter(montant_total_achats__gt=0).order_by('-dernier_achat', '-nombre_achats')
 
         dernieres_ventes = ventes_qs[:5]
 
@@ -1308,8 +1347,6 @@ def rapports(request):
     }
 
     return render(request, 'rapports.html', context)
-
-
 # ==========================
 # PAGES & APIS PARAMÈTRES
 # ==========================
@@ -1361,29 +1398,79 @@ def api_save_parametres(request):
         return JsonResponse({'success': True, 'message': 'Paramètres enregistrés avec succès.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+ 
+
+
 def marquer_notifications_lues(request):
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error'}, status=400)
-    
-    # On récupère le type de notification à marquer comme lu (ex: 'client', 'fournisseur', 'stock')
-    type_notif = request.POST.get('type')
-    
-    if type_notif == 'client':
-        NotificationPlateforme.objects.filter(
-            lu=False
-        ).filter(
-            Q(titre__icontains='Client') | Q(message__icontains='Client')
-        ).update(lu=True)
-    elif type_notif == 'fournisseur':
-        NotificationPlateforme.objects.filter(
-            lu=False
-        ).filter(
-            Q(titre__icontains='Fournisseur') | Q(titre__icontains='Approvisionnement')
-        ).update(lu=True)
-    else:
-        # Par défaut si aucun type n'est spécifié, on marque tout (ou on restreint selon vos besoins)
+    if request.method == 'POST':
+        # Marque toutes les notifications non lues comme lues
         NotificationPlateforme.objects.filter(lu=False).update(lu=True)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+def notifications_header(request):
+    current_url_name = getattr(request.resolver_match, 'url_name', '') if request.resolver_match else ''
+    path = request.path.lower()
+
+    notifs_non_lues = NotificationPlateforme.objects.none()
+
+    # --- 1. PAGE STOCK (Génère et lit l'alerte stock) ---
+    if 'stock' in current_url_name or 'produit' in current_url_name or '/stock/' in path:
+        if hasattr(Produit, 'seuil_alerte'):
+            stock_faible_count = Produit.objects.filter(is_active=True, stock__lte=F('seuil_alerte')).count()
+        else:
+            stock_faible_count = Produit.objects.filter(is_active=True, stock__lte=5).count()
         
-    request.session['last_read_stock_count'] = request.session.get('current_stock_faible_count', 0)
-    request.session.modified = True
-    return JsonResponse({'status': 'success'})
+        if stock_faible_count > 0:
+            titre_stock = "Alerte Stock Faible"
+            msg_stock = f"{stock_faible_count} produit(s) ont atteint le seuil d'alerte critique."
+            if not NotificationPlateforme.objects.filter(lu=False, titre=titre_stock).exists():
+                NotificationPlateforme.objects.create(titre=titre_stock, message=msg_stock, lu=False)
+
+        notifs_non_lues = NotificationPlateforme.objects.filter(
+            lu=False,
+            titre__icontains='Stock'
+        ).order_by('-id')
+
+    # --- 2. PAGE CLIENTS ---
+    elif 'client' in current_url_name or '/client' in path:
+        notifs_non_lues = NotificationPlateforme.objects.filter(
+            lu=False,
+            titre__icontains='Client'
+        ).order_by('-id')
+
+    # --- 3. PAGE VENTES ---
+    elif 'vente' in current_url_name or '/vente/' in path:
+        notifs_non_lues = NotificationPlateforme.objects.filter(
+            lu=False,
+            titre__icontains='Vente'
+        ).order_by('-id')
+
+    # --- 4. PAGE APPROVISIONNEMENTS ---
+    elif 'appro' in current_url_name or 'approvisionnement' in current_url_name or '/approvisionnements/' in path:
+        notifs_non_lues = NotificationPlateforme.objects.filter(
+            lu=False
+        ).filter(
+            Q(titre__icontains='Approvisionnement') | Q(titre__icontains='Appro')
+        ).order_by('-id')
+
+    # --- 5. PAGE FOURNISSEURS ---
+    elif 'fournisseur' in current_url_name or '/fournisseurs/' in path:
+        notifs_non_lues = NotificationPlateforme.objects.filter(
+            lu=False,
+            titre__icontains='Fournisseur'
+        ).order_by('-id')
+
+    # --- 6. PAGE RAPPORTS ---
+    elif 'rapport' in current_url_name or '/rapports/' in path:
+        notifs_non_lues = NotificationPlateforme.objects.filter(
+            lu=False,
+            titre__icontains='Rapport'
+        ).order_by('-id')
+
+    total_non_lus = notifs_non_lues.count()
+
+    return {
+        'notifications_non_lues': notifs_non_lues,
+        'nombre_notifications': total_non_lus,
+    }

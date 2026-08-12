@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% load static %}
 
@@ -14,7 +15,6 @@
             }
         })();
     </script>
-
 <style>
     body, .app-layout, .app-main {
         background-color: #f8fafc !important;
@@ -270,6 +270,12 @@
         overflow-y: auto !important;
         position: relative !important;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+        color: #1e293b !important;
+    }
+
+    .astra-modal-card p, 
+    .astra-modal-card div {
+        color: #334155 !important;
     }
 
     .astra-form-group {
@@ -317,6 +323,11 @@
         border-color: #334155 !important;
         color: #f1f5f9 !important;
     }
+    html.dark .astra-modal-card p,
+    html.dark .astra-modal-card div,
+    html.dark .astra-modal-card h2 {
+        color: #f1f5f9 !important;
+    }
     html.dark input {
         background-color: #0f172a !important;
         border-color: #334155 !important;
@@ -346,7 +357,7 @@
             <p>{{ total_clients }}</p>
         </div>
         <div class="astra-card astra-card-orange">
-            <h3>Nouveaux clients (mois)</h3>
+            <h3>Nouveaux clients (jour)</h3>
             <p>{{ new_clients_count }}</p>
         </div>
         <div class="astra-card astra-card-indigo">
@@ -381,7 +392,7 @@
                         <th>Nom</th>
                         <th>Email</th>
                         <th>Téléphone</th>
-                        <th>Inscription</th>
+                        <th>Dernier Achat</th>
                         <th>Total dépensé</th>
                         <th style="text-align: center;">Cahier Privé</th>
                         <th style="text-align: center;">Actions</th>
@@ -393,10 +404,15 @@
                         <td style="font-weight: 600;">{{ client.nom }}</td>
                         <td>{{ client.email|default:"N/A" }}</td>
                         <td>{{ client.telephone }}</td>
-                        <td>{{ client.date_inscription|date:"d/m/Y"|default:"N/A" }}</td>
+                        <td>
+                            {% if client.dernier_achat %}
+                                <span style="font-weight: 600; color: #4338ca;">{{ client.dernier_achat|date:"d/m/Y H:i" }}</span>
+                            {% else %}
+                                <span style="color: #94a3b8; font-style: italic;">Aucun achat</span>
+                            {% endif %}
+                        </td>
                         <td style="font-weight: 700; color: {% if client.total_depenses_calcule > 100000 %}#16a34a{% else %}#334155{% endif %};">{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>
                         <td style="text-align: center;">
-                            <!-- Redirige vers la page de connexion sécurisée par mot de passe du client -->
                             <a href="{% url 'astra:client_login' client.id %}" style="display: inline-flex; align-items: center; gap: 5px; background-color: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none;" title="Accéder au cahier sécurisé">
                                 <i class="fa-solid fa-lock"></i> Accès Cahier
                             </a>
@@ -406,7 +422,9 @@
                                     data-nom="{{ client.nom }}" 
                                     data-email="{{ client.email|default:'' }}" 
                                     data-telephone="{{ client.telephone }}" 
+                                    data-adresse="{{ client.adresse|default:'N/A' }}"
                                     data-total="{{ client.total_depenses_calcule|default:0|floatformat:0 }}" 
+                                    data-achats="{{ client.nombre_achats|default:0 }}"
                                     data-inscription="{{ client.date_inscription|date:'d/m/Y'|default:'N/A' }}"
                                     style="background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer; margin-right: 12px;">Détails</button>
 
@@ -447,6 +465,10 @@
             <div class="astra-form-group">
                 <label for="id_telephone">Téléphone *</label>
                 <input type="text" id="id_telephone" name="telephone" required placeholder="Ex: +237 ...">
+            </div>
+            <div class="astra-form-group">
+                <label for="id_adresse">Adresse</label>
+                <input type="text" id="id_adresse" name="adresse" placeholder="Ex: Akwa, Douala">
             </div>
             <div class="astra-form-group">
                 <label for="id_password">Mot de passe privé *</label>
@@ -492,14 +514,18 @@
                 const nom = btn.getAttribute('data-nom');
                 const email = btn.getAttribute('data-email');
                 const telephone = btn.getAttribute('data-telephone');
+                const adresse = btn.getAttribute('data-adresse');
                 const total = btn.getAttribute('data-total');
+                const achats = btn.getAttribute('data-achats');
                 const inscription = btn.getAttribute('data-inscription');
 
                 clientDetailsContent.innerHTML = `
                     <p><strong>Nom :</strong> ${nom}</p>
                     <p><strong>Email :</strong> ${email ? email : 'N/A'}</p>
                     <p><strong>Téléphone :</strong> ${telephone}</p>
+                    <p><strong>Adresse :</strong> ${adresse}</p>
                     <p><strong>Date d'inscription :</strong> ${inscription}</p>
+                    <p><strong>Nombre d'achats :</strong> ${achats}</p>
                     <p><strong>Total dépensé :</strong> ${total} FCFA</p>
                 `;
                 detailsClientModal.classList.remove('hidden');

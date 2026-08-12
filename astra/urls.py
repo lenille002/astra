@@ -38,7 +38,7 @@ urlpatterns = [
     
     # Rapports, Clients, Tokens & Divers
     path("rapports/", views.rapports, name="rapports"),
-    path('rapports/reset-page/', views.reset_page_rapports, name='reset_page_rapports'),
+    path("rapports/reset-page/", views.reset_page_rapports, name="reset_page_rapports"),
     path("propos/", views.propos, name="propos"),
     
     path("clients/", views.gestion_clients, name="gestion_clients"),
@@ -63,6 +63,5 @@ urlpatterns = [
     path("historiques/", views.historiques_page_view, name="historiques_page"),
     path("parametres/", views.parametres_page_view, name="parametres_page"),
     path("api/parametres/", views.api_save_parametres, name="api_save_parametres"),
-
     path('notifications/marquer-lues/', views.marquer_notifications_lues, name='marquer_lues'),
 ]

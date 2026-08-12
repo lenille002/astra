@@ -89,30 +89,30 @@
                 </p>
             </div>
 
-            <!-- STATISTIQUES -->
+            <!-- STATISTIQUES DYNAMIQUES -->
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-label"><i class="fas fa-shopping-cart"></i> Ventes aujourd'hui</div>
-                    <div class="stat-value">25</div>
-                    <div class="stat-label">+12% vs hier</div>
+                    <div class="stat-value">{{ ventes_aujourd_hui }}</div>
+                    <div class="stat-label">Activité du jour</div>
                 </div>
 
                 <div class="stat-card orange">
                     <div class="stat-label"><i class="fas fa-chart-line"></i> Chiffre d'affaires</div>
-                    <div class="stat-value">500000 FCFA</div>
-                    <div class="stat-label">Objectif : 5M FCFA</div>
+                    <div class="stat-value">{{ chiffre_affaires|floatformat:0 }} FCFA</div>
+                    <div class="stat-label">Total cumulé</div>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-label"><i class="fas fa-users"></i> Nouveaux clients</div>
-                    <div class="stat-value">15</div>
+                    <div class="stat-value">{{ nouveaux_clients }}</div>
                     <div class="stat-label">Ce mois-ci</div>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-label"><i class="fas fa-box"></i> Produits en stock</div>
-                    <div class="stat-value">120</div>
-                    <div class="stat-label">Dernière mise à jour aujourd'hui</div>
+                    <div class="stat-value">{{ produits_en_stock }}</div>
+                    <div class="stat-label">Unités disponibles</div>
                 </div>
             </div>
 

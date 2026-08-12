@@ -387,7 +387,6 @@ class Token(models.Model):
 # ==================================================
 # NOTIFICATIONS PLATEFORME
 # ==================================================
-
 class NotificationPlateforme(models.Model):
     titre = models.CharField(max_length=255)
     message = models.TextField()
@@ -395,5 +394,4 @@ class NotificationPlateforme(models.Model):
     lu = models.BooleanField(default=False)
 
     def __str__(self):
-        statut = "Lu" if self.lu else "Non lu"
-        return f"{self.titre} ({statut})"
+        return f"{self.titre} - {'Lu' : 'Non lu'}"
