@@ -48,6 +48,8 @@ urlpatterns = [
     path("client/<int:client_id>/supprimer/", views.supprimer_client, name="supprimer_client"),
     path("client/<int:client_id>/modifier/", views.modifier_client, name="modifier_client"),
     path("client/<int:client_id>/espace/", views.espace_client, name="espace_client"),
+    path('client/mot-de-passe-oublie/', views.mot_de_passe_oublie_client, name='mot_de_passe_oublie_client'),
+    path('client/<int:client_id>/modifier-mdp/', views.modifier_mot_de_passe_client, name='modifier_mot_de_passe_client'),
     path("api/generer-tokben/", views.generer_token_api, name="generer_token_api"),
     path("login-token/", views.LoginWithTokenView.as_view(), name="login_token"),
 

@@ -29,22 +29,13 @@ Astra Tech - Rapports & Analyses Globaux
     }
 
     @media print {
-        /* Cacher les éléments non nécessaires à l'impression */
         nav, header, .sidebar, button, form, a, #mainPrintBtn {
             display: none !important;
         }
-        
-        /* Optimisation du layout pour l'impression */
         body { background: white !important; color: black !important; }
         .bg-white { border: none !important; box-shadow: none !important; }
-        
-        /* Forcer l'affichage sur une page */
         .print-grid { display: block !important; width: 100% !important; }
-        
-        /* Mettre en valeur les titres lors de l'impression */
         h2 { border-bottom: 2px solid #000 !important; padding-bottom: 10px; margin-bottom: 20px; }
-        
-        /* Masquer les boutons d'action dans les tableaux imprimés */
         button[onclick] { display: none !important; }
     }
 </style>
@@ -129,7 +120,7 @@ Astra Tech - Rapports & Analyses Globaux
             </div>
         </div>
 
-        <!-- Section Graphiques (Imprimables ensemble via print-grid) -->
+        <!-- Section Graphiques -->
         <div class="print-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
                 <h2 class="text-lg font-bold text-slate-900 mb-6 pb-3 border-b border-slate-100">Évolution du Chiffre d'Affaires (Par ordre d'achat)</h2>
@@ -138,6 +129,99 @@ Astra Tech - Rapports & Analyses Globaux
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
                 <h2 class="text-lg font-bold text-slate-900 mb-6 pb-3 border-b border-slate-100">Répartition du Stock</h2>
                 <div class="w-full h-72 relative flex items-center justify-center"><canvas id="stockChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- SUIVI DES BÉNÉFICES & PERTES (ARTICLES COMMERCIALISÉS) -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-emerald-500 text-xl"></i> Suivi des Bénéfices & Pertes (Articles Commercialisés)
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Analyse des marges, bénéfices, pertes par article, et bilans périodiques.</p>
+                </div>
+                <div class="inline-flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-200">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Bénéfice Net Global :</span>
+                    <span class="text-base font-black {% if benefice_net_global >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                        {{ benefice_net_global|default:0|floatformat:0 }} FCFA
+                    </span>
+                </div>
+            </div>
+
+            <!-- Bilans Mensuels & Annuels -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3"><i class="fas fa-calendar-alt text-orange-500 mr-1.5"></i> Bilans Mensuels</h3>
+                    <div class="space-y-2">
+                        {% for b in bilan_mensuel %}
+                        <div class="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-slate-200/60 font-semibold">
+                            <span class="text-slate-700">{{ b.mois|date:"F Y"|title }}</span>
+                            <span class="text-slate-900 font-bold">{{ b.total_ca|default:0|floatformat:0 }} FCFA (CA)</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">Aucune donnée mensuelle disponible.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3"><i class="fas fa-calendar text-blue-500 mr-1.5"></i> Bilans Annuels</h3>
+                    <div class="space-y-2">
+                        {% for a in bilan_annuel %}
+                        <div class="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-slate-200/60 font-semibold">
+                            <span class="text-slate-700">{{ a.annee|date:"Y" }}</span>
+                            <span class="text-slate-900 font-bold">{{ a.total_ca|default:0|floatformat:0 }} FCFA (CA)</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">Aucune donnée annuelle disponible.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau Détaillé avec Colonnes Bénéfice et Perte Séparées -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500"><i class="fas fa-box-open text-indigo-500 mr-1.5"></i> Détail par article vendu</h3>
+                    <span class="text-[11px] text-slate-400 italic">*(CA Généré = Argent total des ventes brut perçu pour l'article)*</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                                <th class="p-3">Article Commercialisé</th>
+                                <th class="p-3 text-center">Qté Vendue</th>
+                                <th class="p-3 text-right">CA Généré (Brut)</th>
+                                <th class="p-3 text-right text-emerald-600">Bénéfice (+ Gain)</th>
+                                <th class="p-3 text-right text-red-600">Perte (- Déficit)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                            {% for item in benefices_articles %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 font-semibold text-slate-800">{{ item.nom }}</td>
+                                <td class="p-3 text-center font-bold text-slate-600">{{ item.quantite }}</td>
+                                <td class="p-3 text-right font-bold text-slate-700">{{ item.ca|floatformat:0 }} FCFA</td>
+                                
+                                <!-- Colonne Bénéfice -->
+                                <td class="p-3 text-right font-black text-emerald-600">
+                                    {% if item.benefice >= 0 %}+{{ item.benefice|floatformat:0 }} FCFA{% else %}-{% endif %}
+                                </td>
+                                
+                                <!-- Colonne Perte -->
+                                <td class="p-3 text-right font-black text-red-600">
+                                    {% if item.benefice < 0 %}{{ item.benefice|floatformat:0 }} FCFA{% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-slate-400 italic">Aucun article commercialisé enregistré pour le moment.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -177,7 +261,7 @@ Astra Tech - Rapports & Analyses Globaux
             </div>
         </div>
 
-        <!-- Suivi des Approvisionnements par Fournisseur Unique (Sans doublon) -->
+        <!-- Suivi des Approvisionnements par Fournisseur Unique -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
             <h2 class="text-base font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
                 <i class="fas fa-truck-ramp-box text-blue-600 text-lg"></i> Suivi des Approvisionnements par Fournisseur Unique
@@ -323,7 +407,6 @@ Astra Tech - Rapports & Analyses Globaux
         return '';
     };
 
-    // Calcul réel et dynamique du Stock Total basé sur les produits chargés
     const totalStockCalculated = products.reduce((acc, p) => {
         const qty = parseInt(getProp(p, ['stock', 'quantite'])) || 0;
         return acc + qty;
@@ -334,7 +417,6 @@ Astra Tech - Rapports & Analyses Globaux
         stockTotalElem.textContent = totalStockCalculated;
     }
 
-    // Gestion de l'impression
     const mainPrintBtn = document.getElementById('mainPrintBtn');
     if (mainPrintBtn) {
         mainPrintBtn.addEventListener('click', () => {
@@ -342,7 +424,6 @@ Astra Tech - Rapports & Analyses Globaux
         });
     }
 
-    // Graphique Ventes
     const ctxSalesElem = document.getElementById('salesChart');
     if (ctxSalesElem) {
         new Chart(ctxSalesElem.getContext('2d'), {
@@ -368,7 +449,6 @@ Astra Tech - Rapports & Analyses Globaux
         });
     }
 
-    // Graphique Stock
     const ctxStockElem = document.getElementById('stockChart');
     if (ctxStockElem) {
         new Chart(ctxStockElem.getContext('2d'), {
@@ -391,7 +471,6 @@ Astra Tech - Rapports & Analyses Globaux
         });
     }
 
-    // --- Logique du Cahier Client ---
     function openClientCahier(clientName, count, totalAmount) {
         const modal = document.getElementById('clientCahierModal');
         document.getElementById('modalClientName').textContent = `Cahier de : ${clientName}`;
@@ -434,7 +513,6 @@ Astra Tech - Rapports & Analyses Globaux
         document.getElementById('clientCahierModal').classList.add('hidden');
     }
 
-    // --- Logique du Cahier Unique d'Approvisionnement ---
     function openApproCahier(fournisseurNom, totalMontant, nombreAppros) {
         const modal = document.getElementById('approCahierModal');
         document.getElementById('modalApproFournisseurTitle').textContent = `Cahier : ${fournisseurNom}`;

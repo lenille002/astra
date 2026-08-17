@@ -394,4 +394,17 @@ class NotificationPlateforme(models.Model):
     lu = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.titre} - {'Lu' : 'Non lu'}"
+        statut = "Lu" if self.lu else "Non lu"
+        return f"{self.titre} - {statut}"
+
+from django.db import models
+
+class ParametreGlobal(models.Model):
+    nom_boutique = models.CharField(max_length=255, default="ASTRA TECH")
+    verrou_commercial = models.BooleanField(default=False)
+    verrou_admin = models.BooleanField(default=False)
+    seuil_stock = models.IntegerField(default=5)
+    taux_tva = models.DecimalField(max_digits=5, decimal_places=2, default=19.25)
+
+    def __str__(self):
+        return "Configuration Globale de la Boutique"        

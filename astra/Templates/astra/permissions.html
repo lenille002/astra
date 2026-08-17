@@ -1,99 +1,56 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASTRA TECH - Paramètres & Administration Globale</title>
+    <title>ASTRA TECH - Matrice de Sécurité & Permissions</title>
     
-    <!-- Script d’initialisation immédiate du mode nuit global -->
     <script>
         (function() {
-            const savedDarkMode = localStorage.getItem('astra_dark_mode');
-            if (savedDarkMode === 'true') {
+            if (localStorage.getItem('astra_dark_mode') === 'true') {
                 document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
             }
         })();
     </script>
 
-    <!-- CSS Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root {
-            --tech-blue: #0078D7;
-            --tech-dark-blue: #004E8C;
-            --tech-sidebar-bg: #003366;
-            --tech-orange: #f97316;
-            --tech-orange-hover: #ea580c;
-            --tech-white: #FFFFFF;
-            --tech-light-gray: #f8fafc;
-            --tech-card-bg: #ffffff;
-            --tech-dark-gray: #333333;
-            --tech-border: #E0E0E0;
-            --sidebar-width: 280px;
-            --radius-lg: 16px;
-            --radius-md: 10px;
-        }
-
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
+        :root {
+            --tech-dark-blue: #004E8C;
+            --tech-sidebar-bg: #003366;
+            --tech-orange: #FF8C00;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--tech-light-gray);
-            color: var(--tech-dark-gray);
+            background-color: #f8fafc;
+            color: #1e293b;
             display: flex;
             min-height: 100vh;
+            margin: 0;
             overflow-x: hidden;
-            gap: 0;
-            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* --- MODE NUIT GLOBAL --- */
-        html.dark body {
-            background-color: #0f172a !important;
-            color: #f1f5f9 !important;
-        }
-        html.dark .card {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
-            color: #f1f5f9 !important;
-        }
-        html.dark h1, html.dark h2, html.dark h3, html.dark label, html.dark span, html.dark div {
-            color: inherit;
-        }
-        html.dark input, html.dark select {
-            background-color: #0f172a !important;
-            border-color: #334155 !important;
-            color: #ffffff !important;
-        }
-        html.dark .role-card {
-            background-color: #1e293b;
-            border-color: #334155;
-        }
-        html.dark .role-card.border-orange-500 {
-            border-color: #f97316 !important;
-            background-color: rgba(249, 115, 22, 0.1) !important;
-        }
+        html.dark body { background-color: #0f172a; color: #f1f5f9; }
+        html.dark .card-custom { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9 !important; }
 
-        /* --- SIDEBAR --- */
+        /* SIDEBAR CORRIGÉE AVEC LES BONNES COULEURS D'ORIGINE */
         .sidebar {
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--tech-dark-blue) 0%, #003366 100%);
-            color: var(--tech-white);
+            width: 280px;
+            background: linear-gradient(180deg, var(--tech-dark-blue) 0%, var(--tech-sidebar-bg) 100%);
+            color: #fff;
             display: flex;
             flex-direction: column;
             position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
+            top: 0; bottom: 0; left: 0;
             z-index: 100;
             box-shadow: 4px 0 25px rgba(0, 0, 0, 0.08);
             border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -107,85 +64,43 @@
         }
 
         .sidebar-logo {
-            width: 40px;
-            height: 40px;
-            background: var(--tech-white);
-            border-radius: 8px;
-            transform: rotate(45deg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            width: 40px; height: 40px; background: #ffffff; border-radius: 8px;
+            transform: rotate(45deg); display: flex; justify-content: center; align-items: center;
+            margin-right: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
         .sidebar-logo-inner {
-            width: 28px;
-            height: 28px;
-            border: 2px solid var(--tech-orange);
-            border-radius: 5px;
-            transform: rotate(-45deg);
+            width: 28px; height: 28px; border: 2px solid var(--tech-orange);
+            border-radius: 5px; transform: rotate(-45deg);
         }
 
-        .sidebar-title {
-            font-weight: bold;
-            font-size: 20px;
-            letter-spacing: 1px;
-            color: #ffffff !important;
-        }
+        .sidebar-title { font-weight: bold; font-size: 20px; letter-spacing: 1px; color: #ffffff; }
+        .sidebar-title span { color: var(--tech-orange); }
 
-        .sidebar-title span {
-            color: var(--tech-orange);
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 3rem;
+            max-width: calc(100% - 280px);
+            box-sizing: border-box;
         }
 
         .nav-menu {
-            list-style: none;
-            padding: 24px 16px;
-            margin: 0;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            overflow-y: auto;
+            list-style: none; padding: 24px 16px; margin: 0; flex: 1;
+            display: flex; flex-direction: column; gap: 6px; overflow-y: auto;
         }
 
-        .nav-menu li a,
-        .nav-menu a.back-link {
-            display: flex;
-            align-items: center;
-            padding: 14px 18px;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
-            border-radius: var(--radius-md);
-            transition: all 0.25s ease;
+        .nav-link {
+            display: flex; align-items: center; padding: 14px 18px;
+            color: rgba(255, 255, 255, 0.8); text-decoration: none; font-weight: 500; font-size: 14px;
+            border-radius: 10px; transition: all 0.25s ease;
         }
-
-        .nav-menu li a i,
-        .nav-menu a.back-link i {
-            margin-right: 14px;
-            font-size: 16px;
-            width: 22px;
-            text-align: center;
-            transition: transform 0.25s;
-        }
-
-        .nav-menu li a:hover,
-        .nav-menu a.back-link:hover {
-            color: var(--tech-white);
-            background-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .nav-menu li a.active {
-            color: var(--tech-white);
-            background-color: rgba(255, 255, 255, 0.12);
-            border-left: 4px solid var(--tech-orange);
-            font-weight: 600;
-        }
-
-        .nav-menu a.back-link {
-           
+        .nav-link i { margin-right: 14px; font-size: 16px; width: 22px; text-align: center; }
+        .nav-link:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.08); }
+        .nav-link.active { color: #ffffff; background-color: rgba(255, 255, 255, 0.12); border-left: 4px solid var(--tech-orange); font-weight: 600; }
+        
+        .nav-link.back-link {
+            margin-top: auto;
             background-color: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -197,11 +112,11 @@
 
         .btn-logout {
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: var(--tech-white);
-            border: none;
+            background-color: rgba(255, 77, 77, 0.15);
+            color: #ff8080;
+            border: 1px solid rgba(255, 77, 77, 0.3);
             padding: 12px;
-            border-radius: var(--radius-md);
+            border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -209,33 +124,14 @@
             gap: 10px;
             font-weight: 600;
             font-size: 14px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             text-decoration: none;
         }
-
         .btn-logout:hover {
             background-color: #ff4d4d;
+            color: #ffffff;
             box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
-        }
-
-        .main-content {
-            margin-left: var(--sidebar-width);
-            flex: 1;
-            padding: 40px;
-            max-width: calc(100% - var(--sidebar-width));
-            box-sizing: border-box;
-        }
-
-        .card {
-            background-color: var(--tech-card-bg);
-            border-radius: var(--radius-lg);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            border: 1px solid var(--tech-border);
-        }
-
-        .role-card {
-            cursor: pointer;
-            transition: all 0.2s ease;
+            border-color: #ff4d4d;
         }
     </style>
 </head>
@@ -244,26 +140,21 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <div class="sidebar-logo">
-                <div class="sidebar-logo-inner"></div>
-            </div>
+            <div class="sidebar-logo"><div class="sidebar-logo-inner"></div></div>
             <div class="sidebar-title">ASTRA <span>TECH</span></div>
         </div>
-
-        <ul class="nav-menu">
-            <li><a href="{% url 'astra:token_accueil' %}"><i class="fas fa-key"></i> Gestion des Tokens</a></li>
-            <li><a href="{% url 'astra:page_utilisateurs' %}"><i class="fas fa-users"></i> Utilisateurs</a></li>
-            <li><a href="{% url 'astra:permissions_page' %}" class="active"><i class="fas fa-shield-alt"></i> Permissions</a></li>
-            <li><a href="{% url 'astra:historiques_page' %}"><i class="fas fa-history"></i> Historique</a></li>
-            <li><a href="{% url 'astra:parametres_page' %}"><i class="fas fa-cog"></i> Paramètres</a></li>
-
-            <li>
-                <a href="#" onclick="history.back(); return false;" class="back-link">
-                    <i class="fas fa-arrow-left text-white text-lg"></i>
-                    <span>Retour</span>
-                </a>
-            </li>
-        </ul>
+        <nav class="nav-menu">
+            <a href="{% url 'astra:token_accueil' %}" class="nav-link"><i class="fas fa-key"></i> Gestion des Tokens</a>
+            <a href="{% url 'astra:page_utilisateurs' %}" class="nav-link"><i class="fas fa-users"></i> Utilisateurs</a>
+            <a href="{% url 'astra:permissions_page' %}" class="nav-link active"><i class="fas fa-shield-alt"></i> Permissions</a>
+            <a href="{% url 'astra:historiques_page' %}" class="nav-link"><i class="fas fa-history"></i> Historique</a>
+            <a href="{% url 'astra:parametres_page' %}" class="nav-link"><i class="fas fa-cog"></i> Paramètres</a>
+            
+            <a href="#" onclick="history.back(); return false;" class="nav-link back-link">
+                <i class="fas fa-arrow-left text-white"></i>
+                <span>Retour</span>
+            </a>
+        </nav>
 
         <div class="sidebar-footer">
             <a href="{% url 'astra:login' %}" class="btn-logout" id="loginBtn">
@@ -272,126 +163,84 @@
         </div>
     </aside>
 
-
-    <!-- MAIN CONTENT -->
+    <!-- CONTENU PRINCIPAL -->
     <main class="main-content">
-        <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
-                    <i class="fas fa-shield-alt text-orange-500"></i> Matrice des Permissions & Rôles
-                </h1>
-                <p class="text-gray-500 dark:text-gray-400 mt-1">Gérez finement les accès aux modules de vente de matériel informatique (PC, composants, périphériques).</p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Matrice des Rôles & Sécurité</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Contrôlez les autorisations d'accès aux modules de gestion de matériel informatique.</p>
             </div>
-            <div>
-                <select id="role-selector" onchange="filterRoleMatrix(this.value)" class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold outline-none focus:ring-2 focus:ring-orange-500">
-                    <option value="all">Tous les rôles affichés</option>
-                    <option value="admin">Administrateur</option>
-                    <option value="stock">Gestionnaire de Stock</option>
-                    <option value="vendeur">Commercial / Vendeur</option>
-                    <option value="caissier">Caissier(ère)</option>
-                </select>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-xs font-semibold border border-emerald-200 dark:border-emerald-800">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Connecté au Système Django
+                </span>
             </div>
         </div>
 
         <!-- ZONE DE NOTIFICATION -->
-        <div id="alert-box" class="hidden mb-6 p-4 rounded-lg text-sm font-medium transition-all"></div>
+        <div id="alert-box" class="hidden mb-6 p-4 rounded-xl text-sm font-medium transition-all shadow-sm"></div>
 
-        <div class="card overflow-hidden">
-            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-800">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Droits d'Accès par Profil</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Cochez ou décochez les fonctionnalités autorisées pour chaque poste.</p>
-                </div>
-                <button onclick="resetDefaultPermissions()" class="text-xs bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 font-semibold px-3 py-2 rounded-lg transition-all flex items-center gap-1.5">
-                    <i class="fas fa-undo"></i> Réinitialiser
-                </button>
+        <!-- CARTE DE LA MATRICE -->
+        <div class="card-custom bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                <h2 class="font-bold text-slate-800 dark:text-white text-base">Attribution des Permissions par Groupe</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enregistrez vos choix pour valider les droits d'accès directement dans le backend.</p>
             </div>
 
-            <form id="permissions-form" onsubmit="savePermissions(event)">
+            <form id="real-permissions-form" onsubmit="saveRealPermissions(event)">
+                {% csrf_token %}
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-gray-200 dark:border-slate-700 text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-900/50">
-                                <th class="py-3 px-4 font-semibold">Modules & Fonctionnalités Informatiques</th>
-                                <th class="py-3 px-4 text-center font-semibold">Administrateur</th>
-                                <th class="py-3 px-4 text-center font-semibold">Gestionnaire Stock</th>
-                                <th class="py-3 px-4 text-center font-semibold">Commercial / Vendeur</th>
-                                <th class="py-3 px-4 text-center font-semibold">Caissier(ère)</th>
+                            <tr class="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="py-4 px-6">Fonctionnalité / Module Technique</th>
+                                <th class="py-4 px-6 text-center">Administrateur</th>
+                                <th class="py-4 px-6 text-center">Gestionnaire Stock</th>
+                                <th class="py-4 px-6 text-center">Commercial / Vendeur</th>
+                                <th class="py-4 px-6 text-center">Caissier(ère)</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-slate-800 text-sm">
-                            <!-- Section Ventes & Facturation -->
-                            <tr class="bg-gray-50/50 dark:bg-slate-900/30">
-                                <td colspan="5" class="py-2.5 px-4 font-bold text-xs uppercase tracking-wider text-orange-600 dark:text-orange-400">
-                                    <i class="fas fa-cash-register mr-1"></i> Module Ventes & Devis PC
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                                <td class="py-4 px-6 font-medium text-slate-700 dark:text-slate-200">
+                                    <div class="font-bold text-xs text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-1">Module Ventes & Facturation</div>
+                                    Valider une transaction ou émettre un devis matériel (PC, Composants)
                                 </td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="admin_vente" checked class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="stock_vente" class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="vendeur_vente" checked class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="caissier_vente" checked class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
                             </tr>
-                            <tr class="permission-row" data-module="ventes">
-                                <td class="py-3 px-4 font-medium text-gray-700 dark:text-gray-200">Créer une facture ou un devis matériel</td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_admin_vente" data-role="admin" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_stock_vente" data-role="stock" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_vendeur_vente" data-role="vendeur" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_caissier_vente" data-role="caissier" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                            </tr>
-                            <tr class="permission-row" data-module="ventes">
-                                <td class="py-3 px-4 font-medium text-gray-700 dark:text-gray-200">Appliquer des remises exceptionnelles (>10%)</td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_admin_remise" data-role="admin" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_stock_remise" data-role="stock" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_vendeur_remise" data-role="vendeur" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_caissier_remise" data-role="caissier" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                            </tr>
-
-                            <!-- Section Gestion des Stocks & Matériel -->
-                            <tr class="bg-gray-50/50 dark:bg-slate-900/30">
-                                <td colspan="5" class="py-2.5 px-4 font-bold text-xs uppercase tracking-wider text-orange-600 dark:text-orange-400">
-                                    <i class="fas fa-boxes mr-1"></i> Module Stock & Entrepôt (PC, Composants)
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                                <td class="py-4 px-6 font-medium text-slate-700 dark:text-slate-200">
+                                    <div class="font-bold text-xs text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-1">Module Stock & Entrepôt</div>
+                                    Ajouter, modifier ou supprimer des équipements informatiques en stock
                                 </td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="admin_stock" checked class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="stock_stock" checked class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="vendeur_stock" class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="caissier_stock" class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
                             </tr>
-                            <tr class="permission-row" data-module="stock">
-                                <td class="py-3 px-4 font-medium text-gray-700 dark:text-gray-200">Ajouter / Modifier des équipements (PC, RAM, GPU...)</td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_admin_stock_edit" data-role="admin" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_stock_stock_edit" data-role="stock" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_vendeur_stock_edit" data-role="vendeur" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_caissier_stock_edit" data-role="caissier" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                            </tr>
-                            <tr class="permission-row" data-module="stock">
-                                <td class="py-3 px-4 font-medium text-gray-700 dark:text-gray-200">Valider les entrées de livraisons fournisseurs</td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_admin_livraison" data-role="admin" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_stock_livraison" data-role="stock" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_vendeur_livraison" data-role="vendeur" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_caissier_livraison" data-role="caissier" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                            </tr>
-
-                            <!-- Section Sécurité & Administration -->
-                            <tr class="bg-gray-50/50 dark:bg-slate-900/30">
-                                <td colspan="5" class="py-2.5 px-4 font-bold text-xs uppercase tracking-wider text-orange-600 dark:text-orange-400">
-                                    <i class="fas fa-lock mr-1"></i> Administration & Sécurité Système
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                                <td class="py-4 px-6 font-medium text-slate-700 dark:text-slate-200">
+                                    <div class="font-bold text-xs text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-1">Administration & Sécurité</div>
+                                    Générer des jetons d'accès API et modifier les paramètres système
                                 </td>
-                            </tr>
-                            <tr class="permission-row" data-module="admin">
-                                <td class="py-3 px-4 font-medium text-gray-700 dark:text-gray-200">Générer et révoquer des Tokens d'accès API</td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_admin_tokens" data-role="admin" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_stock_tokens" data-role="stock" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_vendeur_tokens" data-role="vendeur" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_caissier_tokens" data-role="caissier" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                            </tr>
-                            <tr class="permission-row" data-module="admin">
-                                <td class="py-3 px-4 font-medium text-gray-700 dark:text-gray-200">Modifier les paramètres globaux de la boutique</td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_admin_settings" data-role="admin" checked class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_stock_settings" data-role="stock" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_vendeur_settings" data-role="vendeur" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
-                                <td class="py-3 px-4 text-center"><input type="checkbox" name="perm_caissier_settings" data-role="caissier" class="w-4 h-4 accent-orange-500 cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="admin_tokens" checked class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="stock_tokens" class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="vendeur_tokens" class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
+                                <td class="py-4 px-6 text-center"><input type="checkbox" name="caissier_tokens" class="w-4 h-4 accent-orange-500 rounded cursor-pointer"></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-info-circle mr-1 text-blue-500"></i> Toute modification prend effet immédiatement à la prochaine reconnexion des utilisateurs concernés.
+                <div class="p-6 bg-slate-50/50 dark:bg-slate-900/40 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <i class="fas fa-server text-blue-500"></i> Communication active avec la base de données de l'application.
                     </p>
-                    <button type="submit" id="btn-save" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer">
-                        <i class="fas fa-save"></i> Enregistrer la matrice
+                    <button type="submit" id="btn-save" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-save text-xs"></i> Enregistrer les permissions
                     </button>
                 </div>
             </form>
@@ -399,126 +248,49 @@
     </main>
 
     <script>
-        // Charger l'état sauvegardé des cases à cocher au démarrage
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedPermissions = localStorage.getItem('astra_permissions_matrix');
-            if (savedPermissions) {
-                try {
-                    const parsedData = JSON.parse(savedPermissions);
-                    const checkboxes = document.querySelectorAll('#permissions-form input[type="checkbox"]');
-                    checkboxes.forEach(cb => {
-                        if (parsedData.hasOwnProperty(cb.name)) {
-                            cb.checked = parsedData[cb.name];
-                        }
-                    });
-                } catch (e) {
-                    console.error("Erreur lors du chargement de la matrice locale", e);
-                }
-            }
-        });
-
-        // Filtrer par rôle spécifique dans le sélecteur
-        function filterRoleMatrix(selectedRole) {
-            const rows = document.querySelectorAll('.permission-row');
-            // Vous pouvez affirmer l'affichage si besoin, ici on gère l'highlight visuel des colonnes si souhaité
-            const thList = document.querySelectorAll('thead th');
-            
-            rows.forEach(row => {
-                const inputs = row.querySelectorAll('input[type="checkbox"]');
-                inputs.forEach((input, index) => {
-                    // index 0 = libellé, colonnes 1 à 4 correspondent aux rôles [admin, stock, vendeur, caissier]
-                    const tdParent = input.closest('td');
-                    if (selectedRole === 'all') {
-                        tdParent.style.opacity = '1';
-                        tdParent.style.pointerEvents = 'auto';
-                    } else {
-                        const roleAttr = input.getAttribute('data-role');
-                        if (roleAttr === selectedRole) {
-                            tdParent.style.opacity = '1';
-                            tdParent.style.pointerEvents = 'auto';
-                            tdParent.style.backgroundColor = 'rgba(255, 140, 0, 0.05)';
-                        } else {
-                            tdParent.style.opacity = '0.3';
-                            tdParent.style.pointerEvents = 'none';
-                            tdParent.style.backgroundColor = 'transparent';
-                        }
-                    }
-                });
-            });
-        }
-
-        // Notification visuelle
         function showNotification(message, isSuccess = true) {
-            const alertBox = document.getElementById('alert-box');
-            alertBox.className = `mb-6 p-4 rounded-lg text-sm font-medium transition-all ${isSuccess ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'}`;
-            alertBox.innerHTML = `<i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`;
-            alertBox.classList.remove('hidden');
-
-            setTimeout(() => {
-                alertBox.classList.add('hidden');
-            }, 4000);
+            const box = document.getElementById('alert-box');
+            box.className = `mb-6 p-4 rounded-xl text-sm font-medium transition-all shadow-sm ${isSuccess ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800' : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800'}`;
+            box.innerHTML = `<i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i> ${message}`;
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 4000);
         }
 
-        // Réinitialiser par défaut
-        function resetDefaultPermissions() {
-            if (confirm("Voulez-vous réinitialiser les permissions aux valeurs par défaut de l'entreprise ?")) {
-                localStorage.removeItem('astra_permissions_matrix');
-                location.reload();
-            }
-        }
-
-        // Enregistrement de la matrice
-        function savePermissions(event) {
+        function saveRealPermissions(event) {
             event.preventDefault();
             const btn = document.getElementById('btn-save');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mise à jour des accès...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin text-xs"></i> Enregistrement en cours...`;
 
-            const checkboxes = document.querySelectorAll('#permissions-form input[type="checkbox"]');
-            const permissionsData = {};
-            checkboxes.forEach(cb => {
-                permissionsData[cb.name] = cb.checked;
+            const dataObj = {};
+            document.querySelectorAll('#real-permissions-form input[type="checkbox"]').forEach(cb => {
+                dataObj[cb.name] = cb.checked;
             });
 
-            // Sauvegarde locale instantanée
-            localStorage.setItem('astra_permissions_matrix', JSON.stringify(permissionsData));
-
-            // Envoi synchrone vers le backend Django (API endpoint à configurer côté urls.py si nécessaire)
             fetch("{% url 'astra:permissions_page' %}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify(permissionsData)
+                body: JSON.stringify(dataObj)
             })
-            .then(response => {
+            .then(res => res.json())
+            .then(resData => {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-save"></i> Enregistrer la matrice`;
-                showNotification("Matrice des permissions mise à jour avec succès pour l'ensemble des postes !", true);
-            })
-            .catch(error => {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-save"></i> Enregistrer la matrice`;
-                showNotification("Permissions enregistrées en local (Serveur hors ligne ou route API non définie).", true);
-            });
-        }
-
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+                btn.innerHTML = `<i class="fas fa-save text-xs"></i> Enregistrer les permissions`;
+                if(resData.status === 'success') {
+                    showNotification(resData.message, true);
+                } else {
+                    showNotification("Erreur lors de l'enregistrement des droits.", false);
                 }
-            }
-            return cookieValue;
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save text-xs"></i> Enregistrer les permissions`;
+                showNotification("Erreur de communication avec le serveur Django.", false);
+            });
         }
     </script>
 </body>
-
 </html>

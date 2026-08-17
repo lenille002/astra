@@ -73,50 +73,57 @@ Veuillez entrer votre token
 
 <form method="POST" class="auth-form">
 
-{% csrf_token %}
+    {% csrf_token %}
+
+    <!-- Indispensable pour retransmettre l'URL cible -->
+    {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
 
 
-<div class="form-group">
+    <div class="form-group">
 
 
-<label>
-Token d'accès
-</label>
+        <label>
+        Token d'accès
+        </label>
 
 
-<div class="input-with-icon">
+        <div class="input-with-icon">
 
-<i class="fas fa-key"></i>
-
-
-<input 
-type="password"
-name="token"
-placeholder="Votre token"
-required>
+            <i class="fas fa-key"></i>
 
 
-</div>
+            <input 
+            type="password"
+            name="token"
+            placeholder="Votre token"
+            required>
 
-</div>
+
+        </div>
+
+    </div>
 
 
 
-<button class="btn btn-primary">
+    <button class="btn btn-primary">
 
-<i class="fas fa-lock-open"></i>
+        <i class="fas fa-lock-open"></i>
 
-Connexion
+        Connexion
 
-</button>
+    </button>
 
 
 
 </form>
+
+
  <div class="token-info">
-                    <p><i class="fas fa-info-circle"></i> Pour obtenir un token d'accès, contactez votre administrateur système.</p>
-                    <p>Tokens valides : <strong>ASTRA-2025-TECH</strong> ou <strong>1234</strong></p>
-                </div>
+    <p><i class="fas fa-info-circle"></i> Pour obtenir un token d'accès, contactez votre administrateur système.</p>
+    <p>Tokens valides : <strong>ASTRA-2025-TECH</strong> ou <strong>1234</strong></p>
+</div>
 
 </div>
 

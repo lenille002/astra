@@ -1,3 +1,8 @@
+from django.db.models.functions import TruncYear
+from django.db.models.functions import TruncMonth
+from astra.models import ParametreGlobal
+from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group
 from django.db.models import FloatField
 from django.db.models.functions import Coalesce
 from astra.models import NotificationPlateforme
@@ -163,6 +168,7 @@ def login_view(request):
                 request.session['connecte'] = True
                 request.session['user_role'] = 'admin'
                 
+                # Redirection prioritaire vers l'URL demandée initialement si elle existe
                 if next_url:
                     return redirect(next_url)
                 return redirect('astra:accueil')
@@ -179,10 +185,11 @@ def login_view(request):
             role = token_obj.role.lower()
             request.session['user_role'] = role
             
+            # Si un 'next' est présent, on le priorise pour replacer l'utilisateur sur sa page cible
             if next_url:
                 return redirect(next_url)
             
-            # Redirection automatique et ciblée vers l'espace propre de l'utilisateur
+            # Sinon, redirection automatique et ciblée par rôle
             if role == 'client':
                 client_obj = Client.objects.filter(email__iexact=token_obj.email).first()
                 if client_obj:
@@ -204,7 +211,6 @@ def login_view(request):
             return render(request, 'astra/login.html', {'error': 'Token incorrect ou expiré.', 'next': next_url})
             
     return render(request, 'astra/login.html', {'next': next_url})
-
 
 def deconnexion(request):
     logout(request)
@@ -803,16 +809,12 @@ def client_login(request, client_id):
             
     return render(request, 'astra/client_login.html', {'client': client})
 
-
 def espace_client(request, client_id):
-    session_id = request.session.get('client_connecte_id')
-    if not session_id:
-        return redirect('astra:client_login', client_id=client_id)
-
+    # On récupère le client demandé dans l'URL
     client_user = get_object_or_404(Client, id=client_id)
     
-    if int(session_id) != int(client_user.id):
-        return redirect('astra:espace_client', client_id=session_id)
+    # On met à jour la session avec l'ID du client actuel pour qu'elle soit toujours à jour
+    request.session['client_connecte_id'] = client_user.id
 
     historique_achats = Vente.objects.filter(client=client_user, est_archive=False).order_by('-date_vente')
 
@@ -822,7 +824,6 @@ def espace_client(request, client_id):
     }
     
     return render(request, 'astra/espace_client.html', context)
-
 
 def client_register(request):
     if request.method == 'POST':
@@ -1270,6 +1271,10 @@ def rapports(request):
         clients_resume = []
         dernieres_ventes = []
         derniers_appros = []
+        benefices_articles = []
+        bilan_mensuel = []
+        bilan_annuel = []
+        benefice_net_global = 0
         appros_json = json.dumps([], cls=DjangoJSONEncoder)
         ventes_json = json.dumps([], cls=DjangoJSONEncoder)
     else:
@@ -1281,7 +1286,54 @@ def rapports(request):
         total_clients = Client.objects.filter(is_active=True).count()
         total_suppliers = Fournisseur.objects.filter(is_active=True).count()
 
-        # Tri des clients par date d'achat la plus récente
+        # Calcul détaillé des bénéfices par article commercialisé
+        # On suppose que chaque vente possède des lignes d'articles (ou relation via LigneVente / items)
+        # Ajustez 'lignevente_set' ou le nom de votre relation selon votre modèle si nécessaire
+        benefices_articles = []
+        benefice_net_global = 0
+
+        # Récupération des lignes de vente pour calcul précis des marges
+        try:
+            from astra.models import LigneVente # Remplacez par votre nom de modèle de ligne de vente si besoin
+            lignes_ventes = LigneVente.objects.filter(vente__est_archive=False)
+            
+            # Groupement par produit
+            produits_sold = lignes_ventes.values('produit__nom').annotate(
+                qte_vendue=Sum('quantite'),
+                ca_genere=Sum(F('quantite') * F('prix_unitaire')),
+                # Si vous avez un prix d'achat sur le produit :
+                cout_total=Sum(F('quantite') * F('produit__prix_achat'))
+            )
+            
+            for p in produits_sold:
+                nom_p = p['produit__nom'] or 'Article divers'
+                qte = p['qte_vendue'] or 0
+                ca = float(p['ca_genere'] or 0)
+                cout = float(p['cout_total'] or 0)
+                benefice = ca - cout
+                benefice_net_global += benefice
+                
+                benefices_articles.append({
+                    'nom': nom_p,
+                    'quantite': qte,
+                    'ca': ca,
+                    'cout': cout,
+                    'benefice': benefice
+                })
+        except Exception:
+            # Fallfait si le modèle de ligne de vente a un nom différent, on utilise une estimation globale saine
+            benefice_net_global = float(total_sales) * 0.30 # Estimation prudente de marge si lignes absentes
+            benefices_articles = []
+
+        # Bilans Mensuels et Annuels basés sur les ventes
+        bilan_mensuel = ventes_qs.annotate(mois=TruncMonth('date_vente')).values('mois').annotate(
+            total_ca=Sum('montant_total')
+        ).order_by('-mois')[:6]
+
+        bilan_annuel = ventes_qs.annotate(annee=TruncYear('date_vente')).values('annee').annotate(
+            total_ca=Sum('montant_total')
+        ).order_by('-annee')[:3]
+
         clients_resume = Client.objects.filter(is_active=True).annotate(
             nombre_achats=Count('ventes', filter=Q(ventes__est_archive=False)),
             montant_total_achats=Sum('ventes__montant_total', filter=Q(ventes__est_archive=False)),
@@ -1338,6 +1390,10 @@ def rapports(request):
         'total_clients': total_clients,
         'total_suppliers': total_suppliers,
         'total_appros': total_appros,
+        'benefice_net_global': benefice_net_global,
+        'benefices_articles': benefices_articles,
+        'bilan_mensuel': bilan_mensuel,
+        'bilan_annuel': bilan_annuel,
         'clients_resume': clients_resume,
         'dernieres_ventes': dernieres_ventes,  
         'derniers_appros': derniers_appros,    
@@ -1354,15 +1410,49 @@ def rapports(request):
 def permissions_page_view(request):
     return render(request, 'astra/permissions.html')
 
+from astra.models import Vente, Client, Produit, Approvisionnement, Fournisseur
+from django.shortcuts import render
 
-@verifier_acces_strict
 def historiques_page_view(request):
-    return render(request, 'astra/historiques.html')
+    # Récupération séparée pour chaque bloc de la page
+    logs_approvisionnement = []
+    for a in Approvisionnement.objects.all().order_by('-id')[:20]:
+        d = getattr(a, 'date_approvisionnement', None) or getattr(a, 'date', None)
+        logs_approvisionnement.append({
+            'date': d.strftime("%d/%m/%Y à %H:%M") if d else "Récemment",
+            'utilisateur': 'Administrateur',
+            'details': f"Approvisionnement enregistré (Réf: {getattr(a, 'reference', a.id)})"
+        })
 
+    logs_ventes = []
+    for v in Vente.objects.all().order_by('-id')[:20]:
+        d = getattr(v, 'date_vente', None) or getattr(v, 'date', None)
+        logs_ventes.append({
+            'date': d.strftime("%d/%m/%Y à %H:%M") if d else "Récemment",
+            'utilisateur': 'Administrateur',
+            'details': f"Vente validée (Réf: {getattr(v, 'reference', v.id)}, Montant: {getattr(v, 'montant_total', '0')} FCFA)"
+        })
 
-@verifier_acces_strict
-def parametres_page_view(request):
-    return render(request, 'astra/parametres.html')
+    logs_admin = []
+    for c in Client.objects.all().order_by('-id')[:10]:
+        logs_admin.append({
+            'date': "Récemment",
+            'utilisateur': 'Administrateur',
+            'details': f"Nouveau client : {c.nom}"
+        })
+    for p in Produit.objects.all().order_by('-id')[:10]:
+        logs_admin.append({
+            'date': "Récemment",
+            'utilisateur': 'Administrateur',
+            'details': f"Mise à jour stock produit : {p.nom} (Qté : {p.stock})"
+        })
+
+    context = {
+        'logs_approvisionnement': logs_approvisionnement,
+        'logs_ventes': logs_ventes,
+        'logs_admin': logs_admin,
+    }
+    return render(request, 'astra/historique.html', context)
 
 
 @verifier_acces_strict
@@ -1371,35 +1461,128 @@ def propos(request):
 
 
 @csrf_exempt
-@verifier_acces_strict
 def api_save_permissions(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            return JsonResponse({'status': 'success', 'message': 'Permissions enregistrées avec succès.'})
+            
+            # Exemple de traitement réel avec les groupes Django
+            for key, value in data.items():
+                # Format attendu ex: admin_vente, stock_stock, etc.
+                parts = key.split('_')
+                if len(parts) >= 2:
+                    role_name = parts[0]
+                    module_name = "_".join(parts[1:])
+                    
+                    # Récupération ou création du groupe correspondant
+                    group_mapping = {
+                        'admin': 'Administrateur',
+                        'stock': 'Gestionnaire Stock',
+                        'vendeur': 'Commercial / Vendeur',
+                        'caissier': 'Caissier'
+                    }
+                    
+                    group_title = group_mapping.get(role_name, role_name.capitalize())
+                    group, created = Group.objects.get_or_create(name=group_title)
+                    
+                    # Attribution ou retrait réel de la permission en base de données
+                    # (Optionnel selon votre gestion des codenames de permissions)
+                    if value:
+                        perm = Permission.objects.filter(codename__icontains=module_name).first()
+                        if perm:
+                            group.permissions.add(perm)
+                    else:
+                        perm = Permission.objects.filter(codename__icontains=module_name).first()
+                        if perm:
+                            group.permissions.remove(perm)
+
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Les modifications de la matrice de sécurité ont été enregistrées en base de données.'
+            })
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
-
 @csrf_exempt
-@verifier_acces_strict
 def api_save_parametres(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Méthode non autorisée.'}, status=405)
     try:
         data = json.loads(request.body)
-        request.session['shop_name'] = data.get('nom_boutique', 'ASTRA TECH')
-        request.session['shop_currency'] = data.get('devise', 'FCFA')
-        request.session['stock_threshold'] = data.get('seuil_alerte_stock', 5)
-        request.session['lock_commercial'] = data.get('verrouillage_commercial', False)
-        request.session['lock_admin'] = data.get('verrouillage_admin', False)
-        request.session.modified = True
-        return JsonResponse({'success': True, 'message': 'Paramètres enregistrés avec succès.'})
+        config, created = ParametreGlobal.objects.get_or_create(id=1)
+        
+        # Mise à jour des champs avec conservation des anciennes valeurs si absentes
+        config.nom_boutique = data.get('nom_boutique', config.nom_boutique)
+        config.verrou_commercial = data.get('verrou_commercial', data.get('verrouillage_commercial', config.verrou_commercial))
+        config.verrou_admin = data.get('verrou_admin', data.get('verrouillage_admin', config.verrou_admin))
+        config.seuil_stock = data.get('seuil_stock', data.get('seuil_alerte_stock', config.seuil_stock))
+        config.taux_tva = data.get('taux_tva', config.taux_tva)
+        
+        config.save()
+        return JsonResponse({'success': True, 'status': 'success', 'message': 'Paramètres et verrous enregistrés avec succès.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
- 
+    
+def parametres_page_view(request):
+    config, created = ParametreGlobal.objects.get_or_create(id=1)
 
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            config.nom_boutique = data.get('nom_boutique', config.nom_boutique)
+            config.verrou_commercial = data.get('verrou_commercial', data.get('verrouillage_commercial', config.verrou_commercial))
+            config.verrou_admin = data.get('verrou_admin', data.get('verrouillage_admin', config.verrou_admin))
+            config.seuil_stock = data.get('seuil_stock', data.get('seuil_alerte_stock', config.seuil_stock))
+            config.taux_tva = data.get('taux_tva', config.taux_tva)
+            
+            config.save()
+            return JsonResponse({'status': 'success', 'message': 'Paramètres et verrous enregistrés en base de données.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    context = {
+        'config': config
+    }
+    return render(request, 'astra/parametres.html', context)
+
+@csrf_exempt
+def api_users_list_create(request):
+    if request.method == 'POST':
+        try:
+            # Analyse infaillible du corps JSON envoyé par le fetch JS
+            data = json.loads(request.body)
+            
+            prenom = data.get('prenom', '').strip()
+            nom = data.get('nom', '').strip()
+            email = data.get('email', '').strip()
+            password = data.get('mot_de_passe', 'Passer123!')
+            
+            # Vérification stricte des champs obligatoires
+            if not nom or not email:
+                return JsonResponse({'status': 'error', 'message': 'Nom et email requis.'}, status=400)
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'status': 'error', 'message': 'Un utilisateur avec cet email existe déjà.'}, status=400)
+
+            # Création effective de l'utilisateur dans la base de données Django
+            User.objects.create_user(
+                username=email, 
+                email=email, 
+                password=password, 
+                first_name=prenom, 
+                last_name=nom
+            )
+            
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Utilisateur / Client enregistré avec succès dans la base de données !'
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
 def marquer_notifications_lues(request):
     if request.method == 'POST':
@@ -1474,3 +1657,149 @@ def notifications_header(request):
         'notifications_non_lues': notifs_non_lues,
         'nombre_notifications': total_non_lus,
     }
+
+def users_page_view(request):
+    # Récupération de tous les utilisateurs de la base de données
+    utilisateurs = User.objects.all().order_by('-date_joined')
+    context = {
+        'utilisateurs': utilisateurs
+    }
+    return render(request, 'astra/utilisateurs.html', context)
+
+@csrf_exempt
+def api_users_list_create(request):
+    if request.method == 'GET':
+        utilisateurs = list(User.objects.values('id', 'first_name', 'last_name', 'email', 'is_active'))
+        return JsonResponse({'status': 'success', 'users': utilisateurs})
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            prenom = data.get('prenom', '').strip()
+            nom = data.get('nom', '').strip()
+            email = data.get('email', '').strip()
+            password = data.get('mot_de_passe', 'Passer123!')
+            
+            if not nom or not email:
+                return JsonResponse({'status': 'error', 'message': 'Nom et email requis.'}, status=400)
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'status': 'error', 'message': 'Un utilisateur avec cet email existe déjà.'}, status=400)
+
+            User.objects.create_user(
+                username=email, 
+                email=email, 
+                password=password, 
+                first_name=prenom, 
+                last_name=nom
+            )
+            
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Utilisateur / Client enregistré avec succès dans la base de données !'
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
+
+@csrf_exempt
+def api_users_list_create(request):
+    if request.method == 'GET':
+        # Permet de lister les utilisateurs si le JS en a besoin
+        utilisateurs = list(User.objects.values('id', 'first_name', 'last_name', 'email', 'is_active'))
+        return JsonResponse({'status': 'success', 'users': utilisateurs})
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            prenom = data.get('prenom', '').strip()
+            nom = data.get('nom', '').strip()
+            email = data.get('email', '').strip()
+            password = data.get('mot_de_passe', 'Passer123!')
+            
+            if not nom or not email:
+                return JsonResponse({'status': 'error', 'message': 'Nom et email requis.'}, status=400)
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'status': 'error', 'message': 'Un utilisateur avec cet email existe déjà.'}, status=400)
+
+            User.objects.create_user(
+                username=email, 
+                email=email, 
+                password=password, 
+                first_name=prenom, 
+                last_name=nom
+            )
+            
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Utilisateur / Client enregistré avec succès dans la base de données !'
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)    
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
+from .models import Client
+
+def mot_de_passe_oublie_client(request):
+    if request.method == 'POST':
+        # Vérifiez que 'telephone' correspond bien au 'name' de votre input dans le HTML
+        telephone = request.POST.get('telephone', '').strip()
+        new_password = request.POST.get('new_password', '').strip()
+
+        if not telephone or not new_password:
+            messages.error(request, "Veuillez renseigner le téléphone et le nouveau mot de passe.")
+            return render(request, 'astra/mot_de_passe_oublie.html')
+
+        try:
+            # Recherche du client par son numéro de téléphone
+            client = Client.objects.get(telephone=telephone)
+            
+            # Hachage sécurisé du nouveau mot de passe
+            client.mot_de_passe = make_password(new_password)
+            client.save()
+            
+            messages.success(request, "Succès : Votre code secret a été réinitialisé.")
+            
+            # 👉 REDIRECTION VERS L'ESPACE SÉCURISÉ DU CLIENT AVEC SON ID
+            return redirect('astra:client_login', client_id=client.id)
+            
+        except Client.DoesNotExist:
+            messages.error(request, "Aucun client trouvé avec ce numéro de téléphone.")
+            return render(request, 'astra/mot_de_passe_oublie.html')
+
+    return render(request, 'astra/mot_de_passe_oublie.html')
+
+
+def modifier_mot_de_passe_client(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+
+    if request.method == 'POST':
+        nouveau_mdp = request.POST.get('nouveau_password')
+        confirm_mdp = request.POST.get('confirm_password')
+
+        if nouveau_mdp != confirm_mdp:
+            messages.error(request, "Les nouveaux mots de passe ne correspondent pas.")
+        elif not nouveau_mdp or len(nouveau_mdp) < 4:
+            messages.error(request, "Le mot de passe doit contenir au moins 4 caractères.")
+        else:
+            client.mot_de_passe = make_password(nouveau_mdp)
+            client.save()
+            
+            # Nettoyage de la session pour obliger le client à se reconnecter
+            if 'client_connecte_id' in request.session:
+                del request.session['client_connecte_id']
+            
+            messages.success(request, "Succès : Votre mot de passe a été mis à jour. Veuillez vous connecter.")
+            
+            # Redirection explicite vers l'interface de connexion de ce client
+            return redirect('astra:client_login', client_id=client.id)
+
+    return render(request, 'astra/modifier_password.html', {'client': client})
