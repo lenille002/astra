@@ -17,7 +17,7 @@
         <a href="{% url 'astra:rapports' %}" class="nav-item {% if request.resolver_match.url_name == 'rapports' %}active{% endif %}">Rapports</a>
     </nav>
 
-    <!-- USER MENU & NOTIFICATIONS -->
+    <!-- MENU UTILISATEUR ET NOTIFICATIONS -->
     <div class="user-menu" style="display: flex; align-items: center; gap: 16px;">
         
         <div class="notification-container" style="position: relative; display: inline-block; cursor: pointer;">
@@ -33,7 +33,7 @@
             <!-- Menu déroulant dynamique -->
             <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 340px; background: white; color: black; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 10px; z-index: 9999; padding: 15px; text-align: left;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
-                    <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem;">Notifications de cette page</h6>
+                    <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem;">Notifications importantes</h6>
                     {% if nombre_notifications and nombre_notifications > 0 %}
                         <button onclick="marquerToutCommeLu()" style="background: none; border: none; color: #007bff; font-size: 0.75rem; cursor: pointer; font-weight: bold; text-decoration: underline;">
                             Tout marquer comme lu
@@ -43,7 +43,6 @@
                 
                 <div id="notifListContainer" style="max-height: 260px; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;">
                     
-                    <!-- Notifications filtrées de la page courante -->
                     {% for notif in notifications_non_lues %}
                         <div style="padding: 10px; background: #f8f9fa; border-radius: 6px; display: flex; gap: 8px; align-items: flex-start; border-left: 4px solid #007bff;">
                             <i class="fas fa-envelope-open-text" style="color: #007bff; font-size: 1.1rem; margin-top: 2px; flex-shrink: 0;"></i>
@@ -56,7 +55,7 @@
                     {% empty %}
                         <div id="noNotifMessage" style="text-align: center; color: #666; margin: 20px 0;">
                             <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
-                            Aucune nouvelle notification pour cette section.
+                            Aucune nouvelle notification.
                         </div>
                     {% endfor %}
 
@@ -75,8 +74,10 @@
 <script>
     function toggleNotificationDropdown() {
         const dropdown = document.getElementById('notificationDropdown');
-        const isOpen = (dropdown.style.display === 'block');
-        dropdown.style.display = isOpen ? 'none' : 'block';
+        if (dropdown) {
+            const isOpen = (dropdown.style.display === 'block');
+            dropdown.style.display = isOpen ? 'none' : 'block';
+        }
     }
 
     function marquerToutCommeLu() {
@@ -99,7 +100,7 @@
                     container.innerHTML = `
                         <div style="text-align: center; color: #666; margin: 20px 0;">
                             <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
-                            Aucune nouvelle notification pour cette section.
+                            Aucune nouvelle notification.
                         </div>
                     `;
                 }

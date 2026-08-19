@@ -64,10 +64,7 @@ Astra Tech - Rapports & Analyses Globaux
         <!-- En-tête (Affichage normal) -->
         <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold mb-2 border border-orange-100">
-                    <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
-                    Synchronisé en temps réel avec la Base de Données
-                </div>
+                
                 <h1 class="text-3xl font-black text-slate-900 tracking-tight">
                     Rapports <span class="text-orange-500">& Analyses</span>
                 </h1>
@@ -99,7 +96,7 @@ Astra Tech - Rapports & Analyses Globaux
         <!-- CARTES KPI -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div class="bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
-                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Chiffre d'Affaires</span>
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">montant total des ventes</span>
                 <p class="text-2xl font-black text-white mb-1">{{ total_sales|default:0|floatformat:0 }} FCFA</p>
             </div>
             <div class="bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
@@ -184,7 +181,7 @@ Astra Tech - Rapports & Analyses Globaux
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500"><i class="fas fa-box-open text-indigo-500 mr-1.5"></i> Détail par article vendu</h3>
-                    <span class="text-[11px] text-slate-400 italic">*(CA Généré = Argent total des ventes brut perçu pour l'article)*</span>
+              
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -192,7 +189,7 @@ Astra Tech - Rapports & Analyses Globaux
                             <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
                                 <th class="p-3">Article Commercialisé</th>
                                 <th class="p-3 text-center">Qté Vendue</th>
-                                <th class="p-3 text-right">CA Généré (Brut)</th>
+                                <th class="p-3 text-right">Montant total des ventes</th>
                                 <th class="p-3 text-right text-emerald-600">Bénéfice (+ Gain)</th>
                                 <th class="p-3 text-right text-red-600">Perte (- Déficit)</th>
                             </tr>

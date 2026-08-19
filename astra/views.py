@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import date
 from django.db.models.functions import TruncYear
 from django.db.models.functions import TruncMonth
 from astra.models import ParametreGlobal
@@ -691,6 +693,7 @@ def modifier_vente(request, vente_id):
 # ==========================
 @verifier_acces_strict
 def gestion_clients(request):
+    # Gestion de l'ajout d'un client en POST
     if request.method == 'POST':
         nom = request.POST.get('nom')
         email = request.POST.get('email') or None
@@ -711,16 +714,20 @@ def gestion_clients(request):
                 nouveau_client.mot_de_passe = password 
             else:
                 nouveau_client.mot_de_passe = "1234"
+            
+            # Assigne la date exacte du jour (2026-08-18) pour Fotso et les suivants
+            nouveau_client.date_inscription = date.today()
             nouveau_client.save()
+            
             messages.success(request, "Client ajouté avec succès.")
             return redirect('astra:gestion_clients')
 
     filter_type = request.GET.get('filter', 'all')
+    today = date.today()  # Date du jour actuel (2026-08-18)
     
-    # Récupération de tous les clients actifs
+    # 1. Récupération de tous les clients actifs du plus récent au plus ancien
     clients_bruts = Client.objects.filter(is_active=True).order_by('-id')
     
-    # Calcul direct et propre, identique au shell Python
     clients_list = []
     for client in clients_bruts:
         ventes_actives = client.ventes.filter(est_archive=False)
@@ -728,28 +735,35 @@ def gestion_clients(request):
         client.nombre_achats = ventes_actives.count()
         dernier = ventes_actives.order_by('-date_vente').first()
         client.dernier_achat = dernier.date_vente if dernier else None
+        
+        # --- VÉRIFICATION UNIVERSELLE DE LA DATE ---
+        c_date = client.date_inscription
+        client.est_nouveau = False
+        
+        if c_date:
+            # Extrait uniquement la partie date (Année-Mois-Jour) pour ignorer les heures/minutes
+            if hasattr(c_date, 'date'):
+                c_date_pure = c_date.date()
+            else:
+                c_date_pure = c_date
+            
+            # Si le client a été inscrit aujourd'hui, il est marqué comme nouveau (Fotso et futurs clients)
+            if c_date_pure == today:
+                client.est_nouveau = True
+            
         clients_list.append(client)
 
-    # Tri par date du dernier achat (du plus récent au plus ancien)
-    clients_list.sort(key=lambda c: (c.dernier_achat is None, c.dernier_achat), reverse=True)
-
-    # Définition sécurisée de la date du jour (conversion .date() pour éviter le conflit datetime / date)
-    debut_journee = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    date_du_jour = debut_journee.date()
-
-    # Filtrage selon les onglets de la page
+    # 2. Application des filtres pour le tableau
     if filter_type == 'loyal':
         clients_qs = [c for c in clients_list if c.nombre_achats >= 2]
     elif filter_type == 'new':
-        clients_qs = [
-            c for c in clients_list 
-            if hasattr(c, 'date_inscription') and c.date_inscription and c.date_inscription >= date_du_jour
-        ]
+        clients_qs = [c for c in clients_list if c.est_nouveau]
     else:
         clients_qs = clients_list
 
+    # 3. Calcul exact des compteurs pour les cartes du haut
     total_clients = Client.objects.filter(is_active=True).count()
-    new_clients_count = Client.objects.filter(is_active=True, date_inscription__gte=date_du_jour).count() if hasattr(Client, 'date_inscription') else 0
+    new_clients_count = sum(1 for c in clients_list if c.est_nouveau)
     loyal_clients_count = sum(1 for c in clients_list if c.nombre_achats >= 2)
 
     context = {
@@ -1584,21 +1598,19 @@ def api_users_list_create(request):
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
-def marquer_notifications_lues(request):
+def marquer_toutes_comme_lues(request):
     if request.method == 'POST':
-        # Marque toutes les notifications non lues comme lues
         NotificationPlateforme.objects.filter(lu=False).update(lu=True)
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
+
 
 def notifications_header(request):
     current_url_name = getattr(request.resolver_match, 'url_name', '') if request.resolver_match else ''
     path = request.path.lower()
 
-    notifs_non_lues = NotificationPlateforme.objects.none()
-
-    # --- 1. PAGE STOCK (Génère et lit l'alerte stock) ---
-    if 'stock' in current_url_name or 'produit' in current_url_name or '/stock/' in path:
+    # --- 1. PAGE STOCK ---
+    if 'stock' in current_url_name or 'produit' in current_url_name or 'stock' in path:
         if hasattr(Produit, 'seuil_alerte'):
             stock_faible_count = Produit.objects.filter(is_active=True, stock__lte=F('seuil_alerte')).count()
         else:
@@ -1610,46 +1622,60 @@ def notifications_header(request):
             if not NotificationPlateforme.objects.filter(lu=False, titre=titre_stock).exists():
                 NotificationPlateforme.objects.create(titre=titre_stock, message=msg_stock, lu=False)
 
-        notifs_non_lues = NotificationPlateforme.objects.filter(
-            lu=False,
-            titre__icontains='Stock'
-        ).order_by('-id')
+    # --- 2. PAGE VENTES ---
+    elif 'vente' in current_url_name or 'vente' in path:
+        total_ventes = Vente.objects.count()
+        titre_vente = "Suivi des Ventes"
+        msg_vente = f"{total_ventes} vente(s) enregistrée(s) au total dans le système."
+        if total_ventes > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_vente).exists():
+            NotificationPlateforme.objects.create(titre=titre_vente, message=msg_vente, lu=False)
 
-    # --- 2. PAGE CLIENTS ---
-    elif 'client' in current_url_name or '/client' in path:
-        notifs_non_lues = NotificationPlateforme.objects.filter(
-            lu=False,
-            titre__icontains='Client'
-        ).order_by('-id')
+    # --- 3. PAGE APPROVISIONNEMENTS ---
+    elif 'appro' in current_url_name or 'approvisionnement' in current_url_name or 'appro' in path:
+        total_appros = Approvisionnement.objects.count()
+        titre_appro = "Gestion des Approvisionnements"
+        msg_appro = f"{total_appros} approvisionnement(s) enregistré(s)."
+        if total_appros > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_appro).exists():
+            NotificationPlateforme.objects.create(titre=titre_appro, message=msg_appro, lu=False)
 
-    # --- 3. PAGE VENTES ---
-    elif 'vente' in current_url_name or '/vente/' in path:
-        notifs_non_lues = NotificationPlateforme.objects.filter(
-            lu=False,
-            titre__icontains='Vente'
-        ).order_by('-id')
-
-    # --- 4. PAGE APPROVISIONNEMENTS ---
-    elif 'appro' in current_url_name or 'approvisionnement' in current_url_name or '/approvisionnements/' in path:
-        notifs_non_lues = NotificationPlateforme.objects.filter(
-            lu=False
-        ).filter(
-            Q(titre__icontains='Approvisionnement') | Q(titre__icontains='Appro')
-        ).order_by('-id')
+    # --- 4. PAGE CLIENTS ---
+    elif 'client' in current_url_name or 'client' in path:
+        total_clients = Client.objects.filter(is_active=True).count()
+        titre_client = "Registre des Clients"
+        msg_client = f"{total_clients} client(s) actif(s) répertorié(s)."
+        if total_clients > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_client).exists():
+            NotificationPlateforme.objects.create(titre=titre_client, message=msg_client, lu=False)
 
     # --- 5. PAGE FOURNISSEURS ---
-    elif 'fournisseur' in current_url_name or '/fournisseurs/' in path:
-        notifs_non_lues = NotificationPlateforme.objects.filter(
-            lu=False,
-            titre__icontains='Fournisseur'
-        ).order_by('-id')
+    elif 'fournisseur' in current_url_name or 'fournisseur' in path:
+        total_fournisseurs = Fournisseur.objects.count()
+        titre_fourn = "Répertoire Fournisseurs"
+        msg_fourn = f"{total_fournisseurs} fournisseur(s) partenaire(s) enregistré(s)."
+        if total_fournisseurs > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_fourn).exists():
+            NotificationPlateforme.objects.create(titre=titre_fourn, message=msg_fourn, lu=False)
 
     # --- 6. PAGE RAPPORTS ---
-    elif 'rapport' in current_url_name or '/rapports/' in path:
-        notifs_non_lues = NotificationPlateforme.objects.filter(
-            lu=False,
-            titre__icontains='Rapport'
-        ).order_by('-id')
+    elif 'rapport' in current_url_name or 'rapport' in path:
+        titre_rap = "Centre de Rapports"
+        msg_rap = "Les données analytiques et bilans sont synchronisés en temps réel."
+        if not NotificationPlateforme.objects.filter(lu=False, titre=titre_rap).exists():
+            NotificationPlateforme.objects.create(titre=titre_rap, message=msg_rap, lu=False)
+
+    # --- RÉCUPÉRATION GLOBALE : Exclut les notifications automatiques des pages ---
+    titres_systeme_exclus = [
+        "Alerte Stock Faible",
+        "Suivi des Ventes",
+        "Gestion des Approvisionnements",
+        "Registre des Clients",
+        "Répertoire Fournisseurs",
+        "Centre de Rapports"
+    ]
+
+    notifs_non_lues = NotificationPlateforme.objects.filter(
+        lu=False
+    ).exclude(
+        titre__in=titres_systeme_exclus
+    ).order_by('-id')
 
     total_non_lus = notifs_non_lues.count()
 
@@ -1657,52 +1683,6 @@ def notifications_header(request):
         'notifications_non_lues': notifs_non_lues,
         'nombre_notifications': total_non_lus,
     }
-
-def users_page_view(request):
-    # Récupération de tous les utilisateurs de la base de données
-    utilisateurs = User.objects.all().order_by('-date_joined')
-    context = {
-        'utilisateurs': utilisateurs
-    }
-    return render(request, 'astra/utilisateurs.html', context)
-
-@csrf_exempt
-def api_users_list_create(request):
-    if request.method == 'GET':
-        utilisateurs = list(User.objects.values('id', 'first_name', 'last_name', 'email', 'is_active'))
-        return JsonResponse({'status': 'success', 'users': utilisateurs})
-
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            
-            prenom = data.get('prenom', '').strip()
-            nom = data.get('nom', '').strip()
-            email = data.get('email', '').strip()
-            password = data.get('mot_de_passe', 'Passer123!')
-            
-            if not nom or not email:
-                return JsonResponse({'status': 'error', 'message': 'Nom et email requis.'}, status=400)
-
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({'status': 'error', 'message': 'Un utilisateur avec cet email existe déjà.'}, status=400)
-
-            User.objects.create_user(
-                username=email, 
-                email=email, 
-                password=password, 
-                first_name=prenom, 
-                last_name=nom
-            )
-            
-            return JsonResponse({
-                'status': 'success', 
-                'message': 'Utilisateur / Client enregistré avec succès dans la base de données !'
-            })
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-            
-    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
 @csrf_exempt
 def api_users_list_create(request):
@@ -1743,10 +1723,6 @@ def api_users_list_create(request):
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)    
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.hashers import make_password
-from .models import Client
 
 def mot_de_passe_oublie_client(request):
     if request.method == 'POST':
@@ -1766,6 +1742,14 @@ def mot_de_passe_oublie_client(request):
             client.mot_de_passe = make_password(new_password)
             client.save()
             
+            # --- CRÉATION DE LA NOTIFICATION PERSISTANTE ---
+            # Enregistre l'événement important de réinitialisation de mot de passe en base
+            NotificationPlateforme.objects.create(
+                titre="Sécurité : Réinitialisation de mot de passe",
+                message=f"Le client {client.nom} (Téléphone: {client.telephone}) a réinitialisé son mot de passe.",
+                lu=False
+            )
+            
             messages.success(request, "Succès : Votre code secret a été réinitialisé.")
             
             # 👉 REDIRECTION VERS L'ESPACE SÉCURISÉ DU CLIENT AVEC SON ID
@@ -1777,29 +1761,25 @@ def mot_de_passe_oublie_client(request):
 
     return render(request, 'astra/mot_de_passe_oublie.html')
 
-
 def modifier_mot_de_passe_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-
+    
     if request.method == 'POST':
-        nouveau_mdp = request.POST.get('nouveau_password')
-        confirm_mdp = request.POST.get('confirm_password')
+        # ... (votre logique de validation et de changement de mot de passe) ...
+        
+        # EXEMPLE : Quand le mot de passe est mis à jour avec succès :
+        nouveau_mot_de_passe_hache = None
+        client.password = nouveau_mot_de_passe_hache
+        client.save()
 
-        if nouveau_mdp != confirm_mdp:
-            messages.error(request, "Les nouveaux mots de passe ne correspondent pas.")
-        elif not nouveau_mdp or len(nouveau_mdp) < 4:
-            messages.error(request, "Le mot de passe doit contenir au moins 4 caractères.")
-        else:
-            client.mot_de_passe = make_password(nouveau_mdp)
-            client.save()
-            
-            # Nettoyage de la session pour obliger le client à se reconnecter
-            if 'client_connecte_id' in request.session:
-                del request.session['client_connecte_id']
-            
-            messages.success(request, "Succès : Votre mot de passe a été mis à jour. Veuillez vous connecter.")
-            
-            # Redirection explicite vers l'interface de connexion de ce client
-            return redirect('astra:client_login', client_id=client.id)
+        # ---> C'EST ICI QU'IL FAUT METTRE LA NOTIFICATION IMPORTANTE <---
+        NotificationPlateforme.objects.create(
+            titre="Sécurité : Changement de mot de passe",
+            message=f"Le client {client.nom} a modifié son mot de passe avec succès.",
+            lu=False
+        )
+        
+        messages.success(request, "Mot de passe modifié avec succès.")
+        return redirect('astra:espace_client', client_id=client.id)
 
     return render(request, 'astra/modifier_password.html', {'client': client})

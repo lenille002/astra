@@ -65,5 +65,5 @@ urlpatterns = [
     path("historiques/", views.historiques_page_view, name="historiques_page"),
     path("parametres/", views.parametres_page_view, name="parametres_page"),
     path("api/parametres/", views.api_save_parametres, name="api_save_parametres"),
-    path('notifications/marquer-lues/', views.marquer_notifications_lues, name='marquer_lues'),
+    path('notifications/marquer-lues/', views.marquer_toutes_comme_lues, name='marquer_lues'),
 ]
