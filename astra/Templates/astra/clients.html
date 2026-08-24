@@ -15,6 +15,7 @@
         })();
     </script>
 <style>
+    /* --- ÉTAT CLAIR PAR DÉFAUT --- */
     body, .app-layout, .app-main {
         background-color: #f8fafc !important;
         background: #f8fafc !important;
@@ -171,6 +172,7 @@
         outline: none !important;
         transition: all 0.2s ease !important;
         background-color: #f8fafc !important;
+        color: #1e293b !important;
     }
 
     .astra-search-input:focus {
@@ -242,92 +244,89 @@
         background-color: #f8fafc !important;
     }
 
-    .astra-modal {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(15, 23, 42, 0.6) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        z-index: 9999 !important;
-    }
 
-    .astra-modal.hidden {
-        display: none !important;
-    }
-
-    .astra-modal-card {
-        background: white !important;
-        padding: 30px !important;
-        border-radius: 16px !important;
-        width: 100% !important;
-        max-width: 500px !important;
-        max-height: 90vh !important;
-        overflow-y: auto !important;
-        position: relative !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
-        color: #1e293b !important;
-    }
-
-    .astra-modal-card p, 
-    .astra-modal-card div {
-        color: #334155 !important;
-    }
-
-    .astra-form-group {
-        margin-bottom: 15px !important;
-        text-align: left !important;
-    }
-
-    .astra-form-group label {
-        display: block !important;
-        font-weight: 600 !important;
-        margin-bottom: 5px !important;
-        color: #1e293b !important;
-    }
-
-    .astra-form-group input {
-        width: 100% !important;
-        padding: 10px 14px !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 8px !important;
-        font-size: 1rem !important;
-    }
-
-    .close-modal-x {
-        position: absolute !important;
-        top: 15px !important;
-        right: 15px !important;
-        border: none !important;
-        background: none !important;
-        font-size: 1.5rem !important;
-        cursor: pointer !important;
-        color: #64748b !important;
-        transition: color 0.2s ease !important;
-    }
-    .close-modal-x:hover {
-        color: #0f172a !important;
-    }
-
-    /* --- MODE NUIT GLOBAL --- */
-    html.dark body {
+    /* ==========================================================
+       --- MODE NUIT CORRIGÉ & FORCÉ POUR CETTE PAGE ---
+       ========================================================== */
+    html.dark body, 
+    html.dark .app-layout, 
+    html.dark .app-main {
         background-color: #0f172a !important;
+        background: #0f172a !important;
         color: #f1f5f9 !important;
     }
-    html.dark .astra-content-box, html.dark .astra-modal-card {
+
+    /* Titres principaux et textes de la page */
+    html.dark .astra-title {
+        color: #f1f5f9 !important;
+    }
+
+    /* Boîte de contenu principale (qui était blanche) */
+    html.dark .astra-content-box {
         background-color: #1e293b !important;
         border-color: #334155 !important;
         color: #f1f5f9 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     }
-    html.dark .astra-modal-card p,
-    html.dark .astra-modal-card div,
-    html.dark .astra-modal-card h2 {
+
+    /* Tableaux en mode nuit */
+    html.dark .astra-table {
+        background-color: transparent !important;
         color: #f1f5f9 !important;
     }
-    html.dark input {
+
+    html.dark .astra-table th {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+        border-bottom: 2px solid #334155 !important;
+    }
+
+    html.dark .astra-table td {
+        border-bottom-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+
+    html.dark .astra-table tbody tr:hover {
+        background-color: rgba(51, 65, 85, 0.4) !important;
+    }
+
+    /* Champs de recherche et filtres en mode nuit */
+    html.dark .astra-search-input {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #ffffff !important;
+    }
+
+    html.dark .astra-search-input::placeholder {
+        color: #64748b !important;
+    }
+
+    html.dark .btn-filter {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+
+    html.dark .btn-filter.active {
+        background-color: #4338ca !important;
+        color: white !important;
+        border-color: #4338ca !important;
+    }
+
+    /* Modales éventuelles */
+    html.dark .astra-modal-card {
+        background: #1e293b !important;
+        color: #f1f5f9 !important;
+        border: 1px solid #334155 !important;
+    }
+
+    html.dark .astra-modal-card p, 
+    html.dark .astra-modal-card div,
+    html.dark .astra-form-group label {
+        color: #cbd5e1 !important;
+    }
+
+    html.dark .astra-form-group input {
         background-color: #0f172a !important;
         border-color: #334155 !important;
         color: #ffffff !important;

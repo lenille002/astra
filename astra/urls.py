@@ -8,16 +8,22 @@ urlpatterns = [
     path("", views.login_view, name="login"),
     path("connexion/", views.connexion, name="connexion"),
     path("register/", views.register, name="register"),
-    path("logout/", views.deconnexion, name="logout"),
-    path("accueil/", views.accueil, name="accueil"),
-    path("tokens/", views.token_accueil, name="token_accueil"),
 
+    path('accueil/', views.accueil, name='accueil'),
+    path('logout/', views.deconnexion, name='logout'),
+    path('tokens/', views.token_accueil, name='token_accueil'),
     # Fournisseurs
-    path("fournisseurs/", views.fournisseurs, name="fournisseurs"),
-    path("fournisseurs/supprimer/<int:pk>/", views.supprimer_fournisseur, name="supprimer_fournisseur"),
-    path('fournisseurs/email/<int:fournisseur_id>/', views.envoyer_email_fournisseur, name='envoyer_email_fournisseur'),   
-   
-    # Ventes & Stocks
+
+    # ... vos autres routes ...
+    path('fournisseurs/', views.fournisseurs, name='fournisseurs'),
+    path('fournisseurs/supprimer/<int:pk>/', views.supprimer_fournisseur, name='supprimer_fournisseur'),
+    path('fournisseurs/email/<int:fournisseur_id>/', views.envoyer_email_fournisseur, name='envoyer_email_fournisseur'),
+    path('fournisseur/<int:fournisseur_id>/verification-app/', views.verification_mot_de_passe_app, name='verifier_mot_de_passe_app'),
+
+    path('fournisseur/<int:fournisseur_id>/connexion/', views.connexion_fournisseur, name='connexion_fournisseur'),
+    path('fournisseur/espace/<int:pk>/', views.espace_fournisseur, name='espace_fournisseur'),
+    # ... la suite des routes ...
+
     path("vente/", views.ventes, name="ventes"),
     path("vente/details/<int:vente_id>/", views.details_vente, name="details_vente"),
     path("vente/enregistrer/", views.enregistrer_vente, name="enregistrer_vente"),
@@ -66,4 +72,5 @@ urlpatterns = [
     path("parametres/", views.parametres_page_view, name="parametres_page"),
     path("api/parametres/", views.api_save_parametres, name="api_save_parametres"),
     path('notifications/marquer-lues/', views.marquer_toutes_comme_lues, name='marquer_lues'),
+    path('notifications/<int:pk>/', views.detail_notification, name='detail_notification'),
 ]

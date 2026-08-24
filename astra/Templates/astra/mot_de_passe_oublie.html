@@ -1,42 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Astra Tech - Réinitialisation du mot de passe{% endblock %}
+{% block title %}Astra Tech - Réinitialisation rapide{% endblock %}
 
 {% block css %}
 <style>
     body, .app-layout, .app-main {
         background-color: #030712 !important;
     }
-
-    @keyframes floatOrb1 {
-        0%, 100% { transform: translate(0px, 0px) scale(1); }
-        50% { transform: translate(35px, -45px) scale(1.1); }
-    }
-
-    @keyframes floatOrb2 {
-        0%, 100% { transform: translate(0px, 0px) scale(1); }
-        50% { transform: translate(-45px, 35px) scale(1.15); }
-    }
-
-    @keyframes pulseGlow {
-        0%, 100% { opacity: 0.4; }
-        50% { opacity: 0.75; }
-    }
-
-    .orb-1 {
-        animation: floatOrb1 9s ease-in-out infinite, pulseGlow 4s ease-in-out infinite;
-    }
-
-    .orb-2 {
-        animation: floatOrb2 11s ease-in-out infinite, pulseGlow 5s ease-in-out infinite;
-    }
-
-    .tech-grid {
-        background-image: radial-gradient(rgba(249, 115, 22, 0.12) 1px, transparent 1px);
-        background-size: 32px 32px;
-    }
-
     .astra-input:focus {
         border-color: #f97316 !important;
         background-color: #ffffff !important;
@@ -46,26 +17,18 @@
 {% endblock %}
 
 {% block content %}
-<div style="width: 100%; min-height: 85vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 25%, #1e1b4b 0%, #090d16 75%);">
+<div style="width: 100%; min-height: 85vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; background: radial-gradient(circle at 50% 25%, #1e1b4b 0%, #090d16 75%);">
     
-    <!-- Grille technologique -->
-    <div class="tech-grid" style="position: absolute; inset: 0; opacity: 0.7; pointer-events: none;"></div>
-
-    <!-- Orbes lumineux -->
-    <div class="orb-1" style="position: absolute; top: 10%; left: 15%; width: 340px; height: 340px; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 50%; filter: blur(95px); opacity: 0.35; pointer-events: none;"></div>
-    <div class="orb-2" style="position: absolute; bottom: 5%; right: 15%; width: 400px; height: 400px; background: linear-gradient(135deg, #4338ca, #3b82f6); border-radius: 50%; filter: blur(110px); opacity: 0.4; pointer-events: none;"></div>
-
-    <!-- Carte principale -->
-    <div style="width: 100%; max-width: 440px; background: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(16px); border-radius: 30px; box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.4) inset; padding: 40px; position: relative; z-index: 10;">
+    <div style="width: 100%; max-width: 440px; background: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(16px); border-radius: 30px; box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6); padding: 40px; position: relative; z-index: 10;">
         
         <!-- En-tête -->
         <div style="text-align: center; margin-bottom: 25px;">
             <div style="display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 70px; border-radius: 22px; background: linear-gradient(135deg, #f97316, #ea580c); color: #ffffff; box-shadow: 0 15px 25px -5px rgba(249, 115, 22, 0.45); margin-bottom: 16px;">
-                <i class="fa-solid fa-lock" style="font-size: 26px; color: #ffffff !important;"></i>
+                <i class="fa-solid fa-mobile-screen-button" style="font-size: 26px; color: #ffffff !important;"></i>
             </div>
-            <h2 style="font-size: 24px; font-weight: 900; color: #0f172a !important; margin: 0 0 8px 0; letter-spacing: -0.5px;">Récupération</h2>
+            <h2 style="font-size: 24px; font-weight: 900; color: #0f172a !important; margin: 0 0 8px 0;">Récupération Rapide</h2>
             <p style="font-size: 13px; color: #475569 !important; margin: 0; line-height: 1.5;">
-                Veuillez renseigner votre téléphone et définir votre nouveau mot de passe.
+                Similaire à la réinitialisation mobile : confirmez votre numéro et votre date de naissance.
             </p>
         </div>
         
@@ -74,47 +37,58 @@
             <div style="margin-bottom: 20px;">
                 {% for message in messages %}
                     <div style="padding: 12px 16px; background-color: {% if message.tags == 'error' %}#fef2f2{% else %}#f0fdf4{% endif %} !important; color: {% if message.tags == 'error' %}#991b1b{% else %}#166534{% endif %} !important; font-size: 12px; font-weight: 700; border-radius: 12px; border: 1px solid {% if message.tags == 'error' %}#fecaca{% else %}#bbf7d0{% endif %}; display: flex; align-items: center; gap: 10px;">
-                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}" style="color: {% if message.tags == 'error' %}#dc2626{% else %}#22c55e{% endif %} !important;"></i>
+                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
                         <span>{{ message }}</span>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <!-- Formulaire de réinitialisation complet -->
-        <form method="POST" action="{% url 'astra:mot_de_passe_oublie_client' %}" style="margin: 0;">
-            {% csrf_token %}
-            
+       <!-- ✅ Correct : Pointe vers la vue de gestion du mot de passe oublié -->
+<form method="POST" action="{% url 'astra:mot_de_passe_oublie_client' %}">    
+    {% csrf_token %} 
+            <!-- Numéro de téléphone -->
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #475569 !important; margin-bottom: 8px;">Numéro de téléphone / Identifiant</label>
+                <label style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569 !important; margin-bottom: 8px;">Numéro de téléphone</label>
                 <div style="position: relative;">
                     <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; z-index: 2;">
                         <i class="fa-solid fa-phone"></i>
                     </span>
-                    <input type="text" name="telephone" required placeholder="Ex: 699000000" class="astra-input" style="width: 100%; padding: 14px 16px 14px 45px; background-color: #f8fafc !important; border: 1.5px solid #cbd5e1 !important; border-radius: 14px; font-size: 14px; font-weight: 600; color: #0f172a !important; outline: none; box-sizing: border-box; transition: all 0.2s ease;">
+                    <input type="text" name="telephone" required placeholder="Ex: 699000000" class="astra-input" style="width: 100%; padding: 14px 16px 14px 45px; background-color: #f8fafc !important; border: 1.5px solid #cbd5e1 !important; border-radius: 14px; font-size: 14px; font-weight: 600; color: #0f172a !important; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
+            <!-- Date de naissance (Vérification instantanée) -->
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569 !important; margin-bottom: 8px;">Date de naissance</label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; z-index: 2;">
+                        <i class="fa-solid fa-calendar"></i>
+                    </span>
+                    <input type="date" name="date_naissance" required class="astra-input" style="width: 100%; padding: 14px 16px 14px 45px; background-color: #f8fafc !important; border: 1.5px solid #cbd5e1 !important; border-radius: 14px; font-size: 14px; font-weight: 600; color: #0f172a !important; outline: none; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <!-- Nouveau code / mot de passe -->
             <div style="margin-bottom: 22px;">
-                <label style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #475569 !important; margin-bottom: 8px;">Nouveau mot de passe</label>
+                <label style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569 !important; margin-bottom: 8px;">Nouveau mot de passe</label>
                 <div style="position: relative;">
                     <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; z-index: 2;">
                         <i class="fa-solid fa-key"></i>
                     </span>
-                    <input type="password" name="new_password" required placeholder="Nouveau mot de passe sécurisé" class="astra-input" style="width: 100%; padding: 14px 16px 14px 45px; background-color: #f8fafc !important; border: 1.5px solid #cbd5e1 !important; border-radius: 14px; font-size: 14px; font-weight: 600; color: #0f172a !important; outline: none; box-sizing: border-box; transition: all 0.2s ease;">
+                    <input type="password" name="new_password" required placeholder="Nouveau mot de passe" class="astra-input" style="width: 100%; padding: 14px 16px 14px 45px; background-color: #f8fafc !important; border: 1.5px solid #cbd5e1 !important; border-radius: 14px; font-size: 14px; font-weight: 600; color: #0f172a !important; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
-            <button type="submit" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #f97316, #ea580c) !important; color: #ffffff !important; font-weight: 800; border-radius: 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; box-shadow: 0 10px 20px -3px rgba(249, 115, 22, 0.4); transition: transform 0.2s, box-shadow 0.2s;">
-                Mettre à jour le mot de passe
+            <button type="submit" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #f97316, #ea580c) !important; color: #ffffff !important; font-weight: 800; border-radius: 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; box-shadow: 0 10px 20px -3px rgba(249, 115, 22, 0.4);">
+                Valider le nouveau mot de passe
             </button>
         </form>
 
         <!-- Lien de retour -->
         <div style="margin-top: 22px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
             <p style="font-size: 13px; color: #475569 !important; margin: 0;">
-                Vous vous souvenez de votre mot de passe ? 
-                <a href="javascript:history.back();" style="color: #f97316 !important; font-weight: 800; text-decoration: underline;">Retour</a>
+                <a href="javascript:history.back();" style="color: #f97316 !important; font-weight: 800; text-decoration: none;">← Retour à la connexion</a>
             </p>
         </div>
 

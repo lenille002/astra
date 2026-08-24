@@ -105,7 +105,6 @@ class Produit(models.Model):
 # ==================================================
 # CLIENTS
 # ==================================================
-
 class Client(models.Model):
     reference = models.CharField(
         max_length=100, unique=True, blank=True, null=True
@@ -113,6 +112,7 @@ class Client(models.Model):
     nom = models.CharField(max_length=255)
     telephone = models.CharField(max_length=50, blank=True)
     email = models.EmailField(blank=True, null=True)
+    date_naissance = models.DateField(blank=True, null=True) # 👈 AJOUTÉ ICI
     adresse = models.TextField(blank=True)
     mot_de_passe = models.CharField(max_length=255, blank=True, null=True)
     date_inscription = models.DateField(auto_now_add=True, null=True, blank=True)
@@ -136,8 +136,6 @@ class Client(models.Model):
     def __str__(self):
         statut = 'Actif' if self.is_active else 'Inactif'
         return f'{self.nom} ({self.reference}) - {statut}'
-
-
 # ==================================================
 # VENTES
 # ==================================================
@@ -248,6 +246,11 @@ class Fournisseur(models.Model):
 
     email = models.EmailField(
         blank=True, null=True
+    )
+
+    mot_de_passe = models.CharField(
+        max_length=255, 
+        default='1234'
     )
 
     is_active = models.BooleanField(
@@ -388,14 +391,26 @@ class Token(models.Model):
 # NOTIFICATIONS PLATEFORME
 # ==================================================
 class NotificationPlateforme(models.Model):
-    titre = models.CharField(max_length=255)
+    CATEGORIES = (
+        ('ventes', 'Ventes'),
+        ('stocks', 'Stocks'),
+        ('appro', 'Approvisionnement'),
+        ('clients', 'Clients'),
+        ('fournisseurs', 'Fournisseurs'),
+        ('rapports', 'Rapports'),
+    )
+    titre = models.CharField(max_length=200)
     message = models.TextField()
-    date_creation = models.DateTimeField(auto_now_add=True)
+    # Ajout d'un choix par défaut pour éviter les champs vides
+    categorie = models.CharField(max_length=20, choices=CATEGORIES, default='clients')
     lu = models.BooleanField(default=False)
+    date_creation = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        statut = "Lu" if self.lu else "Non lu"
-        return f"{self.titre} - {statut}"
+        return f"[{self.categorie}] {self.titre} - {'Lu' if self.lu else 'Non lu'}"
+    
+    def __str__(self):
+        return f"{self.titre} - {'Lu' if self.lu else 'Non lu'}"
 
 from django.db import models
 
@@ -407,4 +422,38 @@ class ParametreGlobal(models.Model):
     taux_tva = models.DecimalField(max_digits=5, decimal_places=2, default=19.25)
 
     def __str__(self):
-        return "Configuration Globale de la Boutique"        
+        return "Configuration Globale de la Boutique"  
+
+
+
+from astra.models import NotificationPlateforme
+
+def creer_notification(titre, message):
+    try:
+        NotificationPlateforme.objects.create(
+            titre=titre,
+            message=message,
+            lu=False
+        )
+    except Exception as e:
+        print(f"Erreur lors de la création de la notification : {e}")       
+
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Utilisateur")
+    titre = models.CharField(max_length=200, verbose_name="Titre")
+    message = models.TextField(verbose_name="Message")
+    lue = models.BooleanField(default=False, verbose_name="Lue")
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    url = models.CharField(max_length=255, blank=True, null=True, verbose_name="Lien associé") # Optionnel pour pointer vers une page spécifique
+
+    def __str__(self):
+        return f"{self.titre} - {self.user.username}"
+
+    class Meta:
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+        ordering = ['-date_creation']               

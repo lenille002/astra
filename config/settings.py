@@ -25,6 +25,15 @@ DEBUG = os.getenv("DEBUG") == "True"
 # Autorise les connexions locales et depuis d'autres appareils du réseau pour les tests
 ALLOWED_HOSTS = ['*']
 
+# AJOUT CRITIQUE : Autorise les requêtes POST/Connexion depuis votre IP locale et Serveo
+CSRF_TRUSTED_ORIGINS = [
+    "http://192.168.0.120:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://*.serveousercontent.com",
+    "https://*.serveo.net",
+]
+
 # ==================================================
 # APPLICATIONS
 # ==================================================
@@ -54,9 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    # Votre middleware de verrouillage global
-    'astra.middleware.VerrouillageGlobalMiddleware',
+    # 'astra.middleware.VerrouillageGlobalMiddleware', # 👈 Commenté pour le test
 ]
 
 # ==================================================
@@ -76,10 +83,10 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'astra.context_processors.notifications_header',
+                'django.template.context_processors.request', # Requis pour l'admin et vos vérifications d'URL
+                'django.contrib.auth.context_processors.auth', # Requis pour l'authentification admin
+                'django.contrib.messages.context_processors.messages', # Requis pour les messages admin
+                'astra.context_processors.notifications_processor',
             ],
         },
     },
@@ -168,11 +175,12 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 # AUTHENTIFICATION & SESSIONS
 # ==================================================
 
-LOGIN_URL = "astra:connexion"
+# Harmonisé sur 'login' pour correspondre aux templates et routes
+LOGIN_URL = "astra:login"
 
 LOGIN_REDIRECT_URL = "astra:accueil"
 
-LOGOUT_REDIRECT_URL = "astra:connexion"
+LOGOUT_REDIRECT_URL = "astra:login"
 
 # Paramètres pour assurer la stabilité des sessions entre navigateurs
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

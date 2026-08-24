@@ -21,22 +21,68 @@ Astra Tech - Rapports & Analyses Globaux
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-    body, main, .main-content, #content {
-        background-color: #f8fafc !important;
-        color: #0f172a !important;
+    /* --- ÉTAT CLAIR PAR DÉFAUT --- */
+    html,
+    body,
+    .main-container {
+        background-color: #ffffff !important;
+        background: #ffffff !important;
     }
 
-    @media print {
-        nav, header, .sidebar, button, form, a, #mainPrintBtn {
-            display: none !important;
-        }
-        body { background: white !important; color: black !important; }
-        .bg-white { border: none !important; box-shadow: none !important; }
-        .print-grid { display: block !important; width: 100% !important; }
-        h2 { border-bottom: 2px solid #000 !important; padding-bottom: 10px; margin-bottom: 20px; }
-        button[onclick] { display: none !important; }
+    /* --- MODE NUIT GLOBAL DE LA PAGE --- */
+    html.dark body,
+    body.dark {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* Forcer le conteneur principal à s'adapter proprement si besoin, ou garder le fond blanc textuel lisible */
+    html.dark .bg-white,
+    body.dark .bg-white {
+        /* Si vous souhaitez que le bloc reste blanc mais lisible : */
+        background-color: #ffffff !important;
+    }
+
+    /* Rendre le titre "Détail par article vendu" et les sous-titres parfaitement visibles */
+    html.dark h1, body.dark h1,
+    html.dark h2, body.dark h2,
+    html.dark h3, body.dark h3 {
+        color: #0f172a !important; /* Texte sombre bien lisible sur le bloc blanc */
+    }
+
+    html.dark p, body.dark p {
+        color: #475569 !important; /* Description en gris foncé lisible */
+    }
+
+    /* --- ACTIVATION DU MODE NUIT POUR LE TABLEAU --- */
+    html.dark table, body.dark table {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+    }
+
+    html.dark th, body.dark th {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    html.dark td, body.dark td {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    html.dark tr:hover, body.dark tr:hover {
+        background-color: rgba(51, 65, 85, 0.4) !important;
+    }
+
+    /* Champs de saisie et formulaires en mode nuit */
+    html.dark input, html.dark select,
+    body.dark input, body.dark select {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #ffffff !important;
     }
 </style>
 {% endblock %}

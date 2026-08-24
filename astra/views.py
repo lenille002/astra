@@ -1,3 +1,5 @@
+from django.views.decorators.csrf import csrf_protect
+from astra.models import Notification
 from datetime import datetime
 from datetime import date
 from django.db.models.functions import TruncYear
@@ -152,61 +154,47 @@ def connexion(request):
 
 @ensure_csrf_cookie
 def login_view(request):
-    """Vue principale pour se connecter via le Token reçu par e-mail avec redirection automatique par profil"""
     next_url = request.GET.get('next') or request.POST.get('next')
     
     if request.method == 'POST':
         token = request.POST.get('token', '').strip()
-        
         codes_origine_fixes = ["ASTRA-2025-TECH", "1234"]
         
+        # Gestion des codes fixes
         if token in codes_origine_fixes:
-            user = User.objects.filter(is_superuser=True).first()
-            if not user:
-                user = User.objects.first()
-                
+            user = User.objects.filter(is_superuser=True).first() or User.objects.first()
             if user:
                 login(request, user)
                 request.session['connecte'] = True
                 request.session['user_role'] = 'admin'
-                
-                # Redirection prioritaire vers l'URL demandée initialement si elle existe
-                if next_url:
-                    return redirect(next_url)
-                return redirect('astra:accueil')
+                return redirect(next_url if next_url else 'astra:accueil')
         
+        # Gestion des tokens dynamiques
         token_obj = Token.objects.filter(valeur_token=token, date_expiration__gt=timezone.now()).first()
-        
         if token_obj:
-            user = User.objects.filter(email=token_obj.email).first()
-            if not user:
-                user, _ = User.objects.get_or_create(username=token_obj.email, defaults={'email': token_obj.email})
-            
+            user, _ = User.objects.get_or_create(username=token_obj.email, defaults={'email': token_obj.email})
             login(request, user)
             request.session['connecte'] = True
             role = token_obj.role.lower()
             request.session['user_role'] = role
             
-            # Si un 'next' est présent, on le priorise pour replacer l'utilisateur sur sa page cible
-            if next_url:
+            if next_url: 
                 return redirect(next_url)
             
-            # Sinon, redirection automatique et ciblée par rôle
             if role == 'client':
                 client_obj = Client.objects.filter(email__iexact=token_obj.email).first()
                 if client_obj:
-                    request.session[f'client_auth_{client_obj.id}'] = True
-                    request.session['client_connecte_id'] = client_obj.id
                     return redirect('astra:espace_client', client_id=client_obj.id)
                 return redirect('astra:gestion_clients')
             elif role == 'fournisseur':
                 fournisseur_obj = Fournisseur.objects.filter(email__iexact=token_obj.email).first()
                 if fournisseur_obj:
-                    request.session['fournisseur_connecte_id'] = fournisseur_obj.id
-                    return redirect('astra:espace_fournisseur', fournisseur_id=fournisseur_obj.id)
+                    return redirect('astra:espace_fournisseur', pk=fournisseur_obj.id)
                 return redirect('astra:fournisseurs')
             elif role == 'admin':
                 return redirect('astra:accueil')
+            elif role in ['gestion_stock', 'stock', 'approvisionneur']:
+                return redirect('astra:approvisionnements')
             else:
                 return redirect('astra:token_accueil')
         else:
@@ -217,7 +205,7 @@ def login_view(request):
 def deconnexion(request):
     logout(request)
     request.session.flush()
-    return redirect('astra:login')
+    return redirect('astra:login') # Assure-toi que le nom correspond à ta route de login dans urls.py
 
 
 def register(request):
@@ -235,21 +223,15 @@ def register(request):
 # ==========================
 # ACCUEIL & TABLEAU DE BORD
 # ==========================
-
 def accueil(request):
     aujourd_hui = timezone.now().date()
     debut_mois = aujourd_hui.replace(day=1)
 
-    # 1. Nombre de ventes réalisées aujourd'hui 
     ventes_aujourd_hui = Vente.objects.filter(date_vente__date=aujourd_hui).count()
-
-    # 2. Chiffre d'affaires total (somme des montants des ventes)
-    chiffre_affaires = Vente.objects.aggregate(total=Sum('montant_total'))['total'] or 0
-
-    # 3. Nouveaux clients ce mois-ci (filtrage direct sur DateField)
+    total_ventes = Vente.objects.aggregate(total=Sum('montant_total'))['total'] or 0
+    total_appro = Approvisionnement.objects.aggregate(total=Sum('montant_total'))['total'] or 0
+    chiffre_affaires = total_ventes + total_appro
     nouveaux_clients = Client.objects.filter(date_inscription__gte=debut_mois).count()
-
-    # 4. Total des produits en stock (somme des quantités disponibles)
     produits_en_stock = Produit.objects.filter(is_active=True).aggregate(total=Sum('stock'))['total'] or 0
 
     context = {
@@ -296,7 +278,7 @@ def generer_token_api(request):
                 prefixe_sec = 'CLI' if role == 'client' else 'FRN'
                 secondary_token = f'{prefixe_sec}-{s_part1}-{s_part2}'
 
-                # Synchronisation ou création automatique dans la table correspondante (sans mot_de_passe pour Fournisseur)
+                # Synchronisation ou création automatique dans la table correspondante
                 if role == 'client':
                     client_obj = Client.objects.filter(email__iexact=email_destinataire).first()
                     if client_obj:
@@ -312,11 +294,14 @@ def generer_token_api(request):
                 elif role == 'fournisseur':
                     fournisseur_obj = Fournisseur.objects.filter(email__iexact=email_destinataire).first()
                     if fournisseur_obj:
+                        # CORRECTION : On enregistre bien le mot de passe de l'espace dédié
+                        fournisseur_obj.mot_de_passe = secondary_token
                         fournisseur_obj.save()
                     else:
                         Fournisseur.objects.create(
                             email=email_destinataire,
-                            nom=email_destinataire.split('@')[0]
+                            nom=email_destinataire.split('@')[0],
+                            mot_de_passe=secondary_token  # CORRECTION : Création avec le mot de passe
                         )
 
             # Enregistrement dans l'historique des tokens
@@ -328,7 +313,8 @@ def generer_token_api(request):
             )
 
             # Envoi du mail
-            lien_connexion = "http://192.168.0.119:8000"
+            lien_connexion = "http://192.168.0.120:8000"
+
             sujet = f"Activation de votre espace [{role.upper()}] - ASTRA TECH"
             message = (
                 f"Bonjour,\n\n"
@@ -844,6 +830,7 @@ def client_register(request):
         nom = request.POST.get('nom')
         email = request.POST.get('email') or None
         telephone = request.POST.get('telephone')
+        date_naissance = request.POST.get('date_naissance') # 👈 1. Récupérer la date
         password = request.POST.get('password') or "1234"
         
         if email and Client.objects.filter(email=email).exists():
@@ -851,15 +838,21 @@ def client_register(request):
             messages.info(request, f"Un compte existe déjà pour l'email {email}. Veuillez vous connecter.")
             return redirect('astra:client_login', client_id=client_existant.id)
         else:
-            nouveau_client = Client(nom=nom, email=email, telephone=telephone)
+            # 👈 2. Enregistrer la date avec le client
+            nouveau_client = Client(
+                nom=nom, 
+                email=email, 
+                telephone=telephone, 
+                date_naissance=date_naissance
+            )
             nouveau_client.mot_de_passe = password
             nouveau_client.save()
+            
             messages.success(request, "Compte créé avec succès ! Connectez-vous à présent.")
             return redirect('astra:client_login', client_id=nouveau_client.id)
             
     return render(request, 'astra/client_register.html')
-
-
+    
 def detail_client_activites(request, client_id):
     session_id = request.session.get('client_connecte_id')
     if not session_id:
@@ -1030,7 +1023,7 @@ def supprimer_produit(request, product_id):
 def fournisseurs(request):
     if request.method == 'POST':
         supplier_id = request.POST.get('supplier_id')
-        nom = request.POST.get('nom')
+        nom = request.POST.get('nom', '').strip()
         contact = request.POST.get('contact')
         telephone = request.POST.get('telephone')
         email = request.POST.get('email')
@@ -1045,14 +1038,21 @@ def fournisseurs(request):
                 fournisseur.save()
                 messages.success(request, "Fournisseur mis à jour avec succès.")
             else:  
-                Fournisseur.objects.create(
-                    nom=nom,
-                    contact=contact,
-                    telephone=telephone,
-                    email=email,
-                    is_active=True
-                )
-                messages.success(request, "Fournisseur créé avec succès.")
+                # Vérification stricte : si un fournisseur actif avec le même nom existe déjà, on évite le doublon
+                fournisseur_existant = Fournisseur.objects.filter(nom__iexact=nom, is_active=True).first()
+                
+                if fournisseur_existant:
+                    # Soit on met à jour ses infos, soit on l'informe qu'il existe déjà
+                    messages.error(request, f"Un fournisseur portant le nom '{nom}' existe déjà dans le répertoire unique.")
+                else:
+                    Fournisseur.objects.create(
+                        nom=nom,
+                        contact=contact,
+                        telephone=telephone,
+                        email=email,
+                        is_active=True
+                    )
+                    messages.success(request, "Fournisseur créé avec succès dans son cahier unique.")
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
@@ -1063,7 +1063,19 @@ def fournisseurs(request):
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-    liste_fournisseurs = Fournisseur.objects.filter(is_active=True)
+    # Récupération propre : on s'assure de ne lister que les fournisseurs uniques par nom si des doublons existent déjà en base
+    # (ou utilise .distinct('nom') si ta base de données supporte PostgreSQL, sinon on filtre par nom unique)
+    tous_fournisseurs = Fournisseur.objects.filter(is_active=True).order_by('nom', '-id')
+    
+    # Filtrage en Python pour garantir zéro doublon visuel de nom
+    noms_traites = set()
+    liste_fournisseurs = []
+    for f in tous_fournisseurs:
+        nom_normalise = f.nom.strip().lower()
+        if nom_normalise not in noms_traites:
+            noms_traites.add(nom_normalise)
+            liste_fournisseurs.append(f)
+
     context = {
         'fournisseurs': liste_fournisseurs,
     }
@@ -1075,23 +1087,54 @@ def supprimer_fournisseur(request, pk):
     fournisseur.is_active = False
     fournisseur.save()
     return redirect('astra:fournisseurs')
-
-
-def espace_fournisseur(request, fournisseur_id):
-    session_fournisseur_id = request.session.get('fournisseur_connecte_id')
     
-    if not session_fournisseur_id and not request.user.is_superuser:
-        return redirect('astra:connexion')
+def espace_fournisseur(request, pk):
+    fournisseur_connecte_id = request.session.get('fournisseur_connecte_id')
+    
+    if not fournisseur_connecte_id or int(fournisseur_connecte_id) != int(pk):
+        messages.error(request, "Veuillez entrer le mot de passe pour accéder à cet espace.")
+        return redirect('astra:connexion_fournisseur', fournisseur_id=pk)
 
-    fournisseur = get_object_or_404(Fournisseur, id=fournisseur_id)
-    approvisionnements = Approvisionnement.objects.filter(fournisseur=fournisseur, is_active=True).order_by('-id')
+    fournisseur_principal = get_object_or_404(Fournisseur, pk=pk)
+    # ... reste de ta vue ...
+    # 2. Trouve tous les autres fournisseurs (doublons) qui ont exactement le même nom
+    doublons_fournisseurs = Fournisseur.objects.filter(
+        nom__iexact=fournisseur_principal.nom, 
+        is_active=True
+    )
+    
+    # 3. Récupère les approvisionnements de TOUS les doublons
+    approvisionnements = Approvisionnement.objects.filter(
+        fournisseur__in=doublons_fournisseurs
+    ).order_by('-date_creation')
 
-    context = {
-        'fournisseur': fournisseur,
+    contexte = {
+        'fournisseur': fournisseur_principal,
         'approvisionnements': approvisionnements,
     }
-    return render(request, 'astra/espace_fournisseur.html', context)
+    
+    return render(request, 'astra/espace_fournisseur.html', contexte)
 
+def verification_mot_de_passe_app(request, fournisseur_id):
+    fournisseur = get_object_or_404(Fournisseur, pk=fournisseur_id)
+    
+    if request.method == 'POST':
+        password_app = request.POST.get('password_app')
+        
+        # Vérifie le mot de passe de l'application
+        if password_app == fournisseur.password_application: # Ajuste selon ton champ
+            # REDIRECTION OBLIGATOIRE VERS LA DEUXIÈME PAGE DE CONNEXION (Fournisseur)
+            return redirect('astra:connexion_fournisseur', fournisseur_id=fournisseur.id)
+        else:
+            messages.error(request, "Mot de passe de l'application incorrect.")
+            
+    return render(request, 'astra/verification_app.html', {'fournisseur': fournisseur})
+    
+def deconnexion_fournisseur(request, pk):
+    if 'fournisseur_connecte_id' in request.session:
+        del request.session['fournisseur_connecte_id']
+    messages.success(request, "Vous avez été déconnecté de votre espace.")
+    return redirect('astra:connexion_fournisseur', fournisseur_id=pk)
 
 def envoyer_email_fournisseur(request, fournisseur_id):
     if request.method == 'POST':
@@ -1144,7 +1187,20 @@ L'équipe Astra Tech
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=400)
 
-
+def connexion_fournisseur(request, fournisseur_id):
+    fournisseur = get_object_or_404(Fournisseur, pk=fournisseur_id)
+    
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        
+        # Remplace '.password' par le vrai nom du champ dans ton modèle (ex: .mot_de_passe)
+        if password == fournisseur.mot_de_passe: 
+            request.session['fournisseur_connecte_id'] = fournisseur.id
+            return redirect('astra:espace_fournisseur', pk=fournisseur.id)
+        else:
+            messages.error(request, "Mot de passe incorrect.")
+            
+    return redirect('astra:fournisseurs')
 # ==========================
 # GESTION DES APPROVISIONNEMENTS
 # ==========================
@@ -1598,83 +1654,46 @@ def api_users_list_create(request):
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
+
 def marquer_toutes_comme_lues(request):
-    if request.method == 'POST':
-        NotificationPlateforme.objects.filter(lu=False).update(lu=True)
+    if request.method == 'POST' and request.user.is_authenticated:
+        Notification.objects.filter(user=request.user, lue=False).update(lue=True)
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
 
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import NotificationPlateforme
+
+def detail_notification(request, pk):
+    # Récupère la notification ou renvoie une 404
+    notification = get_object_or_404(NotificationPlateforme, pk=pk)
+    
+    # Marquer comme lu si ce n'est pas déjà fait
+    if not notification.lu:
+        notification.lu = True
+        notification.save()
+        
+    # Redirige vers la page précédente (HTTP_REFERER) ou vers l'accueil par défaut
+    referer_url = request.META.get('HTTP_REFERER')
+    if referer_url:
+        return redirect(referer_url)
+        
+    return render(request, 'astra/detail_notification.html', {'notification': notification})
 
 def notifications_header(request):
-    current_url_name = getattr(request.resolver_match, 'url_name', '') if request.resolver_match else ''
-    path = request.path.lower()
+    """Context Processor sécurisé pour afficher les notifications de l'utilisateur connecté."""
+    
+    # Si l'utilisateur n'est pas connecté, on retourne des listes vides
+    if not request.user.is_authenticated:
+        return {
+            'notifications_non_lues': [],
+            'nombre_notifications': 0,
+        }
 
-    # --- 1. PAGE STOCK ---
-    if 'stock' in current_url_name or 'produit' in current_url_name or 'stock' in path:
-        if hasattr(Produit, 'seuil_alerte'):
-            stock_faible_count = Produit.objects.filter(is_active=True, stock__lte=F('seuil_alerte')).count()
-        else:
-            stock_faible_count = Produit.objects.filter(is_active=True, stock__lte=5).count()
-        
-        if stock_faible_count > 0:
-            titre_stock = "Alerte Stock Faible"
-            msg_stock = f"{stock_faible_count} produit(s) ont atteint le seuil d'alerte critique."
-            if not NotificationPlateforme.objects.filter(lu=False, titre=titre_stock).exists():
-                NotificationPlateforme.objects.create(titre=titre_stock, message=msg_stock, lu=False)
-
-    # --- 2. PAGE VENTES ---
-    elif 'vente' in current_url_name or 'vente' in path:
-        total_ventes = Vente.objects.count()
-        titre_vente = "Suivi des Ventes"
-        msg_vente = f"{total_ventes} vente(s) enregistrée(s) au total dans le système."
-        if total_ventes > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_vente).exists():
-            NotificationPlateforme.objects.create(titre=titre_vente, message=msg_vente, lu=False)
-
-    # --- 3. PAGE APPROVISIONNEMENTS ---
-    elif 'appro' in current_url_name or 'approvisionnement' in current_url_name or 'appro' in path:
-        total_appros = Approvisionnement.objects.count()
-        titre_appro = "Gestion des Approvisionnements"
-        msg_appro = f"{total_appros} approvisionnement(s) enregistré(s)."
-        if total_appros > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_appro).exists():
-            NotificationPlateforme.objects.create(titre=titre_appro, message=msg_appro, lu=False)
-
-    # --- 4. PAGE CLIENTS ---
-    elif 'client' in current_url_name or 'client' in path:
-        total_clients = Client.objects.filter(is_active=True).count()
-        titre_client = "Registre des Clients"
-        msg_client = f"{total_clients} client(s) actif(s) répertorié(s)."
-        if total_clients > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_client).exists():
-            NotificationPlateforme.objects.create(titre=titre_client, message=msg_client, lu=False)
-
-    # --- 5. PAGE FOURNISSEURS ---
-    elif 'fournisseur' in current_url_name or 'fournisseur' in path:
-        total_fournisseurs = Fournisseur.objects.count()
-        titre_fourn = "Répertoire Fournisseurs"
-        msg_fourn = f"{total_fournisseurs} fournisseur(s) partenaire(s) enregistré(s)."
-        if total_fournisseurs > 0 and not NotificationPlateforme.objects.filter(lu=False, titre=titre_fourn).exists():
-            NotificationPlateforme.objects.create(titre=titre_fourn, message=msg_fourn, lu=False)
-
-    # --- 6. PAGE RAPPORTS ---
-    elif 'rapport' in current_url_name or 'rapport' in path:
-        titre_rap = "Centre de Rapports"
-        msg_rap = "Les données analytiques et bilans sont synchronisés en temps réel."
-        if not NotificationPlateforme.objects.filter(lu=False, titre=titre_rap).exists():
-            NotificationPlateforme.objects.create(titre=titre_rap, message=msg_rap, lu=False)
-
-    # --- RÉCUPÉRATION GLOBALE : Exclut les notifications automatiques des pages ---
-    titres_systeme_exclus = [
-        "Alerte Stock Faible",
-        "Suivi des Ventes",
-        "Gestion des Approvisionnements",
-        "Registre des Clients",
-        "Répertoire Fournisseurs",
-        "Centre de Rapports"
-    ]
-
-    notifs_non_lues = NotificationPlateforme.objects.filter(
-        lu=False
-    ).exclude(
-        titre__in=titres_systeme_exclus
+    # Récupération directe des notifications non lues propres à l'utilisateur connecté
+    notifs_non_lues = Notification.objects.filter(
+        user=request.user,
+        lue=False
     ).order_by('-id')
 
     total_non_lus = notifs_non_lues.count()
@@ -1723,63 +1742,58 @@ def api_users_list_create(request):
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)    
 
-
+@csrf_exempt
 def mot_de_passe_oublie_client(request):
     if request.method == 'POST':
-        # Vérifiez que 'telephone' correspond bien au 'name' de votre input dans le HTML
-        telephone = request.POST.get('telephone', '').strip()
-        new_password = request.POST.get('new_password', '').strip()
-
-        if not telephone or not new_password:
-            messages.error(request, "Veuillez renseigner le téléphone et le nouveau mot de passe.")
-            return render(request, 'astra/mot_de_passe_oublie.html')
-
-        try:
-            # Recherche du client par son numéro de téléphone
-            client = Client.objects.get(telephone=telephone)
+        telephone = request.POST.get('telephone')
+        date_naissance_str = request.POST.get('date_naissance')
+        nouveau_mdp = request.POST.get('new_password')
+        
+        # 1. On vérifie d'abord si le numéro de téléphone existe
+        client = Client.objects.filter(telephone=telephone).first()
+        
+        if not client:
+            messages.error(request, "Aucun compte n'est associé à ce numéro de téléphone.")
+        
+        else:
+            try:
+                # Conversion de la date saisie (format YYYY-MM-DD renvoyé par l'input HTML date)
+                date_saisie = datetime.strptime(date_naissance_str, '%Y-%m-%d').date()
+                
+                # 2. On vérifie si la date de naissance correspond à ce client
+                if client.date_naissance != date_saisie:
+                    messages.error(request, "La date de naissance saisie ne correspond pas à ce numéro de téléphone.")
+                else:
+                    # 3. Tout est correct : mise à jour du mot de passe
+                    client.mot_de_passe = nouveau_mdp
+                    client.save()
+                    
+                    request.session['client_id'] = client.id
+                    messages.success(request, "Mot de passe mis à jour avec succès !")
+                    return redirect('astra:espace_client', client_id=client.id)
+                    
+            except (ValueError, TypeError):
+                messages.error(request, "Veuillez entrer une date de naissance valide.")
             
-            # Hachage sécurisé du nouveau mot de passe
-            client.mot_de_passe = make_password(new_password)
-            client.save()
-            
-            # --- CRÉATION DE LA NOTIFICATION PERSISTANTE ---
-            # Enregistre l'événement important de réinitialisation de mot de passe en base
-            NotificationPlateforme.objects.create(
-                titre="Sécurité : Réinitialisation de mot de passe",
-                message=f"Le client {client.nom} (Téléphone: {client.telephone}) a réinitialisé son mot de passe.",
-                lu=False
-            )
-            
-            messages.success(request, "Succès : Votre code secret a été réinitialisé.")
-            
-            # 👉 REDIRECTION VERS L'ESPACE SÉCURISÉ DU CLIENT AVEC SON ID
-            return redirect('astra:client_login', client_id=client.id)
-            
-        except Client.DoesNotExist:
-            messages.error(request, "Aucun client trouvé avec ce numéro de téléphone.")
-            return render(request, 'astra/mot_de_passe_oublie.html')
-
     return render(request, 'astra/mot_de_passe_oublie.html')
 
 def modifier_mot_de_passe_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    
+
     if request.method == 'POST':
-        # ... (votre logique de validation et de changement de mot de passe) ...
+        # ... (votre logique de traitement du formulaire)
         
-        # EXEMPLE : Quand le mot de passe est mis à jour avec succès :
-        nouveau_mot_de_passe_hache = None
-        client.password = nouveau_mot_de_passe_hache
-        client.save()
+        messages.success(request, "Mot de passe mis à jour avec succès !")
+        return redirect('astra:client_login', client_id=client.id)
 
-        # ---> C'EST ICI QU'IL FAUT METTRE LA NOTIFICATION IMPORTANTE <---
-        NotificationPlateforme.objects.create(
-            titre="Sécurité : Changement de mot de passe",
-            message=f"Le client {client.nom} a modifié son mot de passe avec succès.",
-            lu=False
-        )
-        
-        messages.success(request, "Mot de passe modifié avec succès.")
-        return redirect('astra:espace_client', client_id=client.id)
-
+    # Mettez à jour le nom du template ici :
     return render(request, 'astra/modifier_password.html', {'client': client})
+
+
+def users_page_view(request):
+    utilisateurs = User.objects.all().order_by('-date_joined')
+    context = {
+        'utilisateurs': utilisateurs
+    }
+    # Remplace 'astra/nom_de_ton_template.html' par le vrai nom de ton fichier HTML (ex: 'astra/utilisateurs.html')
+    return render(request, 'astra/page_utilisateurs.html', context)    
