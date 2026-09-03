@@ -5,17 +5,20 @@
 
 {% block content %}
 <style>
-    body, .app-layout, .app-main, .astra-clients-wrapper {
+    body,
+    .app-layout,
+    .app-main,
+    .astra-clients-wrapper {
         background-color: #f1f5f9 !important;
         background: #f1f5f9 !important;
     }
 
-    .astra-dashboard { 
-        padding: 2.5rem 1.5rem; 
-        max-width: 1200px; 
-        margin: 0 auto; 
+    .astra-dashboard {
+        padding: 2.5rem 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
     }
-    
+
     .btn-retour {
         display: inline-flex;
         align-items: center;
@@ -30,6 +33,7 @@
         box-shadow: 0 4px 12px rgba(55, 48, 163, 0.2);
         transition: all 0.2s ease;
     }
+
     .btn-retour:hover {
         background-color: #312e81;
         transform: translateY(-2px);
@@ -50,6 +54,7 @@
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
         transition: all 0.2s ease;
     }
+
     .btn-espace-client:hover {
         background-color: #047857;
         transform: translateY(-2px);
@@ -62,8 +67,11 @@
         gap: 25px;
         align-items: start;
     }
+
     @media (max-width: 900px) {
-        .layout-grid { grid-template-columns: 1fr; }
+        .layout-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     .card {
@@ -74,13 +82,16 @@
         border: 1px solid #e2e8f0;
         border-left: 5px solid #3730a3;
     }
-    .card.orange-accent { border-left-color: #f97316; }
 
-    .card-title { 
-        font-size: 1.1rem; 
-        font-weight: 700; 
-        color: #1e1b4b; 
-        margin-bottom: 1.2rem; 
+    .card.orange-accent {
+        border-left-color: #f97316;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e1b4b;
+        margin-bottom: 1.2rem;
         padding-bottom: 10px;
         border-bottom: 2px solid #f8fafc;
         display: flex;
@@ -91,6 +102,7 @@
     .summary-item {
         margin-bottom: 15px;
     }
+
     .summary-item label {
         display: block;
         font-size: 0.75rem;
@@ -99,45 +111,60 @@
         font-weight: 700;
         margin-bottom: 3px;
     }
+
     .summary-item span {
         font-size: 1rem;
         font-weight: 600;
         color: #1e293b;
     }
 
-    .astra-table { width: 100%; border-collapse: collapse; }
-    .astra-table th { 
-        text-align: left; 
-        padding: 14px 16px; 
-        background-color: #3730a3; 
-        color: white; 
-        font-size: 0.85rem; 
+    .astra-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .astra-table th {
+        text-align: left;
+        padding: 14px 16px;
+        background-color: #3730a3;
+        color: white;
+        font-size: 0.85rem;
         text-transform: uppercase;
     }
-    .astra-table th:first-child { border-top-left-radius: 8px; }
-    .astra-table th:last-child { border-top-right-radius: 8px; }
-    
-    .astra-table td { 
-        padding: 16px; 
-        border-bottom: 1px solid #f1f5f9; 
-        color: #334155; 
+
+    .astra-table th:first-child {
+        border-top-left-radius: 8px;
+    }
+
+    .astra-table th:last-child {
+        border-top-right-radius: 8px;
+    }
+
+    .astra-table td {
+        padding: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
         font-size: 0.95rem;
     }
-    .astra-table tbody tr:hover { background-color: #f8fafc; }
+
+    .astra-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
 </style>
 
 <div class="astra-dashboard">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-        <a href="{% url 'astra:gestion_clients' %}" class="btn-retour">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <a href="{% url 'astra:clients' %}" class="btn-retour">
             <i class="fa-solid fa-arrow-left"></i> Retour à la liste des clients
         </a>
-      <!-- Remplacez ceci : -->
-<!-- <a href="{% url 'astra:espace_client' client.id %}" class="btn-espace-client"> -->
+        <!-- Remplacez ceci : -->
+        <!-- <a href="{% url 'astra:espace_client' client.id %}" class="btn-espace-client"> -->
 
-<!-- Par ceci (si la vue de connexion/espace s'appelle client_login) : -->
-<a href="{% url 'astra:client_login' client.id %}" class="btn-espace-client">
-    <i class="fa-solid fa-user-gear"></i> Voir l'Espace Client
-</a>
+        <!-- Par ceci (si la vue de connexion/espace s'appelle client_login) : -->
+        <a href="{% url 'astra:client_login' client.id %}" class="btn-espace-client">
+            <i class="fa-solid fa-user-gear"></i> Voir l'Espace Client
+        </a>
     </div>
 
     <div style="margin-bottom: 2rem;">
@@ -149,7 +176,8 @@
 
     <div class="layout-grid">
         <div class="card">
-            <h2 class="card-title"><i class="fa-solid fa-address-card" style="color: #3730a3;"></i> Résumé du client</h2>
+            <h2 class="card-title"><i class="fa-solid fa-address-card" style="color: #3730a3;"></i> Résumé du client
+            </h2>
             <div class="summary-item">
                 <label>Nom complet</label>
                 <span>{{ client.nom }}</span>
@@ -164,7 +192,8 @@
             </div>
             <div class="summary-item">
                 <label>Commandes totales</label>
-                <span style="background: #e0e7ff; color: #3730a3; padding: 3px 10px; border-radius: 12px; display: inline-block;">
+                <span
+                    style="background: #e0e7ff; color: #3730a3; padding: 3px 10px; border-radius: 12px; display: inline-block;">
                     {{ nombre_achats }}
                 </span>
             </div>
@@ -177,8 +206,9 @@
         </div>
 
         <div class="card orange-accent">
-            <h2 class="card-title" style="color: #c2410c;"><i class="fa-solid fa-receipt" style="color: #f97316;"></i> Ventes enregistrées</h2>
-            
+            <h2 class="card-title" style="color: #c2410c;"><i class="fa-solid fa-receipt" style="color: #f97316;"></i>
+                Ventes enregistrées</h2>
+
             <div style="overflow-x: auto;">
                 <table class="astra-table">
                     <thead>
@@ -193,11 +223,13 @@
                         <tr>
                             <td style="font-weight: 700; color: #3730a3;">{{ vente.reference }}</td>
                             <td>{{ vente.date_vente|date:"d/m/Y H:i" }}</td>
-                            <td style="font-weight: 700; color: #059669;">{{ vente.montant_total|floatformat:0 }} FCFA</td>
+                            <td style="font-weight: 700; color: #059669;">{{ vente.montant_total|floatformat:0 }} FCFA
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3" style="text-align: center; padding: 2.5rem; color: #94a3b8; font-style: italic;">
+                            <td colspan="3"
+                                style="text-align: center; padding: 2.5rem; color: #94a3b8; font-style: italic;">
                                 Aucun achat enregistré dans le cahier de ce client.
                             </td>
                         </tr>

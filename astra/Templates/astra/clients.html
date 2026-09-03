@@ -373,9 +373,22 @@
         <div class="astra-top-actions">
             <!-- FILTRES AVEC URL ABSOLUE VERS LA VUE DJANGO -->
             <div class="astra-filters-row">
-                <a href="{% url 'astra:gestion_clients' %}?filter=all" class="btn-filter {% if current_filter == 'all' or not current_filter %}active{% endif %}">Tous les clients</a>
-                <a href="{% url 'astra:gestion_clients' %}?filter=loyal" class="btn-filter {% if current_filter == 'loyal' %}active{% endif %}">Clients fidèles</a>
-                <a href="{% url 'astra:gestion_clients' %}?filter=new" class="btn-filter {% if current_filter == 'new' %}active{% endif %}">Nouveaux clients</a>
+               
+<a href="{% url 'astra:clients' %}?filter=all"
+   class="btn-filter {% if current_filter == 'all' or not current_filter %}active{% endif %}">
+    Tous les clients
+</a>
+
+<a href="{% url 'astra:clients' %}?filter=loyal"
+   class="btn-filter {% if current_filter == 'loyal' %}active{% endif %}">
+    Clients fidèles
+</a>
+
+<a href="{% url 'astra:clients' %}?filter=new"
+   class="btn-filter {% if current_filter == 'new' %}active{% endif %}">
+    Nouveaux clients
+</a>
+   
             </div>
 
             <div class="astra-search-bar-wrapper">

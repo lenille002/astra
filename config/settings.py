@@ -25,9 +25,8 @@ DEBUG = os.getenv("DEBUG") == "True"
 # Autorise les connexions locales et depuis d'autres appareils du réseau pour les tests
 ALLOWED_HOSTS = ['*']
 
-# AJOUT CRITIQUE : Autorise les requêtes POST/Connexion depuis votre IP locale et Serveo
 CSRF_TRUSTED_ORIGINS = [
-    "http://192.168.0.120:8000",
+    "http://192.168.0.119:8000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "https://*.serveousercontent.com",

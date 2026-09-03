@@ -1,108 +1,825 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <title>ASTRA TECH Connexion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRA TECH - Connexion</title>
 
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <link rel="stylesheet" 
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* =========================================================
+            ASTRA TECH - WIDGET INSCRIPTION
+        ========================================================= */
+        .astra-registration-widget {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            z-index: 9999;
+        }
+
+        /* =========================================================
+            BULLE INSCRIPTION
+        ========================================================= */
+        .registration-promo {
+            position: absolute;
+            right: 0;
+            bottom: 90px;
+            width: 310px;
+            padding: 17px;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(26, 35, 126, .98), rgba(13, 19, 70, .98));
+            color: white;
+            border: 1px solid rgba(255,255,255,.18);
+            box-shadow: 0 20px 60px rgba(0,0,0,.30), 0 0 40px rgba(255,111,0,.18);
+            backdrop-filter: blur(15px);
+            animation: promoAppear .8s cubic-bezier(.16,1,.3,1) both;
+        }
+
+        .registration-promo::after {
+            content: "";
+            position: absolute;
+            right: 22px;
+            bottom: -8px;
+            width: 17px;
+            height: 17px;
+            background: #151d69;
+            transform: rotate(45deg);
+        }
+
+        .promo-glow {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #ff6f00;
+            filter: blur(50px);
+            opacity: .25;
+            left: -30px;
+            top: -35px;
+            pointer-events: none;
+        }
+
+        .promo-icon {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ff6f00, #ff9800);
+            box-shadow: 0 8px 25px rgba(255,111,0,.4);
+            animation: iconBounce 2s ease-in-out infinite;
+        }
+
+        .promo-icon i {
+            font-size: 19px;
+        }
+
+        .promo-content {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .promo-small {
+            font-size: 9px;
+            letter-spacing: 1.2px;
+            color: rgba(255,255,255,.65);
+        }
+
+        .promo-title {
+            font-size: 15px;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .promo-subtitle {
+            font-size: 11px;
+            color: rgba(255,255,255,.72);
+        }
+
+        .promo-close {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255,255,255,.10);
+            color: rgba(255,255,255,.75);
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .promo-close:hover {
+            background: rgba(255,255,255,.22);
+            color: white;
+        }
+
+        /* =========================================================
+            BOUTON FLOTTANT
+        ========================================================= */
+        .astra-chat-button {
+            position: relative;
+            width: 68px;
+            height: 68px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            background: linear-gradient(135deg, #1a237e, #283593);
+            box-shadow: 0 15px 40px rgba(26,35,126,.40), 0 0 0 4px rgba(255,255,255,.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: transform .3s ease;
+        }
+
+        .astra-chat-button:hover {
+            transform: scale(1.08);
+        }
+
+        .chat-button-inner {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff6f00, #ff9800);
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 5px 18px rgba(255,111,0,.4);
+            animation: buttonFloat 2.5s ease-in-out infinite;
+        }
+
+        .chat-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255,111,0,.55);
+            pointer-events: none;
+        }
+
+        .ring-one {
+            inset: -7px;
+            animation: ringPulse 2s infinite;
+        }
+
+        .ring-two {
+            inset: -14px;
+            border-color: rgba(26,35,126,.25);
+            animation: ringPulse 2s .5s infinite;
+        }
+
+        .chat-notification {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ff3d00;
+            color: white;
+            font-size: 11px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            animation: notificationPulse 1.5s infinite;
+        }
+
+        /* =========================================================
+            MODAL
+        ========================================================= */
+        .astra-register-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(4,7,25,.72);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .35s ease, visibility .35s ease;
+            z-index: 20000;
+        }
+
+        .astra-register-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .astra-register-modal {
+            width: 100%;
+            max-width: 520px;
+            max-height: 92vh;
+            overflow-y: auto;
+            border-radius: 26px;
+            background: white;
+            box-shadow: 0 30px 100px rgba(0,0,0,.45);
+            transform: translateY(35px) scale(.92);
+            transition: transform .4s cubic-bezier(.16,1,.3,1);
+        }
+
+        .astra-register-overlay.active .astra-register-modal {
+            transform: translateY(0) scale(1);
+        }
+
+        /* =========================================================
+            HEADER MODAL
+        ========================================================= */
+        .register-header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 22px;
+            color: white;
+            background: linear-gradient(135deg, #1a237e, #283593);
+            border-radius: 26px 26px 0 0;
+            overflow: hidden;
+        }
+
+        .register-header::before {
+            content: "";
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(255,111,0,.16);
+            right: -70px;
+            top: -100px;
+        }
+
+        .register-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .register-brand-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #ff6f00, #ff9800);
+            box-shadow: 0 7px 20px rgba(255,111,0,.35);
+        }
+
+        .register-brand span {
+            display: block;
+            font-size: 17px;
+            font-weight: 900;
+            letter-spacing: .5px;
+        }
+
+        .register-brand small {
+            display: block;
+            margin-top: 3px;
+            color: rgba(255,255,255,.65);
+        }
+
+        .register-close {
+            position: relative;
+            z-index: 3;
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255,255,255,.12);
+            color: white;
+            cursor: pointer;
+            transition: .25s;
+        }
+
+        .register-close:hover {
+            background: rgba(255,255,255,.25);
+            transform: rotate(90deg);
+        }
+
+        /* =========================================================
+            BODY MODAL
+        ========================================================= */
+        .register-body {
+            padding: 25px;
+        }
+
+        .register-welcome {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .welcome-orbit {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 12px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            background: linear-gradient(135deg, #1a237e, #283593);
+            box-shadow: 0 12px 35px rgba(26,35,126,.28);
+        }
+
+        .welcome-orbit::before {
+            content: "";
+            position: absolute;
+            inset: -7px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,111,0,.35);
+            animation: orbitRotate 4s linear infinite;
+        }
+
+        .welcome-orbit i {
+            font-size: 29px;
+        }
+
+        .orbit-dot {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #ff6f00;
+            top: -5px;
+            right: 13px;
+            box-shadow: 0 0 15px #ff6f00;
+        }
+
+        .register-welcome h2 {
+            margin: 0 0 7px;
+            color: #1a237e;
+            font-size: 21px;
+        }
+
+        .register-welcome p {
+            margin: 0;
+            color: #777;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* =========================================================
+            FORMULAIRES & CHAMPS
+        ========================================================= */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .register-field {
+            margin-bottom: 15px;
+        }
+
+        .register-field label {
+            display: block;
+            margin-bottom: 7px;
+            color: #1a237e;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .register-field label i {
+            margin-right: 5px;
+            color: #ff6f00;
+        }
+
+        .register-field input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 14px;
+            border: 1px solid #e2e2e2;
+            border-radius: 12px;
+            outline: none;
+            font-size: 13px;
+            transition: .25s;
+            background: #fafafa;
+        }
+
+        .register-field input:focus {
+            background: white;
+            border-color: #ff6f00;
+            box-shadow: 0 0 0 3px rgba(255,111,0,.10);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #777;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            transition: .2s;
+        }
+
+        .toggle-password:hover {
+            color: #ff6f00;
+            background: rgba(255,111,0,.08);
+        }
+
+        .password-help {
+            margin-top: 6px;
+            font-size: 10px;
+            color: #888;
+        }
+
+        /* =========================================================
+            BOUTON SOUMISSION
+        ========================================================= */
+        .create-account-button {
+            width: 100%;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border: none;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #ff6f00, #f45100);
+            color: white;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255,111,0,.25);
+            transition: .3s;
+        }
+
+        .create-account-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(255,111,0,.35);
+        }
+
+        .create-account-button i {
+            transition: .3s;
+        }
+
+        .create-account-button:hover i {
+            transform: translateX(5px);
+        }
+
+        /* =========================================================
+            FOOTER MODAL
+        ========================================================= */
+        .register-footer {
+            padding: 13px;
+            text-align: center;
+            color: #888;
+            background: #f7f7f9;
+            border-radius: 0 0 26px 26px;
+            font-size: 10px;
+        }
+
+        .register-footer i {
+            color: #1a237e;
+            margin-right: 5px;
+        }
+
+        /* =========================================================
+            ANIMATIONS
+        ========================================================= */
+        @keyframes promoAppear {
+            from { opacity: 0; transform: translateY(20px) scale(.85); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-5px) rotate(5deg); }
+        }
+
+        @keyframes buttonFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes ringPulse {
+            0% { transform: scale(.8); opacity: 1; }
+            100% { transform: scale(1.25); opacity: 0; }
+        }
+
+        @keyframes notificationPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.18); }
+        }
+
+        @keyframes orbitRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* =========================================================
+            RESPONSIVE MOBILE
+        ========================================================= */
+        @media (max-width: 600px) {
+            .astra-registration-widget {
+                right: 18px;
+                bottom: 18px;
+            }
+            .registration-promo {
+                width: 270px;
+                right: -2px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            .astra-register-overlay {
+                padding: 10px;
+            }
+            .astra-register-modal {
+                max-height: 95vh;
+                border-radius: 20px;
+            }
+            .register-header {
+                border-radius: 20px 20px 0 0;
+            }
+            .register-footer {
+                border-radius: 0 0 20px 20px;
+            }
+        }
+    </style>
 </head>
-
-
 <body>
 
-
 <div class="container">
+    <div class="auth-section">
+        <div class="auth-content">
 
+            <div class="logo">
+                <div class="logo-shape">
+                    <div class="logo-inner"></div>
+                </div>
+                <div class="logo-text">
+                    <div class="astra">ASTRA</div>
+                    <div class="tech">TECH</div>
+                </div>
+            </div>
 
-<div class="auth-section">
+            <h1 class="auth-title">Connexion</h1>
+            <p class="auth-subtitle">Entrez vos informations pour accéder à votre compte</p>
 
+            {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-circle-exclamation"></i>
+                    {{ error }}
+                </div>
+            {% endif %}
 
-<div class="auth-content">
+            {% if messages %}
+                {% for message in messages %}
+                    {% if "token d'accès" not in message.message and "Inscription réussie" not in message.message %}
+                        <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                            <i class="{% if message.tags == 'error' %}fas fa-circle-exclamation{% else %}fas fa-circle-check{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
 
+            <!-- FORMULAIRE DE CONNEXION RÉEL -->
+            <form method="POST" action="{% url 'astra:login' %}">
+                {% csrf_token %}
 
-<div class="logo">
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
 
-<div class="logo-shape">
-<div class="logo-inner"></div>
-</div>
+                <div class="form-group">
+                    <label>Nom</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="nom" placeholder="Votre nom" autocomplete="family-name" required>
+                    </div>
+                </div>
 
+                <div class="form-group">
+                    <label>Prénom</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="prenom" placeholder="Votre prénom" autocomplete="given-name" required>
+                    </div>
+                </div>
 
-<div class="logo-text">
-<div class="astra">
-ASTRA
-</div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <div class="input-with-icon password-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" id="loginPassword" placeholder="Votre mot de passe" autocomplete="current-password" required style="padding-right: 45px;">
+                        <button type="button" class="toggle-password" id="toggleLoginPassword" aria-label="Afficher le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
 
-<div class="tech">
-TECH
-</div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-lock-open"></i> Connexion
+                </button>
+            </form>
 
-</div>
+            <div class="token-info">
+                <p>
+                    <i class="fas fa-info-circle"></i>
+                    Vous pouvez vous connecter avec votre nom, votre prénom et le mot de passe que vous avez choisi lors de votre inscription.
+                </p>
+            </div>
 
-</div>
-
-
-
-<h1 class="auth-title">
-Accès Sécurisé
-</h1>
-
-
-<p class="auth-subtitle">
-Veuillez entrer votre token
-</p>
-
-
-
-{% if error %}
-
-<div class="error-message">
-
-{{ error }}
-
-</div>
-
-{% endif %}
-
-<form method="POST" action="{% url 'astra:login' %}" class="auth-form">
-    {% csrf_token %}
-    
-    {% if next %}
-        <input type="hidden" name="next" value="{{ next }}">
-    {% endif %}
-
-    <div class="form-group">
-        <label>Token d'accès</label>
-        <div class="input-with-icon">
-            <i class="fas fa-key"></i>
-            <input type="password" name="token" placeholder="Votre token" required>
         </div>
     </div>
+</div>
 
-    <button type="submit" class="btn btn-primary">
-        <i class="fas fa-lock-open"></i> Connexion
+<div class="astra-registration-widget">
+    <div class="registration-promo" id="registrationPromo">
+        <div class="promo-glow"></div>
+        <div class="promo-icon">
+            <i class="fas fa-sparkles"></i>
+        </div>
+        <div class="promo-content">
+            <span class="promo-small">NOUVEAU SUR ASTRA TECH ?</span>
+            <strong class="promo-title">✨ Inscris-toi maintenant !</strong>
+            <span class="promo-subtitle">Crée ton compte en quelques secondes</span>
+        </div>
+        <button type="button" class="promo-close" id="closePromo" aria-label="Fermer">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <button type="button" class="astra-chat-button" id="openRegistration" aria-label="Ouvrir l'inscription">
+        <span class="chat-ring ring-one"></span>
+        <span class="chat-ring ring-two"></span>
+        <span class="chat-button-inner">
+            <i class="fas fa-user-plus"></i>
+        </span>
+        <span class="chat-notification">1</span>
     </button>
-</form>
-
-
- <div class="token-info">
-    <p><i class="fas fa-info-circle"></i> Pour obtenir un token d'accès, contactez votre administrateur système.</p>
-   
 </div>
 
+<div class="astra-register-overlay" id="registrationModal">
+    <div class="astra-register-modal">
+
+        <div class="register-header">
+            <div class="register-brand">
+                <div class="register-brand-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div>
+                    <span>ASTRA TECH</span>
+                    <small>Création de compte</small>
+                </div>
+            </div>
+            <button type="button" class="register-close" id="closeRegistration">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="register-body">
+            <div class="register-welcome">
+                <div class="welcome-orbit">
+                    <div class="orbit-dot"></div>
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                <h2>Bienvenue sur ASTRA TECH</h2>
+                <p>
+                    Crée ton compte en choisissant directement ton mot de passe. Aucun envoi par email n'est nécessaire.
+                </p>
+            </div>
+
+            <!-- FORMULAIRE D'INSCRIPTION RÉEL -->
+            <form method="POST" action="{% url 'astra:register' %}" class="registration-form">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="register-field">
+                        <label><i class="fas fa-user"></i> Nom</label>
+                        <input type="text" name="nom" placeholder="Votre nom" autocomplete="family-name" required>
+                    </div>
+
+                    <div class="register-field">
+                        <label><i class="fas fa-user"></i> Prénom</label>
+                        <input type="text" name="prenom" placeholder="Votre prénom" autocomplete="given-name" required>
+                    </div>
+                </div>
+
+                <div class="register-field">
+                    <label><i class="fas fa-envelope"></i> Adresse email</label>
+                    <input type="email" name="email" placeholder="exemple@gmail.com" autocomplete="email" required>
+                </div>
+
+                <div class="register-field">
+                    <label><i class="fas fa-phone"></i> Téléphone</label>
+                    <input type="tel" name="telephone" placeholder="Votre numéro" autocomplete="tel">
+                </div>
+
+                <div class="register-field">
+                    <label><i class="fas fa-user-tag"></i> Je suis un :</label>
+                    <select name="role" required style="width: 100%; padding: 13px 14px; border: 1px solid #e2e2e2; border-radius: 12px; background: #fafafa; font-size: 13px; outline: none;">
+                        <option value="client">Client</option>
+                        <option value="vente">Vente</option>
+                        <option value="fournisseur">Fournisseur</option>
+                        <option value="approvisionnement">Approvisionnement</option>
+                    </select>
+                </div>
+
+                <div class="register-field">
+                    <label><i class="fas fa-lock"></i> Mot de passe</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="registerPassword" placeholder="Choisissez votre mot de passe" autocomplete="new-password" minlength="8" required>
+                        <button type="button" class="toggle-password" id="toggleRegisterPassword" aria-label="Afficher le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-help">Minimum 8 caractères.</div>
+                </div>
+
+                <button type="submit" class="create-account-button">
+                    <span>Créer mon compte</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="register-footer">
+            <i class="fas fa-shield-halved"></i> Système sécurisé ASTRA TECH
+        </div>
+
+    </div>
 </div>
 
-</div>
+<script>
+    const modal = document.getElementById('registrationModal');
+    const openBtn = document.getElementById('openRegistration');
+    const closeBtn = document.getElementById('closeRegistration');
+    const promo = document.getElementById('registrationPromo');
+    const closePromo = document.getElementById('closePromo');
 
+    openBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+        if (promo) promo.style.display = 'none';
+    });
 
-</div>
+    closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
 
+    if (closePromo) {
+        closePromo.addEventListener('click', () => {
+            promo.style.display = 'none';
+        });
+    }
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+
+    function setupPasswordToggle(toggleId, inputId) {
+        const toggleBtn = document.getElementById(toggleId);
+        const inputField = document.getElementById(inputId);
+        if (toggleBtn && inputField) {
+            toggleBtn.addEventListener('click', () => {
+                const type = inputField.getAttribute('type') === 'password' ? 'text' : 'password';
+                inputField.setAttribute('type', type);
+                toggleBtn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+        }
+    }
+
+    setupPasswordToggle('toggleLoginPassword', 'loginPassword');
+    setupPasswordToggle('toggleRegisterPassword', 'registerPassword');
+</script>
 
 </body>
-
 </html>

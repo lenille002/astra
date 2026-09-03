@@ -1,4 +1,5 @@
 {% load static %}
+
 <header class="app-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0 24px; width: 100%; box-sizing: border-box;">
 
     <!-- LOGO -->
@@ -10,66 +11,54 @@
     <nav class="nav-menu" style="display: flex; align-items: center; gap: 24px;">
         <a href="{% url 'astra:ventes' %}" class="nav-item {% if request.resolver_match.url_name == 'ventes' %}active{% endif %}">Ventes</a>
         <a href="{% url 'astra:stock' %}" class="nav-item {% if request.resolver_match.url_name == 'stock' %}active{% endif %}">Stocks</a>
-        <a href="{% url 'astra:approvisionnements' %}" class="nav-item {% if request.resolver_match.url_name == 'approvisionnements' or request.resolver_match.url_name == 'detail_approvisionnement' %}active{% endif %}">Approvisionnement</a>
-        <a href="{% url 'astra:gestion_clients' %}" class="nav-item {% if request.resolver_match.url_name in 'gestion_clients,detail_client_activites,espace_client,client_login,client_register' %}active{% endif %}">Clients</a>
+        <a href="{% url 'astra:approvisionnements' %}" class="nav-item {% if request.resolver_match.url_name == 'approvisionnement' or request.resolver_match.url_name == 'approvisionnements' %}active{% endif %}">Approvisionnement</a>
+        <a href="{% url 'astra:clients' %}" class="nav-item {% if request.resolver_match.url_name == 'gestion_clients' %}active{% endif %}">Clients</a>
         <a href="{% url 'astra:fournisseurs' %}" class="nav-item {% if request.resolver_match.url_name == 'fournisseurs' %}active{% endif %}">Fournisseurs</a>
         <a href="{% url 'astra:rapports' %}" class="nav-item {% if request.resolver_match.url_name == 'rapports' %}active{% endif %}">Rapports</a>
     </nav>
 
-    <!-- MENU UTILISATEUR ET NOTIFICATIONS -->
+    <!-- USER MENU & NOTIFICATIONS -->
     <div class="user-menu" style="display: flex; align-items: center; gap: 16px;">
         
         <div class="notification-container" style="position: relative; display: inline-block; cursor: pointer;">
-            <div class="notification-icon" id="notificationIcon" onclick="toggleNotificationDropdown()" style="font-size: 1.2rem; padding: 8px; color: white;">
-                <i class="fas fa-bell"></i>
-                
-                <!-- Badge rouge (s'affiche si nombre_notifications > 0) -->
-                <span class="notification-badge" id="notifBadge" style="position: absolute; top: 2px; right: 2px; background: #ff4d4d; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 50%; font-weight: bold; {% if not nombre_notifications or nombre_notifications == 0 %}display: none;{% endif %}">
-                    {{ nombre_notifications|default:0 }}
-                </span>
-            </div>
+    <div class="notification-icon" id="notificationIcon" onclick="toggleNotificationDropdown()" style="font-size: 1.2rem; padding: 8px; color: white;">
+        <i class="fas fa-bell"></i>
+        {% if stock_bas and stock_bas > 0 %}
+            <span class="notification-badge" style="position: absolute; top: 2px; right: 2px; background: #ff4d4d; color: white; font-size: 0.65rem; padding: 2px 5px; border-radius: 50%; font-weight: bold;">
+                {{ stock_bas }}
+            </span>
+        {% endif %}
+    </div>
 
-            <!-- Menu déroulant dynamique -->
-            <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 340px; background: white; color: black; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 10px; z-index: 9999; padding: 15px; text-align: left;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
-                    <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem;">Notifications importantes</h6>
-                    
-                    <!-- Bouton tout marquer comme lu -->
-                    <button onclick="marquerToutCommeLu()" id="btnToutMarquerLu" style="background: none; border: none; color: #007bff; font-size: 0.75rem; cursor: pointer; font-weight: bold; text-decoration: underline; {% if not nombre_notifications or nombre_notifications == 0 %}display: none;{% endif %}">
-                        Tout marquer comme lu
-                    </button>
-                </div>
-                
-                <div id="notifListContainer" style="max-height: 260px; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;">
-                    
-                    {% for notif in notifications_non_lues %}
-                        <a href="{% url 'astra:detail_notification' notif.id %}" style="text-decoration: none; color: inherit; display: block;">
-                            <div style="padding: 10px; background: #f8f9fa; border-radius: 6px; display: flex; gap: 8px; align-items: flex-start; border-left: 4px solid #007bff; transition: background 0.2s;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
-                                <i class="fas fa-envelope-open-text" style="color: #007bff; font-size: 1.1rem; margin-top: 2px; flex-shrink: 0;"></i>
-                                <div style="width: 100%;">
-                                    <strong style="display: block; color: #0056b3; font-size: 0.85rem;">{{ notif.titre }}</strong>
-                                    <p style="margin: 2px 0; color: #333; line-height: 1.2;">{{ notif.message }}</p>
-                                    <!-- Utilisation propre du champ date_creation -->
-                                    <span style="font-size: 0.65rem; color: #888;">{{ notif.date_creation|date:"d/m/Y H:i" }}</span>
-                                </div>
-                            </div>
-                        </a>
-                    {% empty %}
-                        <div id="noNotifMessage" style="text-align: center; color: #666; margin: 20px 0;">
-                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
-                            Aucune nouvelle notification.
-                        </div>
-                    {% endfor %}
-
-                </div>
-            </div>
+    <!-- Menu déroulant dynamique -->
+    <div id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 45px; width: 320px; background: white; color: black; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 10px; z-index: 9999; padding: 15px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+            <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem;">Notifications système</h6>
+            <span style="background: #ff7f00; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: bold;">En direct</span>
         </div>
+        <div style="max-height: 220px; overflow-y: auto; font-size: 0.8rem;">
+            {% if stock_bas and stock_bas > 0 %}
+                <div style="padding: 10px; background: #fff3cd; border-radius: 6px; display: flex; gap: 8px; align-items: center; border-left: 4px solid #ff9900;">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff9900; font-size: 1.1rem;"></i>
+                    <div>
+                        <strong style="display: block; color: #b78103;">{{ titre_alerte }} :</strong> 
+                        {{ message_alerte }}
+                    </div>
+                </div>
+            {% else %}
+                <div style="text-align: center; color: #666; margin: 15px 0;">
+                    <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
+                    Aucune alerte critique pour le moment.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 
-        <!-- Bouton Retour -->
+        <!-- 2. Bouton Retour -->
         <a href="{% url 'astra:accueil' %}" class="btn btn-primary rounded-pill px-4" style="white-space: nowrap;">
             <i class="fas fa-arrow-left me-2"></i> Retour
         </a>
-
     </div>
 
 </header>
@@ -77,42 +66,7 @@
 <script>
     function toggleNotificationDropdown() {
         const dropdown = document.getElementById('notificationDropdown');
-        if (dropdown) {
-            const isOpen = (dropdown.style.display === 'block');
-            dropdown.style.display = isOpen ? 'none' : 'block';
-        }
-    }
-
-    function marquerToutCommeLu() {
-        fetch("{% url 'astra:marquer_lues' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': '{{ csrf_token }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                const badge = document.getElementById('notifBadge');
-                if (badge) badge.style.display = 'none';
-
-                const btnLu = document.getElementById('btnToutMarquerLu');
-                if (btnLu) btnLu.style.display = 'none';
-
-                const container = document.getElementById('notifListContainer');
-                if (container) {
-                    container.innerHTML = `
-                        <div style="text-align: center; color: #666; margin: 20px 0;">
-                            <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem; display: block; margin-bottom: 5px;"></i>
-                            Aucune nouvelle notification.
-                        </div>
-                    `;
-                }
-            }
-        })
-        .catch(error => console.error('Erreur:', error));
+        dropdown.style.display = (dropdown.style.display === 'none' || dropdown.style.display === '') ? 'block' : 'none';
     }
 
     window.addEventListener('click', function(e) {
