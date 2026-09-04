@@ -1,3 +1,4 @@
+from astra.decorators import role_required
 from datetime import date, datetime, timedelta
 from functools import wraps
 import json
@@ -441,6 +442,7 @@ def api_user_detail_update_delete(request, pk):
 # ==========================
 # VENTES
 # ==========================
+@role_required(allowed_roles=['etudiant', 'entreprise', 'admin'])
 def ventes_view(request):
     produits = Produit.objects.filter(stock__gt=0, is_active=True)
     ventes_list = Vente.objects.filter(est_archive=False).select_related('client').order_by('-id')
@@ -989,7 +991,7 @@ def supprimer_produit(request, product_id):
 # ==========================
 # FOURNISSEURS & ESPACE FOURNISSEUR DÉDIÉ
 # ==========================
-@verifier_role(["fournisseur"])
+@role_required(allowed_roles=['entreprise', 'admin'])
 @verifier_acces_strict
 def fournisseurs(request):
     if request.method == 'POST':
@@ -1175,7 +1177,7 @@ def connexion_fournisseur(request, fournisseur_id):
 # ==========================
 # GESTION DES APPROVISIONNEMENTS
 # ==========================
-@verifier_role(["fournisseur"])
+@role_required(allowed_roles=['entreprise', 'admin'])
 
 def approvisionnements_view(request):
     if request.method == 'POST':
@@ -1296,7 +1298,8 @@ def supprimer_approvisionnement(request, pk):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
-@verifier_role(["client", "vendeur"])
+
+@role_required(allowed_roles=['admin'])
 @verifier_acces_strict
 def rapports(request):
     reset_actif = request.session.get('rapports_reset_actif', False)
@@ -1448,13 +1451,15 @@ def rapports(request):
 # ==========================
 # PAGES & APIS PARAMÈTRES
 # ==========================
+
+@role_required(allowed_roles=['admin','entreprise'])
 @verifier_acces_strict
 def permissions_page_view(request):
     return render(request, 'astra/permissions.html')
 
 from astra.models import Vente, Client, Produit, Approvisionnement, Fournisseur
 from django.shortcuts import render
-
+@role_required(allowed_roles=['admin','entreprise'])
 def historiques_page_view(request):
     # Récupération séparée pour chaque bloc de la page
     logs_approvisionnement = []
@@ -1496,7 +1501,7 @@ def historiques_page_view(request):
     }
     return render(request, 'astra/historique.html', context)
 
-
+@role_required(allowed_roles=['etudiant', 'enseignant', 'entreprise', 'admin', 'candidat'])
 @verifier_acces_strict
 def propos(request):
     return render(request, 'astra/propos.html')
@@ -1547,6 +1552,7 @@ def api_save_permissions(request):
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)
 
+@role_required(allowed_roles=['admin'])
 @csrf_exempt
 def api_save_parametres(request):
     if request.method != 'POST':
@@ -1567,6 +1573,7 @@ def api_save_parametres(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
     
+@role_required(allowed_roles=['admin','entreprise'])
 def parametres_page_view(request):
     config, created = ParametreGlobal.objects.get_or_create(id=1)
 
@@ -1714,6 +1721,7 @@ def api_users_list_create(request):
             
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée.'}, status=405)    
 
+@role_required(allowed_roles=['admin','entreprise','client'])
 @csrf_exempt
 def mot_de_passe_oublie_client(request):
     if request.method == 'POST':
@@ -1749,6 +1757,7 @@ def mot_de_passe_oublie_client(request):
             
     return render(request, 'astra/mot_de_passe_oublie.html')
 
+@role_required(allowed_roles=['admin','entreprise','client'])
 def modifier_mot_de_passe_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
 
@@ -1762,6 +1771,7 @@ def modifier_mot_de_passe_client(request, client_id):
     return render(request, 'astra/modifier_password.html', {'client': client})
 
 
+@role_required(allowed_roles=['admin','entreprise'])
 def users_page_view(request):
     utilisateurs = User.objects.all().order_by('-date_joined')
     context = {
