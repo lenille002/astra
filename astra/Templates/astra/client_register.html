@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inscription Client - Astra Tech{% endblock %}
+
+{% block content %}
+<style>
+    /* Correction du fond global pour correspondre au thème Astra Tech */
+    body, .app-layout, .app-main, .astra-clients-wrapper {
+        background-color: #f1f5f9 !important;
+        background: #f1f5f9 !important;
+    }
+
+    .register-container {
+        max-width: 520px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .register-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 15px 35px -5px rgba(55, 48, 163, 0.08), 0 5px 15px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Bande lumineuse décorative en haut de la carte */
+    .register-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(90deg, #3730a3, #4338ca, #f97316);
+    }
+
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .register-header h1 {
+        color: #1e1b4b;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+    }
+
+    .register-header p {
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+    }
+
+    .form-group label i {
+        color: #3730a3;
+        font-size: 1rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        background-color: #f8fafc;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        font-size: 1rem;
+        color: #1e293b;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3730a3;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 4px rgba(55, 48, 163, 0.1);
+    }
+
+    .btn-submit {
+        width: 100%;
+        background-color: #3730a3;
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(55, 48, 163, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 1.5rem;
+    }
+
+    .btn-submit:hover {
+        background-color: #312e81;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(55, 48, 163, 0.35);
+    }
+
+    .alert-error {
+        background-color: #fef2f2;
+        border: 1px solid #f87171;
+        color: #991b1b;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .register-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+
+    .register-footer a {
+        color: #3730a3;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .register-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h1>Créer un Compte</h1>
+            <p>Rejoignez Astra Tech pour suivre vos activités et vos achats en toute simplicité.</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert-error">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label><i class="fa-solid fa-user"></i> Nom complet</label>
+                <input type="text" name="nom" required class="form-control" placeholder="Ex: Jean Dupont">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-envelope"></i> Adresse Email</label>
+                <input type="email" name="email" class="form-control" placeholder="Ex: jean.dupont@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-calendar-days"></i> Date de naissance</label>
+                <input type="date" name="date_naissance" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-phone"></i> Numéro de téléphone</label>
+                <input type="text" name="telephone" required class="form-control" placeholder="Ex: +237 6XXXXXXXX">
+            </div>
+
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Mot de passe sécurisé</label>
+                <input type="password" name="password" required class="form-control" placeholder="••••••••••••">
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fa-solid fa-user-plus"></i> S'inscrire maintenant
+            </button>
+        </form>
+
+        <div class="register-footer">
+            Vous avez déjà un compte ? <a href="javascript:history.back()">Retourner en arrière</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

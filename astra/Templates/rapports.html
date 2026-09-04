@@ -6,7 +6,6 @@ Astra Tech - Rapports & Analyses Globaux
 {% endblock %}
 
 {% block css %}
- <!-- Script d’initialisation immédiate du mode nuit global -->
     <script>
         (function() {
             const savedDarkMode = localStorage.getItem('astra_dark_mode');
@@ -22,70 +21,82 @@ Astra Tech - Rapports & Analyses Globaux
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
+    /* --- ÉTAT CLAIR PAR DÉFAUT --- */
+    html,
     body,
-    main,
-    .main-content,
-    #content {
-        background-color: #f8fafc !important;
-        color: #0f172a !important;
+    .main-container {
+        background-color: #ffffff !important;
+        background: #ffffff !important;
     }
 
-    @media print {
-        @page {
-            size: landscape;
-            margin: 10mm;
-        }
+    /* --- MODE NUIT GLOBAL DE LA PAGE --- */
+    html.dark body,
+    body.dark {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+    }
 
-        body * {
-            visibility: hidden !important;
-        }
+    /* Forcer le conteneur principal à s'adapter proprement si besoin, ou garder le fond blanc textuel lisible */
+    html.dark .bg-white,
+    body.dark .bg-white {
+        /* Si vous souhaitez que le bloc reste blanc mais lisible : */
+        background-color: #ffffff !important;
+    }
 
-        body.printing-both #salesCardContainer,
-        body.printing-both #salesCardContainer *,
-        body.printing-both #stockCardContainer,
-        body.printing-both #stockCardContainer * {
-            visibility: visible !important;
-        }
+    /* Rendre le titre "Détail par article vendu" et les sous-titres parfaitement visibles */
+    html.dark h1, body.dark h1,
+    html.dark h2, body.dark h2,
+    html.dark h3, body.dark h3 {
+        color: #0f172a !important; /* Texte sombre bien lisible sur le bloc blanc */
+    }
 
-        body.printing-both .print-charts-wrapper {
-            visibility: visible !important;
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            display: grid !important;
-            grid-template-columns: 2fr 1fr !important;
-            gap: 20px !important;
-            background: #ffffff !important;
-            margin: 0 !important;
-            padding: 10px !important;
-        }
+    html.dark p, body.dark p {
+        color: #475569 !important; /* Description en gris foncé lisible */
+    }
 
-        body.printing-both #salesCardContainer,
-        body.printing-both #stockCardContainer {
-            position: relative !important;
-            width: 100% !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: none !important;
-            margin: 0 !important;
-            padding: 15px !important;
-            background: #ffffff !important;
-        }
+    /* --- ACTIVATION DU MODE NUIT POUR LE TABLEAU --- */
+    html.dark table, body.dark table {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+    }
 
-        .print-ignore {
-            display: none !important;
-        }
+    html.dark th, body.dark th {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    html.dark td, body.dark td {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    html.dark tr:hover, body.dark tr:hover {
+        background-color: rgba(51, 65, 85, 0.4) !important;
+    }
+
+    /* Champs de saisie et formulaires en mode nuit */
+    html.dark input, html.dark select,
+    body.dark input, body.dark select {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #ffffff !important;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- En-tête visible uniquement à l'impression -->
+<div class="hidden print:block text-center mb-8">
+    <h1 class="text-3xl font-black uppercase underline">Rapport d'Activités - Astra Tech</h1>
+    <p class="text-lg">Date d'édition : {% now "d/m/Y H:i" %}</p>
+</div>
+
 <div class="w-full min-h-screen bg-slate-50 text-slate-800 p-4 sm:p-8">
     <div class="max-w-7xl mx-auto space-y-8">
 
-        <!-- Gestion des messages Django -->
         {% if messages %}
         <div class="space-y-2">
             {% for message in messages %}
@@ -96,18 +107,15 @@ Astra Tech - Rapports & Analyses Globaux
         </div>
         {% endif %}
 
-        <!-- En-tête -->
+        <!-- En-tête (Affichage normal) -->
         <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold mb-2 border border-orange-100">
-                    <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
-                    Synchronisé en temps réel avec la Base de Données
-                </div>
+                
                 <h1 class="text-3xl font-black text-slate-900 tracking-tight">
                     Rapports <span class="text-orange-500">& Analyses</span>
                 </h1>
                 <p class="text-sm text-slate-500 mt-1">
-                    Centralisation des données issues des ventes, stocks, clients et approvisionnements d'Astra Tech.
+                    Centralisation des données par ordre d'achat et suivi des cahiers clients et approvisionnements uniques.
                 </p>
             </div>
 
@@ -122,10 +130,9 @@ Astra Tech - Rapports & Analyses Globaux
                     <i class="fas fa-print"></i> Imprimer Page
                 </button>
 
-                <!-- Bouton Remise à zéro sécurisé -->
-                <form action="{% url 'astra:reset_page_rapports' %}" method="POST" onsubmit="return confirm('Attention : Êtes-vous sûr de vouloir vider tout l’historique des ventes ? Cette action est irréversible.');">
+                <form action="{% url 'astra:reset_page_rapports' %}" method="POST" onsubmit="return confirm('Attention : Êtes-vous sûr de vouloir vider tout l’historique ?');">
                     {% csrf_token %}
-                    <button type="submit" class="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-3 rounded-2xl shadow-lg shadow-red-600/20 transition-all text-xs gap-2 cursor-pointer">
+                    <button type="submit" class="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-3 rounded-2xl shadow-lg transition-all text-xs gap-2 cursor-pointer">
                         <i class="fas fa-trash-alt"></i> Reset Page
                     </button>
                 </form>
@@ -134,94 +141,134 @@ Astra Tech - Rapports & Analyses Globaux
 
         <!-- CARTES KPI -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            <div class="bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl border border-blue-800/50 flex flex-col justify-between min-h-[150px]">
-                <div class="flex items-start justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Chiffre d'Affaires</span>
-                    <div class="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center">
-                        <i class="fas fa-wallet text-white text-xs"></i>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-2xl font-black tracking-tight text-white mb-1">{{ total_sales|default:0|floatformat:0 }} FCFA</p>
-                    <span class="text-xs text-blue-200 font-medium">Cumul global des ventes</span>
-                </div>
+            <div class="bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">montant total des ventes</span>
+                <p class="text-2xl font-black text-white mb-1">{{ total_sales|default:0|floatformat:0 }} FCFA</p>
             </div>
-
-            <div class="bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl border border-orange-400/40 flex flex-col justify-between min-h-[150px]">
-                <div class="flex items-start justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Stock Total</span>
-                    <div class="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center">
-                        <i class="fas fa-boxes-stacked text-white text-xs"></i>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-2xl font-black tracking-tight text-white mb-1">{{ total_stock_qty|default:0 }} un.</p>
-                    <span class="text-xs text-orange-100 font-medium">Références en stock</span>
-                </div>
+            <div class="bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Stock Total</span>
+                <p id="stockTotalDisplay" class="text-2xl font-black text-white mb-1">{{ total_stock_qty|default:0 }}</p>
             </div>
-
-            <div class="bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl border border-blue-800/50 flex flex-col justify-between min-h-[150px]">
-                <div class="flex items-start justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Clients</span>
-                    <div class="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center">
-                        <i class="fas fa-users text-white text-xs"></i>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-2xl font-black tracking-tight text-white mb-1">{{ total_clients|default:0 }}</p>
-                    <span class="text-xs text-blue-200 font-medium">Clients enregistrés</span>
-                </div>
+            <div class="bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Clients</span>
+                <p class="text-2xl font-black text-white mb-1">{{ total_clients|default:0 }}</p>
             </div>
-
-            <div class="bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl border border-orange-400/40 flex flex-col justify-between min-h-[150px]">
-                <div class="flex items-start justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Fournisseurs</span>
-                    <div class="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center">
-                        <i class="fas fa-truck-field text-white text-xs"></i>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-2xl font-black tracking-tight text-white mb-1">{{ total_suppliers|default:0 }}</p>
-                    <span class="text-xs text-orange-100 font-medium">Partenaires actifs</span>
-                </div>
+            <div class="bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px]">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Fournisseurs</span>
+                <p class="text-2xl font-black text-white mb-1">{{ total_suppliers|default:0 }}</p>
             </div>
-
-            <div class="bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl border border-blue-800/50 flex flex-col justify-between min-h-[150px] sm:col-span-2 xl:col-span-1">
-                <div class="flex items-start justify-between">
-                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Dépenses Appros</span>
-                    <div class="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center">
-                        <i class="fas fa-cart-flatbed text-white text-xs"></i>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-2xl font-black tracking-tight text-white mb-1">{{ total_appros|default:0|floatformat:0 }} FCFA</p>
-                    <span class="text-xs text-blue-200 font-medium">Dépenses totales</span>
-                </div>
+            <div class="bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl flex flex-col justify-between min-h-[150px] sm:col-span-2 xl:col-span-1">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-white/90">Dépenses Appros</span>
+                <p class="text-2xl font-black text-white mb-1">{{ total_appros|default:0|floatformat:0 }} FCFA</p>
             </div>
         </div>
 
         <!-- Section Graphiques -->
-        <div class="print-charts-wrapper grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div id="salesCardContainer" class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
-                <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-100">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 m-0">
-                        <span class="w-3 h-3 rounded-full bg-blue-900"></span> Évolution du Chiffre d'Affaires
-                    </h2>
-                </div>
+        <div class="print-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                <h2 class="text-lg font-bold text-slate-900 mb-6 pb-3 border-b border-slate-100">Évolution du Chiffre d'Affaires (Par ordre d'achat)</h2>
                 <div class="w-full h-72 relative"><canvas id="salesChart"></canvas></div>
             </div>
-
-            <div id="stockCardContainer" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
-                <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-100">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 m-0">
-                        <span class="w-3 h-3 rounded-full bg-orange-500"></span> Répartition du Stock
-                    </h2>
-                </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                <h2 class="text-lg font-bold text-slate-900 mb-6 pb-3 border-b border-slate-100">Répartition du Stock</h2>
                 <div class="w-full h-72 relative flex items-center justify-center"><canvas id="stockChart"></canvas></div>
             </div>
         </div>
 
-        <!-- Résumé par Client avec Formulaire POST -->
+        <!-- SUIVI DES BÉNÉFICES & PERTES (ARTICLES COMMERCIALISÉS) -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-emerald-500 text-xl"></i> Suivi des Bénéfices & Pertes (Articles Commercialisés)
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Analyse des marges, bénéfices, pertes par article, et bilans périodiques.</p>
+                </div>
+                <div class="inline-flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-200">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Bénéfice Net Global :</span>
+                    <span class="text-base font-black {% if benefice_net_global >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                        {{ benefice_net_global|default:0|floatformat:0 }} FCFA
+                    </span>
+                </div>
+            </div>
+
+            <!-- Bilans Mensuels & Annuels -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3"><i class="fas fa-calendar-alt text-orange-500 mr-1.5"></i> Bilans Mensuels</h3>
+                    <div class="space-y-2">
+                        {% for b in bilan_mensuel %}
+                        <div class="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-slate-200/60 font-semibold">
+                            <span class="text-slate-700">{{ b.mois|date:"F Y"|title }}</span>
+                            <span class="text-slate-900 font-bold">{{ b.total_ca|default:0|floatformat:0 }} FCFA (CA)</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">Aucune donnée mensuelle disponible.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3"><i class="fas fa-calendar text-blue-500 mr-1.5"></i> Bilans Annuels</h3>
+                    <div class="space-y-2">
+                        {% for a in bilan_annuel %}
+                        <div class="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-slate-200/60 font-semibold">
+                            <span class="text-slate-700">{{ a.annee|date:"Y" }}</span>
+                            <span class="text-slate-900 font-bold">{{ a.total_ca|default:0|floatformat:0 }} FCFA (CA)</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">Aucune donnée annuelle disponible.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau Détaillé avec Colonnes Bénéfice et Perte Séparées -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500"><i class="fas fa-box-open text-indigo-500 mr-1.5"></i> Détail par article vendu</h3>
+              
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
+                                <th class="p-3">Article Commercialisé</th>
+                                <th class="p-3 text-center">Qté Vendue</th>
+                                <th class="p-3 text-right">Montant total des ventes</th>
+                                <th class="p-3 text-right text-emerald-600">Bénéfice (+ Gain)</th>
+                                <th class="p-3 text-right text-red-600">Perte (- Déficit)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                            {% for item in benefices_articles %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 font-semibold text-slate-800">{{ item.nom }}</td>
+                                <td class="p-3 text-center font-bold text-slate-600">{{ item.quantite }}</td>
+                                <td class="p-3 text-right font-bold text-slate-700">{{ item.ca|floatformat:0 }} FCFA</td>
+                                
+                                <!-- Colonne Bénéfice -->
+                                <td class="p-3 text-right font-black text-emerald-600">
+                                    {% if item.benefice >= 0 %}+{{ item.benefice|floatformat:0 }} FCFA{% else %}-{% endif %}
+                                </td>
+                                
+                                <!-- Colonne Perte -->
+                                <td class="p-3 text-right font-black text-red-600">
+                                    {% if item.benefice < 0 %}{{ item.benefice|floatformat:0 }} FCFA{% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-slate-400 italic">Aucun article commercialisé enregistré pour le moment.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résumé par Client -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
             <h2 class="text-base font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
                 <i class="fas fa-address-book text-orange-500 text-lg"></i> Résumé par Client (Cahier & Montants)
@@ -240,22 +287,16 @@ Astra Tech - Rapports & Analyses Globaux
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="p-3 font-semibold text-slate-800">{{ client.nom }}</td>
                             <td class="p-3">
-                                <form method="POST" action="" class="inline-block" onsubmit="openClientCahierPost(event, '{{ client.nom|escapejs }}', '{{ client.nombre_achats|default:0 }}', '{{ client.montant_total_achats|default:0|floatformat:0 }}')">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="client_nom" value="{{ client.nom }}">
-                                    <input type="hidden" name="nombre_achats" value="{{ client.nombre_achats|default:0 }}">
-                                    <input type="hidden" name="montant_total_achats" value="{{ client.montant_total_achats|default:0|floatformat:0 }}">
-                                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-xl text-xs font-bold transition-all cursor-pointer border border-orange-200">
-                                        <i class="fas fa-book-open"></i> Ouvrir le Cahier
-                                        <span class="ml-1 px-1.5 py-0.5 bg-orange-200/60 text-orange-800 rounded-full text-[10px]">{{ client.nombre_achats|default:0 }}</span>
-                                    </button>
-                                </form>
+                                <button type="button" onclick="openClientCahier('{{ client.nom|escapejs }}', '{{ client.nombre_achats|default:0 }}', '{{ client.montant_total_achats|default:0|floatformat:0 }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-xl text-xs font-bold transition-all cursor-pointer border border-orange-200">
+                                    <i class="fas fa-book-open"></i> Ouvrir le Cahier
+                                    <span class="ml-1 px-1.5 py-0.5 bg-orange-200/60 text-orange-800 rounded-full text-[10px]">{{ client.nombre_achats|default:0 }}</span>
+                                </button>
                             </td>
                             <td class="p-3 text-right font-black text-slate-900">{{ client.montant_total_achats|default:0|floatformat:0 }} FCFA</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3" class="p-4 text-center text-slate-400 italic">Aucun client enregistré pour le moment.</td>
+                            <td colspan="3" class="p-4 text-center text-slate-400 italic">Aucun client enregistré.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -263,32 +304,37 @@ Astra Tech - Rapports & Analyses Globaux
             </div>
         </div>
 
-        <!-- Derniers Approvisionnements -->
+        <!-- Suivi des Approvisionnements par Fournisseur Unique -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
             <h2 class="text-base font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
-                <i class="fas fa-truck-ramp-box text-blue-600 text-lg"></i> Derniers Approvisionnements Enregistrés
+                <i class="fas fa-truck-ramp-box text-blue-600 text-lg"></i> Suivi des Approvisionnements par Fournisseur Unique
             </h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
-                            <th class="p-3">Réf / ID</th>
                             <th class="p-3">Fournisseur</th>
-                            <th class="p-3 text-right">Coût Total</th>
+                            <th class="p-3">Cahier d'Approvisionnement Unique</th>
+                            <th class="p-3 text-center">Nombre d'Opérations</th>
+                            <th class="p-3 text-right">Coût Total Cumulé</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
                         {% for a in derniers_appros %}
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-3 font-mono text-xs font-bold text-slate-500">{{ a.reference|default:a.id }}</td>
-                            <td class="p-3 font-semibold text-slate-800">
-                                {% if a.fournisseur %}{{ a.fournisseur.nom }}{% else %}Fournisseur externe{% endif %}
+                            <td class="p-3 font-semibold text-slate-800">{{ a.fournisseur_nom }}</td>
+                            <td class="p-3">
+                                <button type="button" onclick="openApproCahier('{{ a.fournisseur_nom|escapejs }}', '{{ a.montant_total|default:0|floatformat:0 }}', '{{ a.nombre_appros }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition-all cursor-pointer border border-blue-200">
+                                    <i class="fas fa-book"></i> Ouvrir le Cahier Unique
+                                    <span class="ml-1 px-1.5 py-0.5 bg-blue-200/60 text-blue-800 rounded-full text-[10px]">{{ a.nombre_appros }}</span>
+                                </button>
                             </td>
+                            <td class="p-3 text-center font-bold text-slate-600">{{ a.nombre_appros }}</td>
                             <td class="p-3 text-right font-black text-slate-900">{{ a.montant_total|default:0|floatformat:0 }} FCFA</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3" class="p-4 text-center text-slate-400 italic">Aucun approvisionnement enregistré</td>
+                            <td colspan="4" class="p-4 text-center text-slate-400 italic">Aucun approvisionnement enregistré</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -329,32 +375,72 @@ Astra Tech - Rapports & Analyses Globaux
         </div>
 
         <div class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Historique des transactions de ce client</h4>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Historique chronologique des transactions</h4>
             <div id="modalClientSalesList" class="max-h-60 overflow-y-auto space-y-2 pr-1"></div>
         </div>
 
         <div class="flex justify-end pt-2 border-t border-slate-100">
-            <button type="button" onclick="closeClientCahier()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-2xl transition-all cursor-pointer">
-                Fermer le Cahier
-            </button>
+            <button type="button" onclick="closeClientCahier()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-2xl transition-all cursor-pointer">Fermer</button>
         </div>
     </div>
 </div>
+
+<!-- Fenêtre Modale (Popup) Unique et Propre au Cahier d'Approvisionnement -->
+<div id="approCahierModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden p-6 space-y-6 m-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 font-bold text-lg">
+                    <i class="fas fa-book-bookmark"></i>
+                </div>
+                <div>
+                    <h3 id="modalApproFournisseurTitle" class="text-xl font-black text-slate-900">Cahier d'Approvisionnement</h3>
+                    <p class="text-xs font-semibold text-slate-500 mt-0.5">Historique global des achats auprès de ce fournisseur</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeApproCahier()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span class="text-xs font-bold uppercase text-slate-400 block mb-1">Total Opérations</span>
+                <p id="modalApproCount" class="text-xl font-black text-slate-800">0</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span class="text-xs font-bold uppercase text-slate-400 block mb-1">Coût Total Cumulé</span>
+                <p id="modalApproTotal" class="text-xl font-black text-blue-600">0 FCFA</p>
+            </div>
+        </div>
+
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Détail des transactions</h4>
+            <div id="modalApproList" class="max-h-60 overflow-y-auto space-y-2 pr-1"></div>
+        </div>
+
+        <div class="flex justify-end pt-2 border-t border-slate-100">
+            <button type="button" onclick="closeApproCahier()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-2xl transition-all cursor-pointer">Fermer le Cahier</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let sales = [];
     let products = [];
+    let approsDataGlobal = [];
 
     try {
         sales = JSON.parse('{{ ventes_json|safe|escapejs }}');
-    } catch (e) {
-        sales = [];
-    }
+    } catch (e) { sales = []; }
 
     try {
         products = JSON.parse('{{ produits_json|safe|escapejs }}');
-    } catch (e) {
-        products = [];
-    }
+    } catch (e) { products = []; }
+
+    try {
+        approsDataGlobal = JSON.parse('{{ appros_json|safe|escapejs }}');
+    } catch (e) { approsDataGlobal = []; }
 
     const getProp = (item, keys) => {
         if (!item) return '';
@@ -364,25 +450,32 @@ Astra Tech - Rapports & Analyses Globaux
         return '';
     };
 
+    const totalStockCalculated = products.reduce((acc, p) => {
+        const qty = parseInt(getProp(p, ['stock', 'quantite'])) || 0;
+        return acc + qty;
+    }, 0);
+
+    const stockTotalElem = document.getElementById('stockTotalDisplay');
+    if (stockTotalElem) {
+        stockTotalElem.textContent = totalStockCalculated;
+    }
+
     const mainPrintBtn = document.getElementById('mainPrintBtn');
     if (mainPrintBtn) {
         mainPrintBtn.addEventListener('click', () => {
-            document.body.classList.add('printing-both');
             window.print();
-            document.body.classList.remove('printing-both');
         });
     }
 
-    // Graphique Ventes
     const ctxSalesElem = document.getElementById('salesChart');
     if (ctxSalesElem) {
         new Chart(ctxSalesElem.getContext('2d'), {
             type: 'line',
             data: {
-                labels: sales.length > 0 ? sales.map((s, index) => getProp(s, ['reference', 'ref', 'code']) || `Vente #${index + 1}`) : ['Aucune vente'],
+                labels: sales.length > 0 ? sales.map((s, index) => getProp(s, ['reference', 'ref']) || `Vente #${index + 1}`) : ['Aucune vente'],
                 datasets: [{
                     label: 'Montant (FCFA)',
-                    data: sales.length > 0 ? sales.map(s => parseFloat(getProp(s, ['montant_total', 'total', 'montant'])) || 0) : [0],
+                    data: sales.length > 0 ? sales.map(s => parseFloat(getProp(s, ['montant_total', 'total'])) || 0) : [0],
                     borderColor: '#1e3a8a',
                     borderWidth: 3,
                     backgroundColor: 'rgba(30, 58, 138, 0.1)',
@@ -399,13 +492,12 @@ Astra Tech - Rapports & Analyses Globaux
         });
     }
 
-    // Graphique Stock
     const ctxStockElem = document.getElementById('stockChart');
     if (ctxStockElem) {
         new Chart(ctxStockElem.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: products.length > 0 ? products.map(p => getProp(p, ['nom', 'name', 'libelle']) || 'Produit') : ['Aucun produit'],
+                labels: products.length > 0 ? products.map(p => getProp(p, ['nom', 'name']) || 'Produit') : ['Aucun produit'],
                 datasets: [{
                     data: products.length > 0 ? products.map(p => parseInt(getProp(p, ['stock', 'quantite'])) || 0) : [1],
                     backgroundColor: ['#1e3a8a', '#f97316', '#0284c7', '#10b981', '#f59e0b', '#8b5cf6'],
@@ -416,42 +508,26 @@ Astra Tech - Rapports & Analyses Globaux
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 12, font: { size: 11 } }
-                    }
-                },
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
                 cutout: '68%'
             }
         });
     }
 
-    // Logique du Cahier Client
-    function openClientCahierPost(event, clientName, count, totalAmount) {
-        event.preventDefault();
-
+    function openClientCahier(clientName, count, totalAmount) {
         const modal = document.getElementById('clientCahierModal');
-        const nameElem = document.getElementById('modalClientName');
+        document.getElementById('modalClientName').textContent = `Cahier de : ${clientName}`;
+        document.getElementById('modalClientCount').textContent = `${count} achat(s)`;
+        document.getElementById('modalClientTotal').textContent = `${totalAmount} FCFA`;
+
         const badgeElem = document.getElementById('modalClientBadge');
-        const countElem = document.getElementById('modalClientCount');
-        const totalElem = document.getElementById('modalClientTotal');
-        const listElem = document.getElementById('modalClientSalesList');
-
-        nameElem.textContent = `Cahier de : ${clientName}`;
-        countElem.textContent = `${count} achat(s)`;
-        totalElem.textContent = `${totalAmount} FCFA`;
-
         const numCount = parseInt(count) || 0;
         if (numCount >= 3) {
             badgeElem.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mt-1 bg-emerald-50 text-emerald-700 border border-emerald-200";
             badgeElem.innerHTML = '<i class="fas fa-crown mr-1"></i> Client Fidèle';
-        } else if (numCount === 2) {
-            badgeElem.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mt-1 bg-blue-50 text-blue-700 border border-blue-200";
-            badgeElem.innerHTML = '<i class="fas fa-star mr-1"></i> Client Régulier';
         } else {
             badgeElem.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mt-1 bg-slate-100 text-slate-600 border border-slate-200";
-            badgeElem.innerHTML = '<i class="fas fa-user mr-1"></i> Client Occasionnel';
+            badgeElem.innerHTML = '<i class="fas fa-user mr-1"></i> Client Régulier';
         }
 
         const clientSales = sales.filter(s => {
@@ -459,68 +535,66 @@ Astra Tech - Rapports & Analyses Globaux
             return cName.toLowerCase() === clientName.toLowerCase();
         });
 
+        const listElem = document.getElementById('modalClientSalesList');
         listElem.innerHTML = '';
         if (clientSales.length > 0) {
             clientSales.forEach(sale => {
                 const ref = sale.reference || sale.ref || 'Vente';
                 const montant = parseFloat(sale.montant_total || sale.montant || 0).toLocaleString();
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 text-sm";
+                item.innerHTML = `<span class="font-mono font-bold text-slate-600 text-xs"><i class="fas fa-receipt text-orange-500 mr-1.5"></i> ${ref}</span><span class="font-black text-slate-900">${montant} FCFA</span>`;
+                listElem.appendChild(item);
+            });
+        } else {
+            listElem.innerHTML = `<div class="p-4 text-center bg-slate-50 rounded-2xl text-slate-500 text-xs italic">Ce client cumule ${count} achat(s) pour un total de ${totalAmount} FCFA.</div>`;
+        }
+        modal.classList.remove('hidden');
+    }
 
+    function closeClientCahier() {
+        document.getElementById('clientCahierModal').classList.add('hidden');
+    }
+
+    function openApproCahier(fournisseurNom, totalMontant, nombreAppros) {
+        const modal = document.getElementById('approCahierModal');
+        document.getElementById('modalApproFournisseurTitle').textContent = `Cahier : ${fournisseurNom}`;
+        document.getElementById('modalApproCount').textContent = `${nombreAppros} opération(s)`;
+        document.getElementById('modalApproTotal').textContent = `${totalMontant} FCFA`;
+
+        const found = approsDataGlobal.find(item => item.fournisseur.toLowerCase() === fournisseurNom.toLowerCase());
+        const listElem = document.getElementById('modalApproList');
+        listElem.innerHTML = '';
+
+        if (found && found.operations && found.operations.length > 0) {
+            found.operations.forEach(op => {
+                const ref = op.reference || `APP-${op.id}`;
+                const montant = parseFloat(op.montant_total || 0).toLocaleString();
+                const statut = op.statut || 'Validé';
                 const item = document.createElement('div');
                 item.className = "flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 text-sm";
                 item.innerHTML = `
-                    <span class="font-mono font-bold text-slate-600 text-xs"><i class="fas fa-receipt text-orange-500 mr-1.5"></i> ${ref}</span>
+                    <span class="font-mono font-bold text-slate-600 text-xs"><i class="fas fa-truck text-blue-500 mr-1.5"></i> ${ref} <span class="text-[10px] text-slate-400">(${statut})</span></span>
                     <span class="font-black text-slate-900">${montant} FCFA</span>
                 `;
                 listElem.appendChild(item);
             });
         } else {
-            listElem.innerHTML = `
-                <div class="p-4 text-center bg-slate-50 rounded-2xl border border-slate-100 text-slate-500 text-xs italic">
-                    Ce client cumule ${count} achat(s) pour un total de ${totalAmount} FCFA.
-                </div>
-            `;
+            listElem.innerHTML = `<div class="p-4 text-center bg-slate-50 rounded-2xl text-slate-500 text-xs italic">Aucun détail disponible.</div>`;
         }
 
         modal.classList.remove('hidden');
     }
 
-    function closeClientCahier() {
-        const modal = document.getElementById('clientCahierModal');
-        modal.classList.add('hidden');
-    }
-
-    // --- SCRIPT DE MODIFICATION AJOUTÉ ---
-    function modifierElement(url, dataForm, onSuccess) {
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: dataForm
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                if (typeof onSuccess === 'function') {
-                    onSuccess(data);
-                } else {
-                    location.reload();
-                }
-            } else {
-                alert('Erreur : ' + (data.message || 'Action impossible'));
-            }
-        })
-        .catch(error => {
-            console.error('Erreur réseau :', error);
-            alert('Une erreur est survenue lors de la modification.');
-        });
+    function closeApproCahier() {
+        document.getElementById('approCahierModal').classList.add('hidden');
     }
 
     window.addEventListener('click', (e) => {
-        const modal = document.getElementById('clientCahierModal');
-        if (e.target === modal) {
-            closeClientCahier();
-        }
+        const clientModal = document.getElementById('clientCahierModal');
+        const approModal = document.getElementById('approCahierModal');
+        if (e.target === clientModal) closeClientCahier();
+        if (e.target === approModal) closeApproCahier();
     });
 </script>
 {% endblock %}

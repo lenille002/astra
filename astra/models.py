@@ -1,44 +1,50 @@
-from django.db.models import Max
+
 from datetime import timedelta
-from django.contrib import admin
+import secrets
+
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Max
 from django.utils import timezone
 
-# ==================================================
+
+# ============================================================
 # PROFIL UTILISATEUR
-# ==================================================
+# ============================================================
 
 class UserProfile(models.Model):
+
+    PROFIL_CHOICES = [
+        ("etudiant", "Étudiant"),
+        ("enseignant", "Enseignant"),
+        ("entreprise", "Entreprise"),
+        ("admin", "Admin"),
+        ("candidat", "Candidat"),
+    ]
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name="profile"
     )
-    
-    PROFIL_CHOICES = [
-        ('etudiant', 'Étudiant'),
-        ('enseignant', 'Enseignant'),
-        ('entreprise', 'Entreprise'),
-        ('admin', 'Admin'),
-        ('candidat', 'Candidat'),
-    ]
-    
+
     profil_type = models.CharField(
         max_length=20,
         choices=PROFIL_CHOICES,
-        default='candidat'
+        default="candidat"
     )
 
     def __str__(self):
         return f"{self.user.username} - {self.profil_type}"
 
 
-# ==================================================
+# ============================================================
 # CATEGORIES
-# ==================================================
+# ============================================================
 
 class Categorie(models.Model):
+
     nom = models.CharField(
         max_length=100,
         unique=True
@@ -48,93 +54,201 @@ class Categorie(models.Model):
         return self.nom
 
 
-# ==================================================
+# ============================================================
 # PRODUITS
-# ==================================================
+# ============================================================
 
 class Produit(models.Model):
-    nom = models.CharField(max_length=255)
+
+    nom = models.CharField(
+        max_length=255
+    )
+
     categorie = models.ForeignKey(
         Categorie,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="produits",
+        related_name="produits"
     )
 
-    # --- PROPRIÉTÉS SPÉCIFIQUES AUX ORDINATEURS ---
     processeur = models.CharField(
-        max_length=100, blank=True, null=True, help_text="Ex: Intel Core i5-12400F, Apple M1"
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Ex: Intel Core i5-12400F, Apple M1"
     )
-    ram = models.CharField(
-        max_length=50, blank=True, null=True, help_text="Ex: 8Go, 16Go DDR4"
-    )
-    stockage_disque = models.CharField(
-        max_length=100, blank=True, null=True, help_text="Ex: SSD 512Go NVMe"
-    )
-    taille_ecran = models.CharField(
-        max_length=50, blank=True, null=True, help_text="Ex: 15.6 pouces, 13.3 pouces"
-    )
-    # ----------------------------------------------
 
-    prix_achat = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    prix_vente = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    stock = models.PositiveIntegerField(default=0)
-    seuil_alerte = models.PositiveIntegerField(default=5)
-    reference = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    image = models.ImageField(upload_to="produits/", blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    date_creation = models.DateTimeField(auto_now_add=True)
+    ram = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Ex: 8Go, 16Go DDR4"
+    )
+
+    stockage_disque = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Ex: SSD 512Go NVMe"
+    )
+
+    taille_ecran = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Ex: 15.6 pouces, 13.3 pouces"
+    )
+
+    prix_achat = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    prix_vente = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    stock = models.PositiveIntegerField(
+        default=0
+    )
+
+    seuil_alerte = models.PositiveIntegerField(
+        default=5
+    )
+
+    reference = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True
+    )
+
+    image = models.ImageField(
+        upload_to="produits/",
+        blank=True,
+        null=True
+    )
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+    date_creation = models.DateTimeField(
+        auto_now_add=True
+    )
 
     def save(self, *args, **kwargs):
-        # Convertit une chaîne vide en None pour éviter les collisions d'unicité
-        if not self.reference:
-            self.reference = None
 
         if not self.reference:
-            dernier = Produit.objects.order_by("id").last()
-            numero = dernier.id + 1 if dernier else 1
+            dernier = Produit.objects.order_by("-id").first()
+
+            if dernier:
+                numero = dernier.id + 1
+            else:
+                numero = 1
+
             self.reference = f"PROD-{numero:04d}"
-            
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nom} - {self.prix_vente} FCFA"
-# ==================================================
+
+
+# ============================================================
 # CLIENTS
-# ==================================================
+# ============================================================
 
 class Client(models.Model):
+
     reference = models.CharField(
-        max_length=100, unique=True, blank=True, null=True
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True
     )
-    nom = models.CharField(max_length=255)
-    telephone = models.CharField(max_length=50, blank=True)
-    email = models.EmailField(blank=True, null=True)
-    adresse = models.TextField(blank=True)
-    date_inscription = models.DateField(auto_now_add=True, null=True, blank=True)
+
+    nom = models.CharField(
+        max_length=255
+    )
+
+    telephone = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    email = models.EmailField(
+        blank=True,
+        null=True
+    )
+
+    date_naissance = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    adresse = models.TextField(
+        blank=True
+    )
+
+    mot_de_passe = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    date_inscription = models.DateField(
+        auto_now_add=True,
+        null=True,
+        blank=True
+    )
+
     total_depense = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0
+        max_digits=12,
+        decimal_places=2,
+        default=0
     )
-    is_active = models.BooleanField(default=True)
+
+    is_active = models.BooleanField(
+        default=True
+    )
 
     def save(self, *args, **kwargs):
+
+        # Mot de passe par défaut
+        if not self.mot_de_passe:
+            self.mot_de_passe = make_password("1234")
+
+        # Génération automatique de la référence
         if not self.reference:
-            # Utilisation de Max('id') pour éviter les collisions si des clients ont été supprimés
-            max_id = Client.objects.all().aggregate(Max('id'))['id__max']
+
+            max_id = Client.objects.aggregate(
+                Max("id")
+            )["id__max"]
+
             numero = (max_id or 0) + 1
-            self.reference = f'CLI-{numero:04d}'
+
+            self.reference = f"CLI-{numero:04d}"
 
         super().save(*args, **kwargs)
 
     def __str__(self):
-        statut = 'Actif' if self.is_active else 'Inactif'
-        return f'{self.nom} ({self.reference}) - {statut}'
-# ==================================================
+
+        statut = "Actif" if self.is_active else "Inactif"
+
+        return f"{self.nom} ({self.reference}) - {statut}"
+
+
+# ============================================================
 # VENTES
-# ==================================================
+# ============================================================
 
 class Vente(models.Model):
+
     STATUT_CHOICES = [
         ("en_attente", "En attente"),
         ("confirmee", "Confirmée"),
@@ -183,11 +297,12 @@ class Vente(models.Model):
         return f"Vente {self.reference}"
 
 
-# ==================================================
-# DETAILS DES VENTES
-# ==================================================
+# ============================================================
+# LIGNES DE VENTE
+# ============================================================
 
 class LigneVente(models.Model):
+
     vente = models.ForeignKey(
         Vente,
         on_delete=models.CASCADE,
@@ -216,13 +331,16 @@ class LigneVente(models.Model):
         return f"{self.quantite} x {self.produit.nom}"
 
 
+# Compatibilité avec l'ancien nom
 DetailVente = LigneVente
 
-# ==================================================
+
+# ============================================================
 # FOURNISSEURS
-# ==================================================
+# ============================================================
 
 class Fournisseur(models.Model):
+
     nom = models.CharField(
         max_length=255
     )
@@ -238,7 +356,13 @@ class Fournisseur(models.Model):
     )
 
     email = models.EmailField(
-        blank=True, null=True
+        blank=True,
+        null=True
+    )
+
+    mot_de_passe = models.CharField(
+        max_length=255,
+        default="1234"
     )
 
     is_active = models.BooleanField(
@@ -246,19 +370,24 @@ class Fournisseur(models.Model):
     )
 
     def __str__(self):
-        statut = 'Actif' if self.is_active else 'Inactif'
-        return f'{self.nom} - {statut}'
-# ==================================================
+
+        statut = "Actif" if self.is_active else "Inactif"
+
+        return f"{self.nom} - {statut}"
+
+
+# ============================================================
 # APPROVISIONNEMENTS
-# ==================================================
+# ============================================================
 
 class Approvisionnement(models.Model):
+
     STATUT_CHOICES = [
-        ('en_attente', 'En attente'),
-        ('confirmee', 'Confirmée'),
-        ('expediee', 'Expédiée'),
-        ('livree', 'Livrée'),
-        ('annulee', 'Annulée'),
+        ("en_attente", "En attente"),
+        ("confirmee", "Confirmée"),
+        ("expediee", "Expédiée"),
+        ("livree", "Livrée"),
+        ("annulee", "Annulée"),
     ]
 
     reference = models.CharField(
@@ -295,24 +424,30 @@ class Approvisionnement(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        if not self.reference:
-            self.reference = None
 
         if not self.reference:
-            dernier = Approvisionnement.objects.order_by("id").last()
-            numero = dernier.id + 1 if dernier else 1
+
+            dernier = Approvisionnement.objects.order_by("-id").first()
+
+            if dernier:
+                numero = dernier.id + 1
+            else:
+                numero = 1
+
             self.reference = f"APP-{numero:04d}"
+
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.reference
+        return self.reference or "Approvisionnement"
 
 
-# ==================================================
-# HISTORIQUE STOCK
-# ==================================================
+# ============================================================
+# MOUVEMENTS DE STOCK
+# ============================================================
 
 class MouvementStock(models.Model):
+
     TYPE_CHOICES = [
         ("entree", "Entrée"),
         ("sortie", "Sortie"),
@@ -339,35 +474,314 @@ class MouvementStock(models.Model):
         return f"{self.type_mouvement} - {self.produit.nom}"
 
 
-# ==================================================
+# ============================================================
 # TOKEN EMAIL SMTP
-# ==================================================
+# ============================================================
 
 class TokenVerification(models.Model):
+
     email = models.EmailField()
-    token = models.CharField(max_length=100)
-    role = models.CharField(max_length=50, default="caissier")
-    date_creation = models.DateTimeField(auto_now_add=True)
-    utilise = models.BooleanField(default=False)
+
+    token = models.CharField(
+        max_length=100
+    )
+
+    role = models.CharField(
+        max_length=50,
+        default="caissier"
+    )
+
+    date_creation = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    utilise = models.BooleanField(
+        default=False
+    )
 
     def est_valide(self):
-        expiration = self.date_creation + timedelta(minutes=10)
-        return timezone.now() < expiration and not self.utilise
+
+        expiration = (
+            self.date_creation
+            + timedelta(minutes=10)
+        )
+
+        return (
+            timezone.now() < expiration
+            and not self.utilise
+        )
 
     def __str__(self):
         return f"{self.email} - {self.token}"
 
 
-# ==================================================
+# ============================================================
 # TOKEN DE GESTION
-# ==================================================
+# ============================================================
 
 class Token(models.Model):
+
     email = models.EmailField()
-    valeur_token = models.CharField(max_length=50, unique=True)
-    role = models.CharField(max_length=50, default='utilisateur')
-    date_creation = models.DateTimeField(auto_now_add=True)
+
+    valeur_token = models.CharField(
+        max_length=50,
+        unique=True
+    )
+
+    role = models.CharField(
+        max_length=50,
+        default="utilisateur"
+    )
+
+    date_creation = models.DateTimeField(
+        auto_now_add=True
+    )
+
     date_expiration = models.DateTimeField()
 
     def __str__(self):
         return f"{self.valeur_token} - {self.email}"
+
+
+# ============================================================
+# NOTIFICATIONS PLATEFORME
+# ============================================================
+
+class NotificationPlateforme(models.Model):
+
+    CATEGORIES = (
+        ("ventes", "Ventes"),
+        ("stocks", "Stocks"),
+        ("appro", "Approvisionnement"),
+        ("clients", "Clients"),
+        ("fournisseurs", "Fournisseurs"),
+        ("rapports", "Rapports"),
+    )
+
+    titre = models.CharField(
+        max_length=200
+    )
+
+    message = models.TextField()
+
+    categorie = models.CharField(
+        max_length=20,
+        choices=CATEGORIES,
+        default="clients"
+    )
+
+    lu = models.BooleanField(
+        default=False
+    )
+
+    date_creation = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.titre} - {'Lu' if self.lu else 'Non lu'}"
+
+
+# ============================================================
+# PARAMETRES GLOBAUX
+# ============================================================
+
+class ParametreGlobal(models.Model):
+
+    nom_boutique = models.CharField(
+        max_length=255,
+        default="ASTRA TECH"
+    )
+
+    verrou_commercial = models.BooleanField(
+        default=False
+    )
+
+    verrou_admin = models.BooleanField(
+        default=False
+    )
+
+    seuil_stock = models.IntegerField(
+        default=5
+    )
+
+    taux_tva = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=19.25
+    )
+
+    def __str__(self):
+        return "Configuration Globale de la Boutique"
+
+
+# ============================================================
+# NOTIFICATIONS UTILISATEURS
+# ============================================================
+
+class Notification(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Utilisateur"
+    )
+
+    titre = models.CharField(
+        max_length=200,
+        verbose_name="Titre"
+    )
+
+    message = models.TextField(
+        verbose_name="Message"
+    )
+
+    lue = models.BooleanField(
+        default=False,
+        verbose_name="Lue"
+    )
+
+    date_creation = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Date de création"
+    )
+
+    url = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Lien associé"
+    )
+
+    class Meta:
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+        ordering = ["-date_creation"]
+
+    def __str__(self):
+        return f"{self.titre} - {self.user.username}"
+
+
+# ============================================================
+# UTILISATEUR ACCES
+# ============================================================
+
+class UtilisateurAcces(models.Model):
+
+    ROLE_CHOICES = [
+        ("client", "Client"),
+        ("fournisseur", "Fournisseur"),
+    ]
+
+    nom = models.CharField(
+        max_length=100
+    )
+
+    prenom = models.CharField(
+        max_length=100
+    )
+
+    email = models.EmailField(
+        unique=True
+    )
+
+    telephone = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES
+    )
+
+    token = models.CharField(
+        max_length=128,
+        unique=True,
+        blank=True
+    )
+
+    token_expiration = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    est_actif = models.BooleanField(
+        default=True
+    )
+
+    date_inscription = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def generer_token(self):
+
+        self.token = secrets.token_urlsafe(32)
+
+        self.token_expiration = (
+            timezone.now()
+            + timedelta(minutes=30)
+        )
+
+        self.save(
+            update_fields=[
+                "token",
+                "token_expiration"
+            ]
+        )
+
+        return self.token
+
+    def token_valide(self):
+
+        if not self.token:
+            return False
+
+        if not self.token_expiration:
+            return False
+
+        if timezone.now() >= self.token_expiration:
+            return False
+
+        if not self.est_actif:
+            return False
+
+        return True
+
+
+# ============================================================
+# UTILISATEUR
+# ============================================================
+
+class Utilisateur(models.Model):
+
+    nom = models.CharField(
+        max_length=150
+    )
+
+    prenom = models.CharField(
+        max_length=150
+    )
+
+    email = models.EmailField(
+        unique=True
+    )
+
+    telephone = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    role = models.CharField(
+        max_length=50,
+        default="client"
+    )
+
+    password = models.CharField(
+        max_length=255
+    )
+
+    def __str__(self):
+        return f"{self.prenom} {self.nom} - {self.role}"
+

@@ -297,7 +297,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom de la Boutique / Entreprise</label>
-                        <input type="text" id="shop-name" value="ASTRA TECH" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
+                        <input type="text" id="shop-name" value="{{ config.nom_boutique }}" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Devise Système</label>
@@ -312,11 +312,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Seuil d'alerte de stock bas par défaut</label>
-                        <input type="number" id="stock-threshold" value="5" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
+                        <input type="number" id="stock-threshold" value="{{ config.seuil_stock }}" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Taux de TVA par défaut (%)</label>
-                        <input type="number" id="tax-rate" value="19.25" step="0.01" min="0" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
+                        <input type="number" id="tax-rate" value="{{ config.taux_tva }}" step="0.01" min="0" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm bg-white" required>
                     </div>
                 </div>
 
@@ -330,13 +330,13 @@
                     </div>
                     <div class="space-y-4 pt-4">
                         <label class="flex items-center cursor-pointer select-none">
-                            <input type="checkbox" id="lock-commercial-mode" class="w-5 h-5 accent-orange-500 rounded cursor-pointer">
-                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage du module commercial</span>
+                            <input type="checkbox" id="lock-commercial-mode" {% if config.verrou_commercial %}checked{% endif %} class="w-5 h-5 accent-orange-500 rounded cursor-pointer">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage effectif du module commercial</span>
                         </label>
                         
                         <label class="flex items-center cursor-pointer select-none">
-                            <input type="checkbox" id="lock-admin-mode" class="w-5 h-5 accent-red-500 rounded cursor-pointer">
-                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage du module administration</span>
+                            <input type="checkbox" id="lock-admin-mode" {% if config.verrou_admin %}checked{% endif %} class="w-5 h-5 accent-red-500 rounded cursor-pointer">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Verrouillage effectif du module administration</span>
                         </label>
                         
                         <label class="flex items-center cursor-pointer select-none">
@@ -367,7 +367,7 @@
                         </h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Téléchargez une copie de sauvegarde complète de toutes vos données (ventes, clients, stocks).</p>
                     </div>
-                    <button type="button" onclick="alert('Sauvegarde de la base de données initialisée avec succès.')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 w-fit">
+                    <button type="button" id="backup-btn" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 w-fit cursor-pointer">
                         <i class="fas fa-download"></i> Télécharger le Backup (.sqlite3)
                     </button>
                 </div>
@@ -379,7 +379,7 @@
                         </h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Nettoyez les anciens fichiers temporaires et l'historique des connexions pour optimiser l'application.</p>
                     </div>
-                    <button type="button" onclick="if(confirm('Voulez-vous vraiment vider les caches temporaires ?')) alert('Cache et journaux purgés avec succès.');" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium text-sm rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 w-fit">
+                    <button type="button" id="purge-btn" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium text-sm rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 w-fit cursor-pointer">
                         <i class="fas fa-broom"></i> Nettoyer le Système
                     </button>
                 </div>
@@ -459,7 +459,24 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Gestion spécifique et immédiate du Mode Nuit Global
+    // 1. Récupération du jeton CSRF Django
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // 2. Gestion spécifique et immédiate du Mode Nuit Global
     const darkModeToggle = document.getElementById("dark-mode-toggle");
     if (darkModeToggle) {
         const isDark = localStorage.getItem("astra_dark_mode") === "true";
@@ -474,36 +491,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem("astra_dark_mode", "false");
             }
         });
-    }
-
-    // 2. Restauration des champs depuis le localStorage
-    if (localStorage.getItem("astra_shop_name")) {
-        const el = document.getElementById("shop-name");
-        if (el) el.value = localStorage.getItem("astra_shop_name");
-    }
-    if (localStorage.getItem("astra_currency")) {
-        const el = document.getElementById("shop-currency");
-        if (el) el.value = localStorage.getItem("astra_currency");
-    }
-    if (localStorage.getItem("astra_threshold")) {
-        const el = document.getElementById("stock-threshold");
-        if (el) el.value = localStorage.getItem("astra_threshold");
-    }
-    if (localStorage.getItem("astra_tax_rate")) {
-        const el = document.getElementById("tax-rate");
-        if (el) el.value = localStorage.getItem("astra_tax_rate");
-    }
-    if (localStorage.getItem("astra_receipt_format")) {
-        const el = document.getElementById("receipt-format");
-        if (el) el.value = localStorage.getItem("astra_receipt_format");
-    }
-    if (localStorage.getItem("astra_lock_commercial")) {
-        const el = document.getElementById("lock-commercial-mode");
-        if (el) el.checked = localStorage.getItem("astra_lock_commercial") === "true";
-    }
-    if (localStorage.getItem("astra_lock_admin")) {
-        const el = document.getElementById("lock-admin-mode");
-        if (el) el.checked = localStorage.getItem("astra_lock_admin") === "true";
     }
 
     // 3. Gestion dynamique des statuts selon chaque rôle sélectionné
@@ -603,33 +590,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-
-    // 4. Enregistrement des paramètres globaux
+    // 4. Enregistrement des paramètres globaux vers Django
     const saveSettingsBtn = document.getElementById("save-settings-btn");
     if (saveSettingsBtn) {
         saveSettingsBtn.addEventListener("click", () => {
-            const shopName = document.getElementById("shop-name") ? document.getElementById("shop-name").value.trim() : "";
-            const currency = document.getElementById("shop-currency") ? document.getElementById("shop-currency").value : "FCFA";
-            const threshold = document.getElementById("stock-threshold") ? document.getElementById("stock-threshold").value : "5";
-            const taxRate = document.getElementById("tax-rate") ? document.getElementById("tax-rate").value : "19.25";
-            const receiptFormat = document.getElementById("receipt-format") ? document.getElementById("receipt-format").value : "thermal";
-            const lockCommercial = document.getElementById("lock-commercial-mode") ? document.getElementById("lock-commercial-mode").checked : false;
-            const lockAdmin = document.getElementById("lock-admin-mode") ? document.getElementById("lock-admin-mode").checked : false;
+            const shopName = document.getElementById("shop-name").value.trim();
+            const currency = document.getElementById("shop-currency").value;
+            const threshold = document.getElementById("stock-threshold").value;
+            const taxRate = document.getElementById("tax-rate").value;
+            const receiptFormat = document.getElementById("receipt-format").value;
+            const lockCommercial = document.getElementById("lock-commercial-mode").checked;
+            const lockAdmin = document.getElementById("lock-admin-mode").checked;
             const darkMode = darkModeToggle ? darkModeToggle.checked : false;
 
             localStorage.setItem("astra_shop_name", shopName);
@@ -644,15 +615,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const payload = {
                 nom_boutique: shopName,
                 devise: currency,
-                seuil_alerte_stock: threshold,
+                seuil_stock: threshold,
                 taux_tva: taxRate,
-                format_reçu: receiptFormat,
-                verrouillage_commercial: lockCommercial,
-                verrouillage_admin: lockAdmin,
-                mode_nuit: darkMode
+                format_recu: receiptFormat,
+                verrou_commercial: lockCommercial,
+                verrou_admin: lockAdmin
             };
 
-            fetch("/api/parametres/", {
+            fetch("{% url 'astra:api_save_parametres' %}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -660,63 +630,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify(payload)
             })
-            .then(response => {
-                if (!response.ok) throw new Error("Erreur réseau");
-                return response.json().catch(() => ({}));
+            .then(res => res.json())
+            .then(data => {
+                if(data.success || data.status === 'success') {
+                    alert("Paramètres enregistrés et appliqués avec succès en base de données !");
+                } else {
+                    alert("Erreur lors de l'enregistrement : " + (data.error || data.message));
+                }
             })
-            .then(() => {
-                alert("Paramètres globaux enregistrés avec succès sur le serveur !");
-            })
-            .catch(() => {
-                alert("Paramètres enregistrés et appliqués localement avec succès !");
+            .catch(err => {
+                alert("Erreur de communication avec le serveur.");
             });
         });
     }
 
-    // 5. Enregistrement d'un utilisateur ou client
+    // 5. Enregistrement d'un utilisateur ou client depuis le formulaire dédié
     const createUserForm = document.getElementById("create-user-form");
     if (createUserForm) {
-        createUserForm.addEventListener("submit", function(e) {
+        createUserForm.addEventListener("submit", (e) => {
             e.preventDefault();
-
-            const firstname = document.getElementById("new-user-firstname").value.trim();
-            const lastname = document.getElementById("new-user-lastname").value.trim();
-            const email = document.getElementById("new-user-email").value.trim();
-            const password = document.getElementById("new-user-password").value;
-            const statusValue = document.getElementById("new-user-status").value;
-            const fullName = `${firstname} ${lastname}`;
-
-            const payload = {
-                name: fullName,
-                email: email,
-                password: password,
+            const userPayload = {
                 role: selectedRole,
-                status: statusValue,
-                active: true
+                prenom: document.getElementById("new-user-firstname").value.trim(),
+                nom: document.getElementById("new-user-lastname").value.trim(),
+                email: document.getElementById("new-user-email").value.trim(),
+                mot_de_passe: document.getElementById("new-user-password").value,
+                statut: document.getElementById("new-user-status").value
             };
 
-            fetch("/api/utilisateurs/", {
+            fetch("{% url 'astra:api_users_list_create' %}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": csrftoken
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(userPayload)
             })
-            .then(async response => {
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(JSON.stringify(errData));
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert(data.message);
+                    createUserForm.reset();
+                    updateStatusOptions(selectedRole);
+                } else {
+                    alert("Erreur : " + data.message);
                 }
-                return response.json();
             })
-            .then(() => {
-                alert("Enregistrement effectué avec succès et synchronisé !");
-                window.location.href = "{% url 'astra:page_utilisateurs' %}";
-            })
-            .catch(error => {
-                console.error("Erreur lors de l'enregistrement:", error);
-                alert("Enregistrement validé et appliqué avec succès !");
+            .catch(err => {
+                alert("Erreur de communication avec le serveur.");
             });
         });
     }

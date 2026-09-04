@@ -12,7 +12,7 @@
         <a href="{% url 'astra:ventes' %}" class="nav-item {% if request.resolver_match.url_name == 'ventes' %}active{% endif %}">Ventes</a>
         <a href="{% url 'astra:stock' %}" class="nav-item {% if request.resolver_match.url_name == 'stock' %}active{% endif %}">Stocks</a>
         <a href="{% url 'astra:approvisionnements' %}" class="nav-item {% if request.resolver_match.url_name == 'approvisionnement' or request.resolver_match.url_name == 'approvisionnements' %}active{% endif %}">Approvisionnement</a>
-        <a href="{% url 'astra:gestion_clients' %}" class="nav-item {% if request.resolver_match.url_name == 'gestion_clients' %}active{% endif %}">Clients</a>
+        <a href="{% url 'astra:clients' %}" class="nav-item {% if request.resolver_match.url_name == 'gestion_clients' %}active{% endif %}">Clients</a>
         <a href="{% url 'astra:fournisseurs' %}" class="nav-item {% if request.resolver_match.url_name == 'fournisseurs' %}active{% endif %}">Fournisseurs</a>
         <a href="{% url 'astra:rapports' %}" class="nav-item {% if request.resolver_match.url_name == 'rapports' %}active{% endif %}">Rapports</a>
     </nav>

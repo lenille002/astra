@@ -1,0 +1,35 @@
+<!-- Conteneur global positionné à droite pour éviter qu'il ne sorte de l'écran -->
+<div style="position: absolute; right: 0; top: 100%; margin-top: 10px; width: 320px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px; font-family: inherit; z-index: 1000;">
+    
+    <!-- En-tête -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px;">
+        <h6 style="margin: 0; font-weight: bold; font-size: 0.9rem; color: #333;">Notifications importantes</h6>
+        {% if nombre_notifications and nombre_notifications > 0 %}
+            <button onclick="marquerToutCommeLu()" style="background: none; border: none; color: #007bff; font-size: 0.75rem; cursor: pointer; font-weight: bold; text-decoration: underline; padding: 0;">
+                Tout marquer comme lu
+            </button>
+        {% endif %}
+    </div>
+    
+    <!-- Liste des notifications -->
+    <div id="notifListContainer" style="max-height: 260px; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px;">
+        {% for notif in notifications_non_lues %}
+            <!-- 
+              Ici, si votre modèle possède un champ 'url' ou 'lien', on l'utilise dynamiquement. 
+              Sinon, on retombe par défaut sur la page de détail de la notification. 
+            -->
+            <a href="{% if notif.url %}{{ notif.url }}{% else %}{% url 'astra:detail_notification' notif.id %}{% endif %}" style="text-decoration: none; color: inherit; display: block;">
+                <div style="padding: 10px; background: #f8f9fa; border-radius: 6px; display: flex; gap: 8px; align-items: flex-start; border-left: 4px solid #007bff; transition: background 0.2s;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+                    <i class="fas fa-envelope-open-text" style="color: #007bff; font-size: 1.1rem; margin-top: 2px; flex-shrink: 0;"></i>
+                    <div style="width: 100%; overflow: hidden;">
+                        <strong style="display: block; color: #0056b3; font-size: 0.85rem; margin-bottom: 2px;">{{ notif.titre }}</strong>
+                        <p style="margin: 0 0 4px 0; color: #333; line-height: 1.2; word-break: break-word;">{{ notif.message }}</p>
+                        <span style="font-size: 0.65rem; color: #888;">{{ notif.date_creation|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </div>
+            </a>
+        {% empty %}
+            <p style="text-align: center; color: #888; padding: 15px; margin: 0; font-size: 0.85rem;">Aucune nouvelle notification</p>
+        {% endfor %}
+    </div>
+</div>

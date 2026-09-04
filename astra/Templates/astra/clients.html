@@ -4,7 +4,6 @@
 {% block title %}Astra Tech - Gestion des Clients{% endblock %}
 
 {% block css %}
- <!-- Script d’initialisation immédiate du mode nuit global -->
     <script>
         (function() {
             const savedDarkMode = localStorage.getItem('astra_dark_mode');
@@ -15,8 +14,8 @@
             }
         })();
     </script>
-
 <style>
+    /* --- ÉTAT CLAIR PAR DÉFAUT --- */
     body, .app-layout, .app-main {
         background-color: #f8fafc !important;
         background: #f8fafc !important;
@@ -173,6 +172,7 @@
         outline: none !important;
         transition: all 0.2s ease !important;
         background-color: #f8fafc !important;
+        color: #1e293b !important;
     }
 
     .astra-search-input:focus {
@@ -244,102 +244,93 @@
         background-color: #f8fafc !important;
     }
 
-    .astra-modal {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(15, 23, 42, 0.6) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        z-index: 9999 !important;
+
+    /* ==========================================================
+       --- MODE NUIT CORRIGÉ & FORCÉ POUR CETTE PAGE ---
+       ========================================================== */
+    html.dark body, 
+    html.dark .app-layout, 
+    html.dark .app-main {
+        background-color: #0f172a !important;
+        background: #0f172a !important;
+        color: #f1f5f9 !important;
     }
 
-    .astra-modal.hidden {
-        display: none !important;
+    /* Titres principaux et textes de la page */
+    html.dark .astra-title {
+        color: #f1f5f9 !important;
     }
 
-    .astra-modal-card {
-        background: white !important;
-        padding: 30px !important;
-        border-radius: 16px !important;
-        width: 100% !important;
-        max-width: 500px !important;
-        position: relative !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    /* Boîte de contenu principale (qui était blanche) */
+    html.dark .astra-content-box {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     }
 
-    .astra-form-group {
-        margin-bottom: 15px !important;
-        text-align: left !important;
+    /* Tableaux en mode nuit */
+    html.dark .astra-table {
+        background-color: transparent !important;
+        color: #f1f5f9 !important;
     }
 
-    .astra-form-group label {
-        display: block !important;
-        font-weight: 600 !important;
-        margin-bottom: 5px !important;
-        color: #1e293b !important;
+    html.dark .astra-table th {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+        border-bottom: 2px solid #334155 !important;
     }
 
-    .astra-form-group input {
-        width: 100% !important;
-        padding: 10px 14px !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 8px !important;
-        font-size: 1rem !important;
+    html.dark .astra-table td {
+        border-bottom-color: #334155 !important;
+        color: #cbd5e1 !important;
     }
 
-    .details-btn:hover, .edit-btn:hover {
-        text-decoration: underline !important;
-    }
-    
-    .delete-link:hover {
-        text-decoration: underline !important;
+    html.dark .astra-table tbody tr:hover {
+        background-color: rgba(51, 65, 85, 0.4) !important;
     }
 
-    .close-modal-x {
-        position: absolute !important;
-        top: 15px !important;
-        right: 15px !important;
-        border: none !important;
-        background: none !important;
-        font-size: 1.5rem !important;
-        cursor: pointer !important;
+    /* Champs de recherche et filtres en mode nuit */
+    html.dark .astra-search-input {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #ffffff !important;
+    }
+
+    html.dark .astra-search-input::placeholder {
         color: #64748b !important;
-        transition: color 0.2s ease !important;
-    }
-    .close-modal-x:hover {
-        color: #0f172a !important;
     }
 
-        /* --- MODE NUIT GLOBAL --- */
-        html.dark body {
-            background-color: #0f172a !important;
-            color: #f1f5f9 !important;
-        }
-        html.dark .card {
-            background-color: #1e293b !important;
-            border-color: #334155 !important;
-            color: #f1f5f9 !important;
-        }
-        html.dark h1, html.dark h2, html.dark h3, html.dark label, html.dark span, html.dark div {
-            color: inherit;
-        }
-        html.dark input, html.dark select {
-            background-color: #0f172a !important;
-            border-color: #334155 !important;
-            color: #ffffff !important;
-        }
-        html.dark .role-card {
-            background-color: #1e293b;
-            border-color: #334155;
-        }
-        html.dark .role-card.border-orange-500 {
-            border-color: #f97316 !important;
-            background-color: rgba(249, 115, 22, 0.1) !important;
-        }
+    html.dark .btn-filter {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+
+    html.dark .btn-filter.active {
+        background-color: #4338ca !important;
+        color: white !important;
+        border-color: #4338ca !important;
+    }
+
+    /* Modales éventuelles */
+    html.dark .astra-modal-card {
+        background: #1e293b !important;
+        color: #f1f5f9 !important;
+        border: 1px solid #334155 !important;
+    }
+
+    html.dark .astra-modal-card p, 
+    html.dark .astra-modal-card div,
+    html.dark .astra-form-group label {
+        color: #cbd5e1 !important;
+    }
+
+    html.dark .astra-form-group input {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #ffffff !important;
+    }
 </style>
 {% endblock %}
 
@@ -349,9 +340,12 @@
     <!-- En-tête -->
     <div class="astra-header-bar">
         <h1 class="astra-title"><span>Gestion</span> des Clients</h1>
-        <button id="add-client-btn" type="button" class="btn-astra-orange">
-            <i class="fa-solid fa-plus"></i> Ajouter un client
-        </button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="{% url 'astra:client_register' %}" style="font-size: 0.85rem; color: #4338ca; font-weight: 700; text-decoration: underline;">Créer un compte client</a>
+            <button id="add-client-btn" type="button" class="btn-astra-orange">
+                <i class="fa-solid fa-plus"></i> Ajouter un client
+            </button>
+        </div>
     </div>
 
     <!-- Cartes de Statistiques -->
@@ -361,7 +355,7 @@
             <p>{{ total_clients }}</p>
         </div>
         <div class="astra-card astra-card-orange">
-            <h3>Nouveaux clients (mois)</h3>
+            <h3>Nouveaux clients (jour)</h3>
             <p>{{ new_clients_count }}</p>
         </div>
         <div class="astra-card astra-card-indigo">
@@ -377,10 +371,24 @@
         </h2>
 
         <div class="astra-top-actions">
+            <!-- FILTRES AVEC URL ABSOLUE VERS LA VUE DJANGO -->
             <div class="astra-filters-row">
-                <a href="?filter=all" class="btn-filter {% if current_filter == 'all' or not current_filter %}active{% endif %}">Tous les clients</a>
-                <a href="?filter=loyal" class="btn-filter {% if current_filter == 'loyal' %}active{% endif %}">Clients fidèles</a>
-                <a href="?filter=new" class="btn-filter {% if current_filter == 'new' %}active{% endif %}">Nouveaux clients</a>
+               
+<a href="{% url 'astra:clients' %}?filter=all"
+   class="btn-filter {% if current_filter == 'all' or not current_filter %}active{% endif %}">
+    Tous les clients
+</a>
+
+<a href="{% url 'astra:clients' %}?filter=loyal"
+   class="btn-filter {% if current_filter == 'loyal' %}active{% endif %}">
+    Clients fidèles
+</a>
+
+<a href="{% url 'astra:clients' %}?filter=new"
+   class="btn-filter {% if current_filter == 'new' %}active{% endif %}">
+    Nouveaux clients
+</a>
+   
             </div>
 
             <div class="astra-search-bar-wrapper">
@@ -393,153 +401,118 @@
             <table class="astra-table" id="clients-table">
                 <thead>
                     <tr>
-                        <th>ID Client</th>
                         <th>Nom</th>
                         <th>Email</th>
                         <th>Téléphone</th>
-                        <th>Inscription</th>
+                        <th>Dernier Achat</th>
                         <th>Total dépensé</th>
-                        <th style="text-align: center;">Cahier</th>
+                        <th style="text-align: center;">Cahier Privé</th>
                         <th style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-    {% for client in clients %}
-    <tr class="client-row" data-search="{{ client.nom|lower }} {{ client.email|default:''|lower }} {{ client.telephone|lower }} cli-{{ client.id|stringformat:'03d' }}">
-        <td style="font-weight: 700; color: #3730a3;">CLI-{{ client.id|stringformat:"03d" }}</td>
-        <td style="font-weight: 600;">{{ client.nom }}</td>
-        <td>{{ client.email|default:"N/A" }}</td>
-        <td>{{ client.telephone }}</td>
-        <td>{{ client.date_inscription|date:"d/m/Y"|default:"N/A" }}</td>
-        <td style="font-weight: 700; color: {% if client.total_depenses_calcule > 100000 %}#16a34a{% else %}#334155{% endif %};">{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>
-        <td style="text-align: center;">
-            <a href="{% url 'astra:detail_client_activites' client.id %}" style="display: inline-flex; align-items: center; gap: 5px; background-color: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none;" title="Voir le cahier d'activités">
-                <i class="fa-solid fa-book-open"></i> Cahier ({{ client.nombre_achats|default:0 }})
-            </a>
-        </td>
-        <td style="text-align: center; white-space: nowrap;">
-            <button type="button" class="details-btn" data-id="{{ client.id }}" 
-                    data-nom="{{ client.nom }}" 
-                    data-email="{{ client.email|default:'' }}" 
-                    data-telephone="{{ client.telephone }}" 
-                    data-dernier="{{ client.dernier_achat|date:'d/m/Y'|default:'Aucun' }}" 
-                    data-total="{{ client.total_depenses_calcule|default:0|floatformat:0 }}" 
-                    data-inscription="{{ client.date_inscription|date:'d/m/Y'|default:'N/A' }}"
-                    style="background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer; margin-right: 8px;">Détails</button>
-            
-            <button type="button" class="edit-btn" data-id="{{ client.id }}" 
-                    data-nom="{{ client.nom }}" 
-                    data-email="{{ client.email|default:'' }}" 
-                    data-telephone="{{ client.telephone }}" 
-                    data-adresse="{{ client.adresse|default:'' }}"
-                    style="background: none; border: none; color: #d97706; font-weight: 600; cursor: pointer; margin-right: 8px;">Modifier</button>
+                    {% for client in clients %}
+                    <tr class="client-row" data-search="{{ client.nom|lower }} {{ client.email|default:''|lower }} {{ client.telephone|lower }}">
+                        <td style="font-weight: 600;">{{ client.nom }}</td>
+                        <td>{{ client.email|default:"N/A" }}</td>
+                        <td>{{ client.telephone }}</td>
+                        <td>
+                            {% if client.dernier_achat %}
+                                <span style="font-weight: 600; color: #4338ca;">{{ client.dernier_achat|date:"d/m/Y H:i" }}</span>
+                            {% else %}
+                                <span style="color: #94a3b8; font-style: italic;">Aucun achat</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 700; color: {% if client.total_depenses_calcule > 100000 %}#16a34a{% else %}#334155{% endif %};">{{ client.total_depenses_calcule|default:0|floatformat:0 }} FCFA</td>
+                        <td style="text-align: center;">
+                            <a href="{% url 'astra:client_login' client.id %}" style="display: inline-flex; align-items: center; gap: 5px; background-color: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-decoration: none;" title="Accéder au cahier sécurisé">
+                                <i class="fa-solid fa-lock"></i> Accès Cahier
+                            </a>
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <button type="button" class="details-btn" data-id="{{ client.id }}" 
+                                    data-nom="{{ client.nom }}" 
+                                    data-email="{{ client.email|default:'' }}" 
+                                    data-telephone="{{ client.telephone }}" 
+                                    data-adresse="{{ client.adresse|default:'N/A' }}"
+                                    data-total="{{ client.total_depenses_calcule|default:0|floatformat:0 }}" 
+                                    data-achats="{{ client.nombre_achats|default:0 }}"
+                                    data-inscription="{{ client.date_inscription|date:'d/m/Y'|default:'N/A' }}"
+                                    style="background: none; border: none; color: #2563eb; font-weight: 600; cursor: pointer; margin-right: 12px;">Détails</button>
 
-            <a href="{% url 'astra:supprimer_client' client.id %}" class="delete-link" onclick="return confirm('Voulez-vous archiver / désactiver le client {{ client.nom }} ? Son historique financier sera conservé.');" style="background: none; border: none; color: #dc2626; font-weight: 600; cursor: pointer; text-decoration: none;">Archiver</a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr id="empty-db-row">
-        <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun client trouvé dans la base de données.</td>
-    </tr>
-    {% endfor %}
-    <tr id="no-search-results" style="display: none;">
-        <td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun résultat ne correspond à votre recherche.</td>
-    </tr>
-</tbody>
+                            <a href="{% url 'astra:supprimer_client' client.id %}" class="delete-link" onclick="return confirm('Voulez-vous archiver / désactiver le client {{ client.nom }} ?');" style="background: none; border: none; color: #dc2626; font-weight: 600; cursor: pointer; text-decoration: none;">Archiver</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun client trouvé dans la base de données.</td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="no-search-results" style="display: none;">
+                        <td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">Aucun résultat ne correspond à votre recherche.</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
 
 </div>
 
-<!-- MODALE : AJOUTER CLIENT -->
+<!-- MODALE AJOUT DE CLIENT -->
 <div id="add-client-modal" class="astra-modal hidden">
     <div class="astra-modal-card">
-        <button id="close-add-modal-btn" type="button" class="close-modal-x">&times;</button>
-        <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #1e1b4b;">Ajouter un client</h2>
+        <button type="button" id="close-add-modal-btn" class="close-modal-x">&times;</button>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; color: #1e1b4b;">Ajouter un nouveau client</h2>
         
-        <form id="add-client-form" method="POST" action="{% url 'astra:ajouter_client' %}">
+        <form method="POST" action="">
             {% csrf_token %}
             <div class="astra-form-group">
-                <label>Nom complet</label>
-                <input type="text" name="nom" required>
+                <label for="id_nom">Nom complet *</label>
+                <input type="text" id="id_nom" name="nom" required placeholder="Ex: Jean Dupont">
             </div>
             <div class="astra-form-group">
-                <label>Email</label>
-                <input type="email" name="email">
+                <label for="id_email">Email</label>
+                <input type="email" id="id_email" name="email" placeholder="Ex: jean@example.com">
             </div>
             <div class="astra-form-group">
-                <label>Téléphone</label>
-                <input type="tel" name="telephone" required>
+                <label for="id_telephone">Téléphone *</label>
+                <input type="text" id="id_telephone" name="telephone" required placeholder="Ex: +237 ...">
             </div>
             <div class="astra-form-group">
-                <label>Adresse</label>
-                <input type="text" name="adresse">
+                <label for="id_adresse">Adresse</label>
+                <input type="text" id="id_adresse" name="adresse" placeholder="Ex: Akwa, Douala">
             </div>
-            <button type="submit" class="btn-astra-orange" style="width: 100%; justify-content: center; margin-top: 10px;">Enregistrer</button>
+            <div class="astra-form-group">
+                <label for="id_password">Mot de passe privé *</label>
+                <input type="password" id="id_password" name="password" required placeholder="Mot de passe sécurisé du client">
+            </div>
+
+            <div style="margin-top: 25px; text-align: right;">
+                <button type="submit" class="btn-astra-orange" style="width: 100%; justify-content: center;">Enregistrer le client</button>
+            </div>
         </form>
     </div>
 </div>
 
-<!-- MODALE : MODIFIER CLIENT -->
-<div id="edit-client-modal" class="astra-modal hidden">
-    <div class="astra-modal-card">
-        <button id="close-edit-modal-btn" type="button" class="close-modal-x">&times;</button>
-        <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #1e1b4b;">Modifier le client</h2>
-        
-        <form id="edit-client-form" method="POST">
-            {% csrf_token %}
-            <input type="hidden" id="edit-client-id" name="client_id">
-            <div class="astra-form-group">
-                <label>Nom complet</label>
-                <input type="text" id="edit-nom" name="nom" required>
-            </div>
-            <div class="astra-form-group">
-                <label>Email</label>
-                <input type="email" id="edit-email" name="email">
-            </div>
-            <div class="astra-form-group">
-                <label>Téléphone</label>
-                <input type="tel" id="edit-telephone" name="telephone" required>
-            </div>
-            <div class="astra-form-group">
-                <label>Adresse</label>
-                <input type="text" id="edit-adresse" name="adresse">
-            </div>
-            <button type="submit" class="btn-astra-orange" style="width: 100%; justify-content: center; margin-top: 10px;">Mettre à jour</button>
-        </form>
-    </div>
-</div>
-
-<!-- MODALE : DÉTAILS -->
+<!-- MODALE DÉTAILS DU CLIENT -->
 <div id="details-client-modal" class="astra-modal hidden">
     <div class="astra-modal-card">
-        <button id="close-details-modal-btn" type="button" class="close-modal-x">&times;</button>
-        <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #1e1b4b;">Détails du client</h2>
-        <div id="client-details-content" style="line-height: 1.8; color: #334155;"></div>
+        <button type="button" id="close-details-modal-btn" class="close-modal-x">&times;</button>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; color: #1e1b4b;">Détails du Client</h2>
+        <div id="client-details-content" style="line-height: 1.6;"></div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Modal Ajout
         const addClientBtn = document.getElementById('add-client-btn');
         const addClientModal = document.getElementById('add-client-modal');
         const closeAddModalBtn = document.getElementById('close-add-modal-btn');
 
-        // Modal Détails
         const detailsClientModal = document.getElementById('details-client-modal');
         const closeDetailsModalBtn = document.getElementById('close-details-modal-btn');
         const clientDetailsContent = document.getElementById('client-details-content');
 
-        // Modal Modification
-        const editClientModal = document.getElementById('edit-client-modal');
-        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
-        const ajaxEditForm = document.getElementById('edit-client-form');
-
-        // Gestion Ajout
         if(addClientBtn) {
             addClientBtn.addEventListener('click', () => addClientModal.classList.remove('hidden'));
         }
@@ -547,25 +520,24 @@
             closeAddModalBtn.addEventListener('click', () => addClientModal.classList.add('hidden'));
         }
 
-        // Gestion Détails
         document.querySelectorAll('.details-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const btn = e.currentTarget;
-                const id = btn.getAttribute('data-id');
                 const nom = btn.getAttribute('data-nom');
                 const email = btn.getAttribute('data-email');
                 const telephone = btn.getAttribute('data-telephone');
-                const dernier = btn.getAttribute('data-dernier');
+                const adresse = btn.getAttribute('data-adresse');
                 const total = btn.getAttribute('data-total');
+                const achats = btn.getAttribute('data-achats');
                 const inscription = btn.getAttribute('data-inscription');
 
                 clientDetailsContent.innerHTML = `
-                    <p><strong>ID Client :</strong> CLI-${String(id).padStart(3, '0')}</p>
                     <p><strong>Nom :</strong> ${nom}</p>
                     <p><strong>Email :</strong> ${email ? email : 'N/A'}</p>
                     <p><strong>Téléphone :</strong> ${telephone}</p>
+                    <p><strong>Adresse :</strong> ${adresse}</p>
                     <p><strong>Date d'inscription :</strong> ${inscription}</p>
-                    <p><strong>Dernier achat :</strong> ${dernier}</p>
+                    <p><strong>Nombre d'achats :</strong> ${achats}</p>
                     <p><strong>Total dépensé :</strong> ${total} FCFA</p>
                 `;
                 detailsClientModal.classList.remove('hidden');
@@ -576,97 +548,11 @@
             closeDetailsModalBtn.addEventListener('click', () => detailsClientModal.classList.add('hidden'));
         }
 
-        // Gestion Ouverture de la Modification
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const btn = e.currentTarget;
-                const id = btn.getAttribute('data-id');
-                
-                document.getElementById('edit-client-id').value = id;
-                document.getElementById('edit-nom').value = btn.getAttribute('data-nom');
-                document.getElementById('edit-email').value = btn.getAttribute('data-email');
-                document.getElementById('edit-telephone').value = btn.getAttribute('data-telephone');
-                document.getElementById('edit-adresse').value = btn.getAttribute('data-adresse') || '';
-
-                editClientModal.classList.remove('hidden');
-            });
-        });
-
-        if(closeEditModalBtn) {
-            closeEditModalBtn.addEventListener('click', () => editClientModal.classList.add('hidden'));
-        }
-
-        // Interception robuste de la modification
-        if(ajaxEditForm) {
-            ajaxEditForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const clientId = document.getElementById('edit-client-id').value;
-                const formData = new FormData(ajaxEditForm);
-
-                fetch(`/clients/modifier/${clientId}/`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        return response.json();
-                    } else {
-                        window.location.reload();
-                        return null;
-                    }
-                })
-                .then(data => {
-                    if (data && data.success) {
-                        const editButton = document.querySelector(`.edit-btn[data-id="${data.id}"]`);
-                        if (editButton) {
-                            const row = editButton.closest('tr');
-                            if (row) {
-                                row.cells[1].innerText = data.nom;
-                                row.cells[2].innerText = data.email || 'N/A';
-                                row.cells[3].innerText = data.telephone;
-
-                                const detailsBtn = row.querySelector('.details-btn');
-                                if(detailsBtn) {
-                                    detailsBtn.setAttribute('data-nom', data.nom);
-                                    detailsBtn.setAttribute('data-email', data.email === 'N/A' ? '' : data.email);
-                                    detailsBtn.setAttribute('data-telephone', data.telephone);
-                                    if(data.adresse !== undefined) {
-                                        editButton.setAttribute('data-adresse', data.adresse);
-                                    }
-                                }
-                                editButton.setAttribute('data-nom', data.nom);
-                                editButton.setAttribute('data-email', data.email === 'N/A' ? '' : data.email);
-                                editButton.setAttribute('data-telephone', data.telephone);
-                                if(data.adresse !== undefined) {
-                                    editButton.setAttribute('data-adresse', data.adresse);
-                                }
-                            }
-                        }
-                        editClientModal.classList.add('hidden');
-                    } else if (data && !data.success) {
-                        alert('Erreur lors de la modification.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    window.location.reload();
-                });
-            });
-        }
-
-        // Fermeture des modales en cliquant à l'extérieur
         window.addEventListener('click', (e) => {
             if (e.target === addClientModal) addClientModal.classList.add('hidden');
             if (e.target === detailsClientModal) detailsClientModal.classList.add('hidden');
-            if (e.target === editClientModal) editClientModal.classList.add('hidden');
         });
 
-        // Barre de recherche en temps réel
         const searchInput = document.getElementById('client-search-input');
         const clientRows = document.querySelectorAll('.client-row');
         const noResultsRow = document.getElementById('no-search-results');

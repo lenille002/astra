@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Astra Tech - Gestion des Fournisseurs{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+    
+    <!-- Notification Toast -->
+    <div id="toastNotification" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 max-w-md">
+        <div id="toastContent" class="flex items-center gap-3 p-4 rounded-xl shadow-xl border text-sm font-medium">
+            <i id="toastIcon"></i>
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+        <h1 class="text-3xl font-extrabold text-blue-900">Gestion des Fournisseurs</h1>
+        <button id="addSupplierBtn" class="bg-orange-500 hover:bg-orange-600 text-white font-medium px-5 py-2.5 rounded-xl transition">Nouveau Fournisseur</button>
+    </div>
+
+    <!-- Tableau -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-blue-900 text-white">
+                <tr>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase">Nom</th>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase">Email</th>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase text-center">Espace Sécurisé</th>
+                    <th class="px-6 py-4 text-xs font-semibold uppercase text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for f in fournisseurs %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ f.nom }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ f.email|default:"N/A" }}</td>
+                    <td class="px-6 py-4 text-center">
+                        <!-- BOUTON SÉCURISÉ : AUCUN HREF DIRECT -->
+                        <button type="button" 
+                                onclick="ouvrirModalConnexionFournisseur('{{ f.id }}', '{{ f.nom|escapejs }}')"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition">
+                            <span>Accéder à l'espace</span>
+                            <i class="fas fa-lock text-[10px]"></i>
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="text-gray-400 hover:text-blue-600 mr-3" onclick="ouvrirModalEmail('{{ f.id }}', '{{ f.nom|escapejs }}', '{{ f.email|default:"" }}', '{% url 'astra:envoyer_email_fournisseur' f.id %}')">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODALE CONNEXION (Correction Flux) -->
+<div id="modalConnexionFournisseur" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 hidden">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-sm">
+        <h3 class="text-lg font-bold mb-4">Connexion : <span id="nomFournisseurConnexion" class="text-blue-900"></span></h3>
+        <form id="formConnexionFournisseur" method="POST">
+            {% csrf_token %}
+            <input type="password" name="password" required placeholder="Mot de passe" class="w-full p-3 border rounded-lg mb-4">
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="fermerModalConnexionFournisseur()" class="px-4 py-2 bg-gray-100 rounded-lg">Annuler</button>
+                <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded-lg">Se connecter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Interception de la connexion pour forcer la redirection après succès
+    document.getElementById('formConnexionFournisseur').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        
+        if (response.redirected) {
+            window.location.href = response.url; // Redirige vers l'espace après connexion validée
+        } else {
+            alert("Mot de passe incorrect ou erreur.");
+        }
+    });
+
+    function ouvrirModalConnexionFournisseur(id, nom) {
+        document.getElementById('nomFournisseurConnexion').innerText = nom;
+        document.getElementById('formConnexionFournisseur').action = `/fournisseur/${id}/connexion/`;
+        document.getElementById('modalConnexionFournisseur').classList.remove('hidden');
+    }
+
+    function fermerModalConnexionFournisseur() {
+        document.getElementById('modalConnexionFournisseur').classList.add('hidden');
+    }
+    
+    // ... reste de tes fonctions ...
+</script>
+{% endblock %}
